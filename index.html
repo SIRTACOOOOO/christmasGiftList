@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+// ================= SETTINGS (edit these) =================
+// Your Apps Script web app URL. It starts with https://script.google.com and ends in /exec
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPSIUTTEeQdgaAHIvFtEcBVyXAJL4HyhKsZ6gW5MTULy7Lv-K5Ktaex3OkgqdTwmJ_mg/exec';
+
+// Heading shown for each theme. Change the words if you like.
+const THEMES = {legacy: 'Christmas List', christmas: 'Christmas List', birthday: 'Birthday List', ocean: 'Gift List', sunset: 'Gift List', rose: 'Gift List', midnight: 'Gift List'};
+// =========================================================
+</script>
+<title>Christmas List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Fredoka:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--on-berry:#fff;--display:Fraunces,Georgia,serif;--panel:transparent;--pad:0px;--gap:0px;--bgimg:none;--bg:#eef1ec;--card:#fff;--ink:#1c2b27;--mute:#5d6b66;--line:#d5dcd6;--pine:#1f4a3d;--berry:#a3293f;--on-pine:#fff;--done:#e3e9e4}
+@media (prefers-color-scheme:dark){:root{--bg:#121a17;--card:#1a2420;--ink:#e8eee9;--mute:#9aa9a2;--line:#2c3a34;--pine:#7fc4a8;--berry:#e8798c;--on-pine:#10201a;--on-berry:#2a0f16;--done:#16201c}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html[data-theme=christmas]{--bg:#0d2a24;--panel:rgba(251,253,251,.95);--pad:20px;--gap:48px;--card:#fff;--ink:#1c2b27;--mute:#5d6b66;--line:#d5dcd6;--pine:#1f4a3d;--berry:#a3293f;--on-pine:#fff;--done:#e4eee7;
+--bgimg:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27120%27%20height%3D%2770%27%3E%3Cpath%20d%3D%27M0%208%20Q30%2038%2060%208%20Q90%2038%20120%208%27%20stroke%3D%27%231b1b1b%27%20stroke-width%3D%272%27%20fill%3D%27none%27/%3E%3Cellipse%20cx%3D%2730%27%20cy%3D%2730%27%20rx%3D%275%27%20ry%3D%277%27%20fill%3D%27%23e63946%27/%3E%3Cellipse%20cx%3D%2760%27%20cy%3D%2714%27%20rx%3D%275%27%20ry%3D%277%27%20fill%3D%27%2352b788%27/%3E%3Cellipse%20cx%3D%2790%27%20cy%3D%2730%27%20rx%3D%275%27%20ry%3D%277%27%20fill%3D%27%23ffd166%27/%3E%3Cellipse%20cx%3D%270%27%20cy%3D%2714%27%20rx%3D%275%27%20ry%3D%277%27%20fill%3D%27%234cc9f0%27/%3E%3Cellipse%20cx%3D%27120%27%20cy%3D%2714%27%20rx%3D%275%27%20ry%3D%277%27%20fill%3D%27%234cc9f0%27/%3E%3C/svg%3E") repeat-x top/120px 70px,url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27170%27%20height%3D%27120%27%3E%3Cpolygon%20points%3D%2745%2C8%2072%2C55%2018%2C55%27%20fill%3D%27%23123d2e%27/%3E%3Cpolygon%20points%3D%2745%2C32%2082%2C92%208%2C92%27%20fill%3D%27%23123d2e%27/%3E%3Cpolygon%20points%3D%2745%2C58%2092%2C120%20-2%2C120%27%20fill%3D%27%23123d2e%27/%3E%3Cpolygon%20points%3D%27130%2C52%20150%2C86%20110%2C86%27%20fill%3D%27%230b2a1f%27/%3E%3Cpolygon%20points%3D%27130%2C68%20158%2C120%20102%2C120%27%20fill%3D%27%230b2a1f%27/%3E%3C/svg%3E") repeat-x bottom/170px 120px,url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27300%27%20height%3D%27300%27%3E%3Ccircle%20cx%3D%27170%27%20cy%3D%2782%27%20r%3D%272.3%27%20fill%3D%27white%27%20fill-opacity%3D%270.47%27/%3E%3Ccircle%20cx%3D%27279%27%20cy%3D%2753%27%20r%3D%272.3%27%20fill%3D%27white%27%20fill-opacity%3D%270.48%27/%3E%3Ccircle%20cx%3D%27264%27%20cy%3D%27114%27%20r%3D%271.5%27%20fill%3D%27white%27%20fill-opacity%3D%270.65%27/%3E%3Ccircle%20cx%3D%2740%27%20cy%3D%27128%27%20r%3D%271.6%27%20fill%3D%27white%27%20fill-opacity%3D%270.64%27/%3E%3Ccircle%20cx%3D%27294%27%20cy%3D%2768%27%20r%3D%273.7%27%20fill%3D%27white%27%20fill-opacity%3D%270.73%27/%3E%3Ccircle%20cx%3D%2736%27%20cy%3D%27208%27%20r%3D%271.5%27%20fill%3D%27white%27%20fill-opacity%3D%270.55%27/%3E%3Ccircle%20cx%3D%27290%27%20cy%3D%2773%27%20r%3D%272.1%27%20fill%3D%27white%27%20fill-opacity%3D%270.51%27/%3E%3Ccircle%20cx%3D%2765%27%20cy%3D%27162%27%20r%3D%272.7%27%20fill%3D%27white%27%20fill-opacity%3D%270.76%27/%3E%3Ccircle%20cx%3D%2757%27%20cy%3D%27101%27%20r%3D%272.3%27%20fill%3D%27white%27%20fill-opacity%3D%270.70%27/%3E%3Ccircle%20cx%3D%2737%27%20cy%3D%27293%27%20r%3D%271.5%27%20fill%3D%27white%27%20fill-opacity%3D%270.54%27/%3E%3Ccircle%20cx%3D%27277%27%20cy%3D%27223%27%20r%3D%273.3%27%20fill%3D%27white%27%20fill-opacity%3D%270.66%27/%3E%3Ccircle%20cx%3D%27237%27%20cy%3D%27190%27%20r%3D%272.1%27%20fill%3D%27white%27%20fill-opacity%3D%270.81%27/%3E%3Ccircle%20cx%3D%27129%27%20cy%3D%2746%27%20r%3D%272.8%27%20fill%3D%27white%27%20fill-opacity%3D%270.69%27/%3E%3Ccircle%20cx%3D%27180%27%20cy%3D%27234%27%20r%3D%272.1%27%20fill%3D%27white%27%20fill-opacity%3D%270.89%27/%3E%3Ccircle%20cx%3D%2765%27%20cy%3D%27267%27%20r%3D%272.4%27%20fill%3D%27white%27%20fill-opacity%3D%270.79%27/%3E%3Ccircle%20cx%3D%2782%27%20cy%3D%27255%27%20r%3D%272.4%27%20fill%3D%27white%27%20fill-opacity%3D%270.88%27/%3E%3Ccircle%20cx%3D%2744%27%20cy%3D%27290%27%20r%3D%272.8%27%20fill%3D%27white%27%20fill-opacity%3D%270.84%27/%3E%3Ccircle%20cx%3D%27165%27%20cy%3D%27179%27%20r%3D%273.1%27%20fill%3D%27white%27%20fill-opacity%3D%270.72%27/%3E%3Ccircle%20cx%3D%27238%27%20cy%3D%2740%27%20r%3D%273.4%27%20fill%3D%27white%27%20fill-opacity%3D%270.88%27/%3E%3Ccircle%20cx%3D%27247%27%20cy%3D%2738%27%20r%3D%271.5%27%20fill%3D%27white%27%20fill-opacity%3D%270.77%27/%3E%3Ccircle%20cx%3D%27233%27%20cy%3D%27150%27%20r%3D%273.1%27%20fill%3D%27white%27%20fill-opacity%3D%270.85%27/%3E%3Ccircle%20cx%3D%27182%27%20cy%3D%2716%27%20r%3D%273.7%27%20fill%3D%27white%27%20fill-opacity%3D%270.61%27/%3E%3Ccircle%20cx%3D%2764%27%20cy%3D%27257%27%20r%3D%271.5%27%20fill%3D%27white%27%20fill-opacity%3D%270.80%27/%3E%3Ccircle%20cx%3D%2771%27%20cy%3D%27131%27%20r%3D%272.4%27%20fill%3D%27white%27%20fill-opacity%3D%270.86%27/%3E%3Ccircle%20cx%3D%27259%27%20cy%3D%2746%27%20r%3D%271.8%27%20fill%3D%27white%27%20fill-opacity%3D%270.63%27/%3E%3Ccircle%20cx%3D%27147%27%20cy%3D%2775%27%20r%3D%273.4%27%20fill%3D%27white%27%20fill-opacity%3D%270.84%27/%3E%3Ccircle%20cx%3D%27147%27%20cy%3D%27217%27%20r%3D%273.8%27%20fill%3D%27white%27%20fill-opacity%3D%270.76%27/%3E%3Ccircle%20cx%3D%27199%27%20cy%3D%27123%27%20r%3D%271.8%27%20fill%3D%27white%27%20fill-opacity%3D%270.53%27/%3E%3Ccircle%20cx%3D%27123%27%20cy%3D%27124%27%20r%3D%271.4%27%20fill%3D%27white%27%20fill-opacity%3D%270.82%27/%3E%3Ccircle%20cx%3D%2798%27%20cy%3D%27139%27%20r%3D%272.1%27%20fill%3D%27white%27%20fill-opacity%3D%270.52%27/%3E%3Ccircle%20cx%3D%27278%27%20cy%3D%27194%27%20r%3D%272.9%27%20fill%3D%27white%27%20fill-opacity%3D%270.59%27/%3E%3Ccircle%20cx%3D%2769%27%20cy%3D%27268%27%20r%3D%273.7%27%20fill%3D%27white%27%20fill-opacity%3D%270.74%27/%3E%3Ccircle%20cx%3D%2732%27%20cy%3D%27238%27%20r%3D%273.6%27%20fill%3D%27white%27%20fill-opacity%3D%270.80%27/%3E%3Ccircle%20cx%3D%27291%27%20cy%3D%27205%27%20r%3D%272.4%27%20fill%3D%27white%27%20fill-opacity%3D%270.63%27/%3E%3C/svg%3E") 0 0/300px 300px,linear-gradient(180deg,#0b2538,#0f3a2c 70%,#0d2a24)}
+html[data-theme=birthday]{--bg:#ffe3ec;--panel:rgba(255,255,255,.94);--pad:20px;--gap:0px;--card:#fff;--ink:#2a2236;--mute:#6b5f7a;--line:#eadff5;--pine:#5a3d9a;--berry:#d6336c;--on-pine:#fff;--done:#f4eefc;--display:Fredoka,"Trebuchet MS",sans-serif;
+--bgimg:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27260%27%20height%3D%27190%27%3E%3Cellipse%20cx%3D%2740%27%20cy%3D%2745%27%20rx%3D%2724%27%20ry%3D%2730%27%20fill%3D%27%23ff6b9d%27/%3E%3Cpath%20d%3D%27M36%2075%20L44%2075%20L40%2082%20Z%27%20fill%3D%27%23ff6b9d%27/%3E%3Cpath%20d%3D%27M40%2082%20q-7%2014%200%2028%20t0%2028%27%20stroke%3D%27%238a8a99%27%20fill%3D%27none%27%20stroke-width%3D%271.5%27/%3E%3Cellipse%20cx%3D%27120%27%20cy%3D%2780%27%20rx%3D%2724%27%20ry%3D%2730%27%20fill%3D%27%23ffd166%27/%3E%3Cpath%20d%3D%27M116%20110%20L124%20110%20L120%20117%20Z%27%20fill%3D%27%23ffd166%27/%3E%3Cpath%20d%3D%27M120%20117%20q-7%2014%200%2028%20t0%2028%27%20stroke%3D%27%238a8a99%27%20fill%3D%27none%27%20stroke-width%3D%271.5%27/%3E%3Cellipse%20cx%3D%27205%27%20cy%3D%2750%27%20rx%3D%2724%27%20ry%3D%2730%27%20fill%3D%27%234cc9f0%27/%3E%3Cpath%20d%3D%27M201%2080%20L209%2080%20L205%2087%20Z%27%20fill%3D%27%234cc9f0%27/%3E%3Cpath%20d%3D%27M205%2087%20q-7%2014%200%2028%20t0%2028%27%20stroke%3D%27%238a8a99%27%20fill%3D%27none%27%20stroke-width%3D%271.5%27/%3E%3C/svg%3E") repeat-x bottom/260px 190px,url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27240%27%20height%3D%27240%27%3E%3Crect%20x%3D%27168%27%20y%3D%27108%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%239b5de5%27%20transform%3D%27rotate%2817%20168%20108%29%27/%3E%3Crect%20x%3D%27118%27%20y%3D%2747%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ffd166%27%20transform%3D%27rotate%28153%20118%2047%29%27/%3E%3Ccircle%20cx%3D%2732%27%20cy%3D%276%27%20r%3D%273.5%27%20fill%3D%27%23ff6b9d%27/%3E%3Ccircle%20cx%3D%2731%27%20cy%3D%2799%27%20r%3D%273.5%27%20fill%3D%27%2352b788%27/%3E%3Ccircle%20cx%3D%27229%27%20cy%3D%2759%27%20r%3D%273.5%27%20fill%3D%27%23ff6b9d%27/%3E%3Ccircle%20cx%3D%27168%27%20cy%3D%2770%27%20r%3D%273.5%27%20fill%3D%27%23ffd166%27/%3E%3Crect%20x%3D%2799%27%20y%3D%27127%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%2352b788%27%20transform%3D%27rotate%28124%2099%20127%29%27/%3E%3Crect%20x%3D%27128%27%20y%3D%27129%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%239b5de5%27%20transform%3D%27rotate%2836%20128%20129%29%27/%3E%3Ccircle%20cx%3D%27197%27%20cy%3D%2793%27%20r%3D%273.5%27%20fill%3D%27%23ff6b9d%27/%3E%3Crect%20x%3D%27218%27%20y%3D%27183%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%239b5de5%27%20transform%3D%27rotate%285%20218%20183%29%27/%3E%3Crect%20x%3D%27141%27%20y%3D%2798%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ffd166%27%20transform%3D%27rotate%28139%20141%2098%29%27/%3E%3Crect%20x%3D%27200%27%20y%3D%27141%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ff6b9d%27%20transform%3D%27rotate%28164%20200%20141%29%27/%3E%3Crect%20x%3D%27184%27%20y%3D%27222%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ff6b9d%27%20transform%3D%27rotate%2893%20184%20222%29%27/%3E%3Crect%20x%3D%2797%27%20y%3D%27203%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ffd166%27%20transform%3D%27rotate%28138%2097%20203%29%27/%3E%3Crect%20x%3D%2790%27%20y%3D%27168%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%2352b788%27%20transform%3D%27rotate%2849%2090%20168%29%27/%3E%3Ccircle%20cx%3D%27215%27%20cy%3D%27108%27%20r%3D%273.5%27%20fill%3D%27%23ffd166%27/%3E%3Crect%20x%3D%2757%27%20y%3D%27138%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ffd166%27%20transform%3D%27rotate%287%2057%20138%29%27/%3E%3Crect%20x%3D%27208%27%20y%3D%2777%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ff6b9d%27%20transform%3D%27rotate%2849%20208%2077%29%27/%3E%3Crect%20x%3D%27160%27%20y%3D%2794%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ff9f1c%27%20transform%3D%27rotate%2889%20160%2094%29%27/%3E%3Crect%20x%3D%2726%27%20y%3D%2762%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%234cc9f0%27%20transform%3D%27rotate%28120%2026%2062%29%27/%3E%3Crect%20x%3D%2792%27%20y%3D%2758%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ffd166%27%20transform%3D%27rotate%28156%2092%2058%29%27/%3E%3Crect%20x%3D%27128%27%20y%3D%27173%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ff6b9d%27%20transform%3D%27rotate%28164%20128%20173%29%27/%3E%3Crect%20x%3D%27219%27%20y%3D%27175%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ff6b9d%27%20transform%3D%27rotate%2899%20219%20175%29%27/%3E%3Crect%20x%3D%27198%27%20y%3D%2757%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ff9f1c%27%20transform%3D%27rotate%2845%20198%2057%29%27/%3E%3Crect%20x%3D%27208%27%20y%3D%27168%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%239b5de5%27%20transform%3D%27rotate%28101%20208%20168%29%27/%3E%3Ccircle%20cx%3D%27108%27%20cy%3D%27196%27%20r%3D%273.5%27%20fill%3D%27%239b5de5%27/%3E%3Ccircle%20cx%3D%2746%27%20cy%3D%2749%27%20r%3D%273.5%27%20fill%3D%27%23ff9f1c%27/%3E%3Ccircle%20cx%3D%2744%27%20cy%3D%27157%27%20r%3D%273.5%27%20fill%3D%27%23ff6b9d%27/%3E%3Ccircle%20cx%3D%2743%27%20cy%3D%27162%27%20r%3D%273.5%27%20fill%3D%27%23ff9f1c%27/%3E%3Crect%20x%3D%27174%27%20y%3D%2795%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%239b5de5%27%20transform%3D%27rotate%28140%20174%2095%29%27/%3E%3C/svg%3E") 0 0/240px 240px,linear-gradient(160deg,#ffe3ec,#ffd6a5 45%,#d7c6ff)}
+html[data-theme=ocean]{--bg:#e6f1f7;--card:#fff;--ink:#12293a;--mute:#566b7a;--line:#cddbe5;--pine:#0b5f8a;--berry:#c8431f;--on-pine:#fff;--done:#d9e8f1;--bgimg:linear-gradient(180deg,#d8eaf6,#eef6fb)}
+html[data-theme=sunset]{--bg:#fff1e6;--card:#fff;--ink:#3a2218;--mute:#7a5f52;--line:#f0d8c8;--pine:#c2410c;--berry:#be185d;--on-pine:#fff;--done:#fbe6d6;--bgimg:linear-gradient(160deg,#ffe8d6,#ffd9e3)}
+html[data-theme=rose]{--bg:#fbeef1;--card:#fff;--ink:#3b2229;--mute:#7d5c66;--line:#efd3da;--pine:#8b2347;--berry:#0e7c86;--on-pine:#fff;--done:#f6dde3;--bgimg:linear-gradient(180deg,#fbe6eb,#fdf3f5)}
+html[data-theme=midnight]{--bg:#0e1420;--card:#182030;--ink:#e7ecf5;--mute:#9aa7bd;--line:#2a3550;--pine:#8ab4ff;--berry:#ff7a90;--on-pine:#0e1420;--on-berry:#1a0b10;--done:#121a2a;--bgimg:linear-gradient(180deg,#0b101a,#111a2b)}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--bgimg)}
+main{background:var(--panel);padding:var(--pad);border-radius:16px}
+.top select{margin:0}
+.top>span{display:flex;gap:10px;align-items:center}
+.sr{position:absolute;left:-9999px}
+
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Instrument Sans",system-ui,sans-serif;padding:calc(max(20px,env(safe-area-inset-top)) + var(--gap)) 16px 64px}
+main{max-width:720px;margin:0 auto}
+h1{font:700 2.4rem/1.1 var(--display);margin:16px 0 4px;color:var(--pine)}
+.top{display:flex;justify-content:flex-end;gap:10px;align-items:center;color:var(--mute);font-size:.92rem}
+.sub{color:var(--mute);margin:0 0 18px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+input,textarea,button{font:inherit;color:inherit}
+input,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.bar input{flex:1 1 180px;width:auto}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--card);padding:10px 14px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--pine);color:var(--on-pine)}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:10px 14px;cursor:pointer}
+.btn.primary{background:var(--berry);border-color:var(--berry);color:var(--on-berry);font-weight:600}
+.btn.danger{color:var(--berry)}
+.link{border:0;background:none;color:var(--pine);text-decoration:underline;cursor:pointer;padding:0}
+button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--pine);outline-offset:2px}
+#people{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
+#people button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 16px;cursor:pointer}
+#people button[aria-pressed=true]{background:var(--pine);color:var(--on-pine);border-color:var(--pine)}
+select{padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);margin:0 0 12px}
+.grp{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:10px 0}
+.grp b{font:500 1.05rem var(--display)}
+.grp code{background:var(--bg);padding:2px 6px;border-radius:4px;letter-spacing:.08em;font-weight:600}
+.grp p{margin:4px 0}
+.inline{display:flex;gap:8px;margin-top:8px}
+.inline input{flex:1}
+.totals{display:flex;gap:20px;margin:0 0 12px;color:var(--mute);font-size:.95rem}
+.totals b{color:var(--ink)}
+ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+li{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;padding:14px 4px;border-bottom:1px solid var(--line)}
+li.mine{grid-template-columns:1fr auto}
+li.done{background:var(--done)}
+li.done .name{text-decoration:line-through;color:var(--mute)}
+.chk{width:24px;height:24px;margin-top:2px;accent-color:var(--pine);cursor:pointer}
+.name{font:500 1.1rem/1.3 var(--display)}
+.meta{color:var(--mute);font-size:.92rem}
+.meta a{color:var(--pine)}
+.tag{display:inline-block;font-size:.8rem;font-weight:600;color:var(--berry);border:1px solid var(--berry);border-radius:999px;padding:0 8px;margin-top:4px}
+.price{font-weight:600;white-space:nowrap}
+.edit{border:0;background:none;color:var(--mute);cursor:pointer;padding:0;font-size:.9rem;text-decoration:underline}
+.empty{padding:32px 0;color:var(--mute)}
+#msg{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90%}
+#msg.show{opacity:1}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);width:min(440px,calc(100% - 24px));padding:20px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{margin:0;font:700 1.3rem var(--display)}
+dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
+.note{color:var(--mute);font-size:.9rem;margin:6px 0 0}
+.err{color:var(--berry);min-height:1.4em;margin:10px 0 0;font-size:.92rem}
+.row{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+.row .del{margin-right:auto}
+@media (prefers-reduced-motion:reduce){#msg{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><label class="sr" for="theme">Theme</label>
+    <select id="theme"><option value="legacy">Christmas Legacy</option><option value="christmas">Christmas</option><option value="birthday">Birthday</option><option value="ocean">Ocean</option><option value="sunset">Sunset</option><option value="rose">Rose</option><option value="midnight">Midnight</option></select>
+    <span id="acct" hidden><span id="who"></span><button class="link" id="groupsBtn">Groups</button><button class="link" id="logout">Log out</button></span></div>
+  <h1 id="title">Christmas List</h1>
+  <p class="sub" id="sub"></p>
+  <select id="gsel" hidden aria-label="Show people from group"></select>
+  <div id="people" role="group" aria-label="Lists"></div>
+  <div class="bar">
+    <input id="q" type="search" placeholder="Search gifts" aria-label="Search gifts">
+    <div class="seg" id="seg" role="group" aria-label="Filter">
+      <button data-f="all" aria-pressed="true">All</button>
+      <button data-f="todo" aria-pressed="false">To buy</button>
+      <button data-f="done" aria-pressed="false">Bought</button>
+    </div>
+    <button class="btn primary" id="add">Add gift</button>
+  </div>
+  <p class="totals"><span id="l-left">Still to buy: <b id="t-left">$0</b></span><span id="l-done">Bought: <b id="t-done">$0</b></span></p>
+  <ul id="list"></ul>
+  <p class="empty" id="empty" hidden></p>
+</main>
+
+<dialog id="auth">
+  <form id="aform">
+    <h2 id="atitle">Log in</h2>
+    <label for="a-name">Name</label><input id="a-name" autocomplete="username" required>
+    <label for="a-pw">Password</label><input id="a-pw" type="password" autocomplete="current-password" required>
+    <div id="a-code-box" hidden><label for="a-code">Family code</label><input id="a-code"></div>
+    <p class="err" id="a-err" role="alert"></p>
+    <div class="row"><button type="button" class="link" id="a-switch">Create an account</button><button class="btn primary" id="a-go">Log in</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlg">
+  <form id="form">
+    <h2 id="dtitle">Add gift</h2>
+    <p class="note" id="dnote" hidden></p>
+    <label for="f-name">Gift name</label><input id="f-name" required>
+    <label for="f-price">Approx. price</label><input id="f-price" inputmode="decimal" placeholder="20.00">
+    <label for="f-link">Link</label><input id="f-link" placeholder="Paste a link (optional)">
+    <label for="f-notes">Notes</label><textarea id="f-notes" rows="2"></textarea>
+    <div class="row">
+      <button type="button" class="btn danger del" id="del">Delete</button>
+      <button type="button" class="btn" id="cancel">Cancel</button>
+      <button class="btn primary" id="save">Save gift</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="gdlg">
+  <h2>Groups</h2>
+  <p class="note">People in the same group can see each other’s lists. You can be in as many groups as you like, and your list is the same in all of them.</p>
+  <div id="glist"></div>
+  <form id="gcreate" class="inline"><input id="g-new" placeholder="New group name" aria-label="New group name"><button class="btn primary">Create</button></form>
+  <form id="gjoin" class="inline"><input id="g-code" placeholder="Invite code" aria-label="Invite code" autocapitalize="characters"><button class="btn">Join</button></form>
+  <div class="row"><button type="button" class="btn" id="gclose">Close</button></div>
+</dialog>
+<div id="msg" role="status"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let token = '', me = '', groups = [], gf = '', people = [], person = '', items = [], filter = 'all', editing = null, signup = false;
+try { token = localStorage.getItem('giftToken') || ''; } catch (e) {}
+try { person = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
+let theme = 'legacy';
+try { theme = localStorage.getItem('giftTheme') || 'legacy'; } catch (e) {}
+if (!THEMES[theme]) theme = 'legacy';
+function applyTheme() { document.documentElement.dataset.theme = theme; $('theme').value = theme; $('title').textContent = THEMES[theme]; document.title = THEMES[theme] + (person ? ' - ' + person : ''); }
+$('theme').onchange = () => { theme = $('theme').value; try { localStorage.setItem('giftTheme', theme); } catch (e) {} applyTheme(); };
+applyTheme();
+
+const money = n => '$' + (n || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const num = v => parseFloat(String(v).replace(/[^0-9.]/g, '')) || 0;
+const fixLink = v => { v = String(v || '').trim(); return v && !/^[a-z][a-z0-9+.-]*:/i.test(v) && /^[^\s]+\.[^\s]{2,}/.test(v) ? 'https://' + v : v; };
+const isUrl = v => /^https?:\/\//i.test(v);
+const isMine = () => person.toLowerCase() === me.toLowerCase();
+function toast(t) { const m = $('msg'); m.textContent = t; m.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => m.classList.remove('show'), 3000); }
+
+async function api(body) {
+  body.token = token;
+  const r = await fetch(SCRIPT_URL + '?payload=' + encodeURIComponent(JSON.stringify(body)));
+  const j = await r.json();
+  if (j.error) {
+    if (j.error === 'Please sign in') { setToken(''); showAuth(); }
+    if (/list changed/i.test(j.error)) load();
+    throw new Error(j.error);
+  }
+  return j;
+}
+function setToken(t) { token = t; try { t ? localStorage.setItem('giftToken', t) : localStorage.removeItem('giftToken'); } catch (e) {} }
+
+/* ---- sign in ---- */
+function showAuth() { $('acct').hidden = true; if (!$('auth').open) $('auth').showModal(); $('a-name').focus(); }
+$('auth').addEventListener('cancel', e => e.preventDefault());
+$('a-switch').onclick = () => {
+  signup = !signup; $('atitle').textContent = signup ? 'Create an account' : 'Log in';
+  $('a-go').textContent = signup ? 'Create account' : 'Log in'; $('a-switch').textContent = signup ? 'I already have an account' : 'Create an account';
+  $('a-code-box').hidden = !signup; $('a-pw').autocomplete = signup ? 'new-password' : 'current-password'; $('a-err').textContent = '';
+};
+$('aform').onsubmit = async e => {
+  e.preventDefault(); $('a-err').textContent = ''; $('a-go').disabled = true;
+  try {
+    const j = await api({action: signup ? 'signup' : 'login', name: $('a-name').value.trim(), password: $('a-pw').value, code: $('a-code').value.trim()});
+    setToken(j.token); me = j.name; person = me; $('a-pw').value = ''; $('auth').close(); await load();
+  } catch (err) { $('a-err').textContent = err.message; }
+  $('a-go').disabled = false;
+};
+$('logout').onclick = async () => { try { await api({action: 'logout'}); } catch (e) {} setToken(''); items = []; people = []; render(); showAuth(); };
+
+/* ---- data ---- */
+async function load() {
+  if (!SCRIPT_URL) { $('sub').textContent = 'Add your Apps Script URL to SCRIPT_URL in index.html to connect the site.'; return; }
+  if (!token) return showAuth();
+  try {
+    const j = await api({action: 'list', person});
+    me = j.me; groups = j.groups || []; if (gf && !groups.some(g => g.code === gf)) gf = ''; people = j.people; person = j.person; items = j.items.map(i => ({...i, price: num(i.price)}));
+    render();
+  } catch (e) { if (!$('auth').open) { $('empty').hidden = false; $('empty').textContent = 'Could not load the sheet: ' + e.message; } }
+}
+function pick(n) { person = n; try { history.replaceState(null, '', '#' + encodeURIComponent(n)); } catch (e) {} load(); }
+
+/* ---- render ---- */
+function render() {
+  const mine = isMine();
+  $('acct').hidden = !me; $('who').textContent = me ? 'Signed in as ' + me : '';
+  const gs = $('gsel'); gs.hidden = groups.length < 2; gs.innerHTML = '';
+  [['', 'All groups'], ...groups.map(g => [g.code, g.name])].forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; o.selected = v === gf; gs.append(o); });
+  const gm = gf && groups.find(g => g.code === gf);
+  const box = $('people'); box.innerHTML = '';
+  [...people].filter(n => !gm || n.toLowerCase() === me.toLowerCase() || gm.members.some(m => m.toLowerCase() === n.toLowerCase())).sort((a, b) => (b.toLowerCase() === me.toLowerCase()) - (a.toLowerCase() === me.toLowerCase())).forEach(n => {
+    const b = document.createElement('button'); b.textContent = n.toLowerCase() === me.toLowerCase() ? 'My list' : n;
+    b.setAttribute('aria-pressed', n === person); b.onclick = () => pick(n); box.append(b);
+  });
+  document.title = THEMES[theme] + (person ? ' - ' + person : '');
+  $('sub').textContent = !person ? '' : mine ? 'Your list. For the surprise, you can\u2019t see what has been bought.' : 'Tick what you\u2019ve bought for ' + person + '. Use Add surprise gift for anything not on their list; ' + person + ' won\u2019t see it.';
+  $('add').textContent = mine ? 'Add gift' : 'Add surprise gift';
+  $('seg').hidden = mine; $('l-done').hidden = mine; $('l-left').firstChild.textContent = mine ? 'Total wish list: ' : 'Still to buy: ';
+  const q = $('q').value.toLowerCase();
+  const shown = items.filter(i => (mine || filter === 'all' || (filter === 'done') === i.bought) && (i.name + i.notes).toLowerCase().includes(q));
+  $('list').innerHTML = '';
+  shown.forEach(i => {
+    const li = document.createElement('li'); li.className = (mine ? 'mine ' : '') + (i.bought ? 'done' : '');
+    if (!mine) {
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'chk'; cb.checked = i.bought; cb.disabled = !!i.by;
+      cb.setAttribute('aria-label', 'Bought: ' + i.name); cb.onchange = () => toggle(i, cb.checked); li.append(cb);
+    }
+    const mid = document.createElement('div');
+    const nm = document.createElement('div'); nm.className = 'name'; nm.textContent = i.name; mid.append(nm);
+    const meta = document.createElement('div'); meta.className = 'meta';
+    if (i.link) { if (isUrl(i.link)) { const a = document.createElement('a'); a.href = i.link; a.target = '_blank'; a.rel = 'noopener'; let h = i.link; try { h = new URL(i.link).hostname.replace(/^www\./, ''); } catch (e) {} a.textContent = h; meta.append(a); } else meta.append(i.link); }
+    if (i.notes) meta.append((i.link ? ' \u00b7 ' : '') + i.notes);
+    if (meta.childNodes.length) mid.append(meta);
+    if (i.by) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'Surprise gift from ' + (i.by.toLowerCase() === me.toLowerCase() ? 'you' : i.by); mid.append(t); }
+    const right = document.createElement('div'); right.style.textAlign = 'right';
+    const p = document.createElement('div'); p.className = 'price'; p.textContent = i.price ? money(i.price) : ''; right.append(p);
+    if (mine || (i.by && i.by.toLowerCase() === me.toLowerCase())) { const eb = document.createElement('button'); eb.className = 'edit'; eb.textContent = 'Edit'; eb.onclick = () => openDlg(i); right.append(eb); }
+    li.append(mid, right); $('list').append(li);
+  });
+  $('empty').hidden = !me || (shown.length > 0 && groups.length > 0); $('empty').textContent = groups.length ? 'No gifts to show yet.' : 'Create a group or join one with an invite code (Groups, top right) to see other people\u2019s lists.';
+  if ($('gdlg').open) renderGroups();
+  $('t-left').textContent = money(items.filter(i => mine || !i.bought).reduce((s, i) => s + i.price, 0));
+  $('t-done').textContent = money(items.filter(i => i.bought).reduce((s, i) => s + i.price, 0));
+}
+
+async function toggle(i, v) {
+  const old = i.bought; i.bought = v; render();
+  try { await api({action: 'toggle', person, row: i.row, was: i.name, bought: v}); }
+  catch (e) { i.bought = old; render(); toast(e.message); }
+}
+
+function openDlg(i) {
+  editing = i || null; const mine = isMine();
+  $('dtitle').textContent = i ? 'Edit gift' : mine ? 'Add gift' : 'Add surprise gift for ' + person;
+  $('dnote').hidden = mine; $('dnote').textContent = person + ' will not see this. Everyone else sees it as already bought.';
+  $('f-name').value = i ? i.name : ''; $('f-price').value = i && i.price ? i.price : '';
+  $('f-link').value = i ? i.link : ''; $('f-notes').value = i ? i.notes : '';
+  $('del').style.display = i ? '' : 'none';
+  $('dlg').showModal(); $('f-name').focus();
+}
+$('add').onclick = () => openDlg(null);
+$('cancel').onclick = () => $('dlg').close();
+$('q').oninput = render;
+document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
+  filter = b.dataset.f; document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); render();
+});
+
+$('form').onsubmit = async e => {
+  e.preventDefault();
+  const d = {action: 'save', person, row: editing ? editing.row : null, was: editing ? editing.name : '', name: $('f-name').value.trim(), price: $('f-price').value, link: fixLink($('f-link').value), notes: $('f-notes').value.trim()};
+  if (!d.name) return;
+  $('save').disabled = true;
+  try { await api(d); $('dlg').close(); toast('Gift saved'); await load(); } catch (err) { toast(err.message); }
+  $('save').disabled = false;
+};
+$('del').onclick = async () => {
+  if (!editing || !confirm('Delete "' + editing.name + '"?')) return;
+  try { await api({action: 'delete', person, row: editing.row, was: editing.name}); $('dlg').close(); toast('Gift deleted'); await load(); } catch (err) { toast(err.message); }
+};
+
+$('gsel').onchange = () => { gf = $('gsel').value; render(); };
+function renderGroups() {
+  const box = $('glist'); box.innerHTML = '';
+  if (!groups.length) { const p = document.createElement('p'); p.className = 'note'; p.textContent = 'You are not in a group yet. Create one or join with an invite code.'; box.append(p); }
+  groups.forEach(g => {
+    const d = document.createElement('div'); d.className = 'grp';
+    const t = document.createElement('b'); t.textContent = g.name;
+    const c = document.createElement('p'); c.append('Invite code: '); const k = document.createElement('code'); k.textContent = g.code; c.append(k);
+    const m = document.createElement('p'); m.className = 'meta'; m.textContent = 'Members: ' + g.members.join(', ');
+    const l = document.createElement('button'); l.className = 'link'; l.textContent = 'Leave group';
+    l.onclick = async () => { if (!confirm('Leave "' + g.name + '"?')) return; try { await api({action: 'leaveGroup', code: g.code}); await load(); } catch (e) { toast(e.message); } };
+    d.append(t, c, m, l); box.append(d);
+  });
+}
+$('groupsBtn').onclick = () => { renderGroups(); $('gdlg').showModal(); };
+$('gclose').onclick = () => $('gdlg').close();
+$('gcreate').onsubmit = async e => {
+  e.preventDefault(); const name = $('g-new').value.trim(); if (!name) return;
+  try { const j = await api({action: 'createGroup', name}); $('g-new').value = ''; await load(); toast('Group created. Invite code: ' + j.code); } catch (err) { toast(err.message); }
+};
+$('gjoin').onsubmit = async e => {
+  e.preventDefault(); const code = $('g-code').value.trim(); if (!code) return;
+  try { const j = await api({action: 'joinGroup', code}); $('g-code').value = ''; await load(); toast('Joined ' + j.name); } catch (err) { toast(err.message); }
+};
+
+load();
+</script>
+</body>
+</html>

@@ -23,6 +23,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPSIUTTEeQdgaAHIvFt
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--bgimg)}
 main{background:var(--panel);padding:var(--pad);border-radius:16px}
 .top select{margin:0}
+.sync{color:var(--mute);font-size:.85rem}
 .top>span{display:flex;gap:10px;align-items:center}
 .sr{position:absolute;left:-9999px}
 
@@ -83,7 +84,7 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 </head>
 <body>
 <main>
-  <div class="top"><label class="sr" for="theme">Theme</label>
+  <div class="top"><span class="sync" id="sync" hidden>Syncing…</span><label class="sr" for="theme">Theme</label>
     <select id="theme"></select>
     <span id="acct" hidden><span id="who"></span><button class="link" id="groupsBtn">Groups</button><button class="link" id="accountBtn">Account</button><button class="link" id="logout">Log out</button></span></div>
   <h1 id="title">Christmas List</h1>
@@ -196,7 +197,12 @@ const isUrl = v => /^https?:\/\//i.test(v);
 const isMine = () => person.toLowerCase() === me.toLowerCase();
 function toast(t) { const m = $('msg'); m.textContent = t; m.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => m.classList.remove('show'), 3000); }
 
+let busy = 0, loadSeq = 0, lists = {};
 async function api(body) {
+  busy++; $('sync').hidden = false;
+  try { return await rawApi(body); } finally { if (--busy === 0) $('sync').hidden = true; }
+}
+async function rawApi(body) {
   body.token = token;
   const r = await fetch(SCRIPT_URL + '?payload=' + encodeURIComponent(JSON.stringify(body)));
   const j = await r.json();
@@ -245,13 +251,17 @@ $('logout').onclick = async () => { try { await api({action: 'logout'}); } catch
 async function load() {
   if (!SCRIPT_URL) { $('sub').textContent = 'Add your Apps Script URL to SCRIPT_URL in index.html to connect the site.'; return; }
   if (!token) return showAuth();
+  const seq = ++loadSeq;
   try {
-    const j = await api({action: 'list', person});
-    me = j.me; groups = j.groups || []; if (gf && !groups.some(g => g.code === gf)) gf = ''; people = j.people; person = j.person; items = j.items.map(i => ({...i, price: num(i.price)}));
+    const j = await api({action: 'listAll', person});
+    if (seq !== loadSeq) return;              // a newer refresh is already on its way
+    me = j.me; groups = j.groups || []; if (gf && !groups.some(g => g.code === gf)) gf = ''; people = j.people; person = j.person;
+    lists = {}; Object.keys(j.lists).forEach(n => { lists[n] = j.lists[n].map(i => ({...i, price: num(i.price)})); });
+    items = lists[person] || [];
     render();
   } catch (e) { if (!$('auth').open) { $('empty').hidden = false; $('empty').textContent = 'Could not load the sheet: ' + e.message; } }
 }
-function pick(n) { person = n; try { history.replaceState(null, '', '#' + encodeURIComponent(n)); } catch (e) {} load(); }
+function pick(n) { person = n; try { history.replaceState(null, '', '#' + encodeURIComponent(n)); } catch (e) {} items = lists[n] || []; render(); }
 
 /* ---- render ---- */
 function render() {
@@ -275,7 +285,7 @@ function render() {
   shown.forEach(i => {
     const li = document.createElement('li'); li.className = (mine ? 'mine ' : '') + (i.bought ? 'done' : '');
     if (!mine) {
-      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'chk'; cb.checked = i.bought; cb.disabled = !!i.by;
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'chk'; cb.checked = i.bought; cb.disabled = !!i.by || !i.row;
       cb.setAttribute('aria-label', 'Bought: ' + i.name); cb.onchange = () => toggle(i, cb.checked); li.append(cb);
     }
     const mid = document.createElement('div');
@@ -287,7 +297,7 @@ function render() {
     if (i.by) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'Surprise gift from ' + (i.by.toLowerCase() === me.toLowerCase() ? 'you' : i.by); mid.append(t); }
     const right = document.createElement('div'); right.style.textAlign = 'right';
     const p = document.createElement('div'); p.className = 'price'; p.textContent = i.price ? money(i.price) : ''; right.append(p);
-    if (mine || (i.by && i.by.toLowerCase() === me.toLowerCase())) { const eb = document.createElement('button'); eb.className = 'edit'; eb.textContent = 'Edit'; eb.onclick = () => openDlg(i); right.append(eb); }
+    if (i.row && (mine || (i.by && i.by.toLowerCase() === me.toLowerCase()))) { const eb = document.createElement('button'); eb.className = 'edit'; eb.textContent = 'Edit'; eb.onclick = () => openDlg(i); right.append(eb); }
     li.append(mid, right); $('list').append(li);
   });
   $('empty').hidden = !me || (shown.length > 0 && groups.length > 0); $('empty').textContent = groups.length ? 'No gifts to show yet.' : 'Create a group or join one with an invite code (Groups, top right) to see other people\u2019s lists.';
@@ -318,19 +328,23 @@ document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
   filter = b.dataset.f; document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); render();
 });
 
-$('form').onsubmit = async e => {
+$('form').onsubmit = e => {
   e.preventDefault();
+  const mine = isMine();
   const d = {action: 'save', person, row: editing ? editing.row : null, was: editing ? editing.name : '', name: $('f-name').value.trim(), price: $('f-price').value, link: fixLink($('f-link').value), notes: $('f-notes').value.trim()};
   if (!d.name) return;
-  $('save').disabled = true;
-  try { await api(d); $('dlg').close(); toast('Gift saved'); await load(); } catch (err) { toast(err.message); }
-  $('save').disabled = false;
+  const target = editing || {row: 0, bought: !mine, by: mine ? '' : me};   // shown straight away, confirmed by the sheet
+  Object.assign(target, {name: d.name, price: num(d.price), link: d.link, notes: d.notes});
+  if (!editing) items.push(target);
+  $('dlg').close(); render();
+  api(d).then(() => { toast('Gift saved'); load(); }).catch(err => { toast(err.message); load(); });
 };
-$('del').onclick = async () => {
+$('del').onclick = () => {
   if (!editing || !confirm('Delete "' + editing.name + '"?')) return;
-  try { await api({action: 'delete', person, row: editing.row, was: editing.name}); $('dlg').close(); toast('Gift deleted'); await load(); } catch (err) { toast(err.message); }
+  const e = editing, k = items.indexOf(e); if (k > -1) items.splice(k, 1);
+  $('dlg').close(); render();
+  api({action: 'delete', person, row: e.row, was: e.name}).then(() => { toast('Gift deleted'); load(); }).catch(err => { toast(err.message); load(); });
 };
-
 $('gsel').onchange = () => { gf = $('gsel').value; render(); };
 function renderGroups() {
   const box = $('glist'); box.innerHTML = '';
@@ -380,6 +394,8 @@ $('pform').onsubmit = async e => {
   catch (err) { toast(err.message); }
 };
 
+document.addEventListener('visibilitychange', () => { if (!document.hidden && token && me) load(); });
+setTimeout(() => THEMES.forEach(t => fetch('themes/' + t.id + '.css').catch(() => {})), 2000);   // warm the cache so switching themes is instant
 load();
 </script>
 </body>

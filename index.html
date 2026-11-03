@@ -93,7 +93,7 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 <main>
   <div class="top"><label class="sr" for="theme">Theme</label>
     <select id="theme"><option value="legacy">Christmas Legacy</option><option value="christmas">Christmas</option><option value="birthday">Birthday</option><option value="ocean">Ocean</option><option value="sunset">Sunset</option><option value="rose">Rose</option><option value="midnight">Midnight</option></select>
-    <span id="acct" hidden><span id="who"></span><button class="link" id="groupsBtn">Groups</button><button class="link" id="logout">Log out</button></span></div>
+    <span id="acct" hidden><span id="who"></span><button class="link" id="groupsBtn">Groups</button><button class="link" id="accountBtn">Account</button><button class="link" id="logout">Log out</button></span></div>
   <h1 id="title">Christmas List</h1>
   <p class="sub" id="sub"></p>
   <select id="gsel" hidden aria-label="Show people from group"></select>
@@ -116,10 +116,15 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
   <form id="aform">
     <h2 id="atitle">Log in</h2>
     <label for="a-name">Name</label><input id="a-name" autocomplete="username" required>
-    <label for="a-pw">Password</label><input id="a-pw" type="password" autocomplete="current-password" required>
+    <div id="a-pw-box"><label for="a-pw">Password</label><input id="a-pw" type="password" autocomplete="current-password" required></div>
     <div id="a-code-box" hidden><label for="a-code">Family code</label><input id="a-code"></div>
+    <div id="a-reset-box" hidden>
+      <p class="note" style="color:var(--ink)">Your question: <b id="a-q"></b></p>
+      <label for="a-ans">Your answer</label><input id="a-ans" autocomplete="off">
+      <label for="a-new">New password</label><input id="a-new" type="password" autocomplete="new-password">
+    </div>
     <p class="err" id="a-err" role="alert"></p>
-    <div class="row"><button type="button" class="link" id="a-switch">Create an account</button><button class="btn primary" id="a-go">Log in</button></div>
+    <div class="row"><span style="margin-right:auto;display:flex;gap:12px;flex-wrap:wrap"><button type="button" class="link" id="a-switch">Create an account</button><button type="button" class="link" id="a-forgot">Forgot password?</button></span><button class="btn primary" id="a-go">Log in</button></div>
   </form>
 </dialog>
 
@@ -137,6 +142,25 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
       <button class="btn primary" id="save">Save gift</button>
     </div>
   </form>
+</dialog>
+<dialog id="adlg">
+  <h2>Account</h2>
+  <p class="note" id="e-now"></p>
+  <form id="eform">
+    <label for="e-q">Recovery question</label><input id="e-q" maxlength="120" placeholder="A question only you know the answer to">
+    <label for="e-a">Answer</label><input id="e-a" autocomplete="off">
+    <label for="e-pw">Current password</label><input id="e-pw" type="password" autocomplete="current-password">
+    <div class="row"><button class="btn">Save question</button></div>
+    <p class="note">If you forget your password, answering this lets you pick a new one. Pick something others can’t guess. The answer ignores capital letters. Leave both boxes empty and save to remove it.</p>
+  </form>
+  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+  <form id="pform">
+    <label for="p-cur">Current password</label><input id="p-cur" type="password" autocomplete="current-password" required>
+    <label for="p-new">New password</label><input id="p-new" type="password" autocomplete="new-password" required>
+    <label for="p-new2">New password again</label><input id="p-new2" type="password" autocomplete="new-password" required>
+    <div class="row"><button class="btn">Change password</button></div>
+  </form>
+  <div class="row"><button type="button" class="btn" id="aclose">Close</button></div>
 </dialog>
 <dialog id="gdlg">
   <h2>Groups</h2>
@@ -183,16 +207,30 @@ function setToken(t) { token = t; try { t ? localStorage.setItem('giftToken', t)
 /* ---- sign in ---- */
 function showAuth() { $('acct').hidden = true; if (!$('auth').open) $('auth').showModal(); $('a-name').focus(); }
 $('auth').addEventListener('cancel', e => e.preventDefault());
-$('a-switch').onclick = () => {
-  signup = !signup; $('atitle').textContent = signup ? 'Create an account' : 'Log in';
-  $('a-go').textContent = signup ? 'Create account' : 'Log in'; $('a-switch').textContent = signup ? 'I already have an account' : 'Create an account';
-  $('a-code-box').hidden = !signup; $('a-pw').autocomplete = signup ? 'new-password' : 'current-password'; $('a-err').textContent = '';
-};
+let mode = 'login';
+function setMode(m, msg) {
+  mode = m; $('a-err').textContent = msg || '';
+  $('atitle').textContent = {login: 'Log in', signup: 'Create an account', forgot: 'Reset your password', reset: 'Answer your question'}[m];
+  $('a-go').textContent = {login: 'Log in', signup: 'Create account', forgot: 'Continue', reset: 'Change password'}[m];
+  $('a-pw-box').hidden = m === 'forgot' || m === 'reset'; $('a-pw').required = !$('a-pw-box').hidden;
+  $('a-code-box').hidden = m !== 'signup'; $('a-reset-box').hidden = m !== 'reset';
+  $('a-ans').required = $('a-new').required = m === 'reset';
+  $('a-pw').autocomplete = m === 'signup' ? 'new-password' : 'current-password';
+  $('a-switch').textContent = m === 'login' ? 'Create an account' : m === 'signup' ? 'I already have an account' : 'Back to log in';
+  $('a-forgot').hidden = m !== 'login';
+}
+$('a-switch').onclick = () => setMode(mode === 'login' ? 'signup' : 'login');
+$('a-forgot').onclick = () => setMode('forgot');
 $('aform').onsubmit = async e => {
   e.preventDefault(); $('a-err').textContent = ''; $('a-go').disabled = true;
+  const name = $('a-name').value.trim();
   try {
-    const j = await api({action: signup ? 'signup' : 'login', name: $('a-name').value.trim(), password: $('a-pw').value, code: $('a-code').value.trim()});
-    setToken(j.token); me = j.name; person = me; $('a-pw').value = ''; $('auth').close(); await load();
+    if (mode === 'forgot') { const q = await api({action: 'getQuestion', name}); $('a-q').textContent = q.question; setMode('reset'); }
+    else if (mode === 'reset') { await api({action: 'resetPassword', name, answer: $('a-ans').value, newPassword: $('a-new').value}); $('a-ans').value = $('a-new').value = ''; setMode('login', 'Password changed. You can log in now.'); }
+    else {
+      const j = await api({action: mode, name, password: $('a-pw').value, code: $('a-code').value.trim()});
+      setToken(j.token); me = j.name; person = me; $('a-pw').value = ''; $('auth').close(); await load();
+    }
   } catch (err) { $('a-err').textContent = err.message; }
   $('a-go').disabled = false;
 };
@@ -311,6 +349,21 @@ $('gcreate').onsubmit = async e => {
 $('gjoin').onsubmit = async e => {
   e.preventDefault(); const code = $('g-code').value.trim(); if (!code) return;
   try { const j = await api({action: 'joinGroup', code}); $('g-code').value = ''; await load(); toast('Joined ' + j.name); } catch (err) { toast(err.message); }
+};
+
+function showEmail(j) { $('e-now').textContent = j.question ? 'Recovery question: ' + j.question : 'No recovery question yet. Add one so you can reset a forgotten password.'; }
+$('accountBtn').onclick = async () => { try { showEmail(await api({action: 'account'})); $('adlg').showModal(); } catch (e) { toast(e.message); } };
+$('aclose').onclick = () => $('adlg').close();
+$('eform').onsubmit = async e => {
+  e.preventDefault();
+  try { await api({action: 'setQuestion', question: $('e-q').value.trim(), answer: $('e-a').value, password: $('e-pw').value}); $('e-pw').value = $('e-q').value = $('e-a').value = ''; showEmail(await api({action: 'account'})); toast('Recovery question saved'); }
+  catch (err) { toast(err.message); }
+};
+$('pform').onsubmit = async e => {
+  e.preventDefault();
+  if ($('p-new').value !== $('p-new2').value) return toast('The new passwords do not match');
+  try { await api({action: 'changePassword', password: $('p-cur').value, newPassword: $('p-new').value}); $('p-cur').value = $('p-new').value = $('p-new2').value = ''; toast('Password changed. Other devices were signed out.'); }
+  catch (err) { toast(err.message); }
 };
 
 load();

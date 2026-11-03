@@ -1,0 +1,14 @@
+/* Ocean: cool blues with a coral accent.
+   Edit the colors below. See themes/README.md for what each variable does. */
+html[data-theme=ocean] {
+  --bg: #e6f1f7;
+  --card: #fff;
+  --ink: #12293a;
+  --mute: #566b7a;
+  --line: #cddbe5;
+  --pine: #0b5f8a;
+  --berry: #c8431f;
+  --on-pine: #fff;
+  --done: #d9e8f1;
+  --bgimg: linear-gradient(180deg,#d8eaf6,#eef6fb);
+}

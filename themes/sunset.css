@@ -1,0 +1,14 @@
+/* Sunset: warm orange and pink.
+   Edit the colors below. See themes/README.md for what each variable does. */
+html[data-theme=sunset] {
+  --bg: #fff1e6;
+  --card: #fff;
+  --ink: #3a2218;
+  --mute: #7a5f52;
+  --line: #f0d8c8;
+  --pine: #c2410c;
+  --berry: #be185d;
+  --on-pine: #fff;
+  --done: #fbe6d6;
+  --bgimg: linear-gradient(160deg,#ffe8d6,#ffd9e3);
+}

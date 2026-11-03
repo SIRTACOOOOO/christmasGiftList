@@ -1,0 +1,14 @@
+/* Rose: deep rose with a teal accent.
+   Edit the colors below. See themes/README.md for what each variable does. */
+html[data-theme=rose] {
+  --bg: #fbeef1;
+  --card: #fff;
+  --ink: #3b2229;
+  --mute: #7d5c66;
+  --line: #efd3da;
+  --pine: #8b2347;
+  --berry: #0e7c86;
+  --on-pine: #fff;
+  --done: #f6dde3;
+  --bgimg: linear-gradient(180deg,#fbe6eb,#fdf3f5);
+}

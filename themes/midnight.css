@@ -1,0 +1,15 @@
+/* Midnight: dark navy with light blue highlights.
+   Edit the colors below. See themes/README.md for what each variable does. */
+html[data-theme=midnight] {
+  --bg: #0e1420;
+  --card: #182030;
+  --ink: #e7ecf5;
+  --mute: #9aa7bd;
+  --line: #2a3550;
+  --pine: #8ab4ff;
+  --berry: #ff7a90;
+  --on-pine: #0e1420;
+  --on-berry: #1a0b10;
+  --done: #121a2a;
+  --bgimg: linear-gradient(180deg,#0b101a,#111a2b);
+}

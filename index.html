@@ -4,30 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>
-// ================= SETTINGS (edit these) =================
+// ================= SETTINGS (edit this) =================
 // Your Apps Script web app URL. It starts with https://script.google.com and ends in /exec
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPSIUTTEeQdgaAHIvFtEcBVyXAJL4HyhKsZ6gW5MTULy7Lv-K5Ktaex3OkgqdTwmJ_mg/exec';
-
-// Heading shown for each theme. Change the words if you like.
-const THEMES = {legacy: 'Christmas List', christmas: 'Christmas List', birthday: 'Birthday List', ocean: 'Gift List', sunset: 'Gift List', rose: 'Gift List', midnight: 'Gift List'};
-// =========================================================
+const SCRIPT_URL = '';
+// Themes live in the "themes" folder. See themes/README.md.
+// ========================================================
 </script>
+<script src="themes/themes.js"></script>
+<link id="themecss" rel="stylesheet">
 <title>Christmas List</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Fredoka:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--on-berry:#fff;--display:Fraunces,Georgia,serif;--panel:transparent;--pad:0px;--gap:0px;--bgimg:none;--bg:#eef1ec;--card:#fff;--ink:#1c2b27;--mute:#5d6b66;--line:#d5dcd6;--pine:#1f4a3d;--berry:#a3293f;--on-pine:#fff;--done:#e3e9e4}
 @media (prefers-color-scheme:dark){:root{--bg:#121a17;--card:#1a2420;--ink:#e8eee9;--mute:#9aa9a2;--line:#2c3a34;--pine:#7fc4a8;--berry:#e8798c;--on-pine:#10201a;--on-berry:#2a0f16;--done:#16201c}}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html[data-theme=christmas]{--bg:#0d2a24;--panel:rgba(251,253,251,.95);--pad:20px;--gap:48px;--card:#fff;--ink:#1c2b27;--mute:#5d6b66;--line:#d5dcd6;--pine:#1f4a3d;--berry:#a3293f;--on-pine:#fff;--done:#e4eee7;
---bgimg:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27120%27%20height%3D%2770%27%3E%3Cpath%20d%3D%27M0%208%20Q30%2038%2060%208%20Q90%2038%20120%208%27%20stroke%3D%27%231b1b1b%27%20stroke-width%3D%272%27%20fill%3D%27none%27/%3E%3Cellipse%20cx%3D%2730%27%20cy%3D%2730%27%20rx%3D%275%27%20ry%3D%277%27%20fill%3D%27%23e63946%27/%3E%3Cellipse%20cx%3D%2760%27%20cy%3D%2714%27%20rx%3D%275%27%20ry%3D%277%27%20fill%3D%27%2352b788%27/%3E%3Cellipse%20cx%3D%2790%27%20cy%3D%2730%27%20rx%3D%275%27%20ry%3D%277%27%20fill%3D%27%23ffd166%27/%3E%3Cellipse%20cx%3D%270%27%20cy%3D%2714%27%20rx%3D%275%27%20ry%3D%277%27%20fill%3D%27%234cc9f0%27/%3E%3Cellipse%20cx%3D%27120%27%20cy%3D%2714%27%20rx%3D%275%27%20ry%3D%277%27%20fill%3D%27%234cc9f0%27/%3E%3C/svg%3E") repeat-x top/120px 70px,url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27170%27%20height%3D%27120%27%3E%3Cpolygon%20points%3D%2745%2C8%2072%2C55%2018%2C55%27%20fill%3D%27%23123d2e%27/%3E%3Cpolygon%20points%3D%2745%2C32%2082%2C92%208%2C92%27%20fill%3D%27%23123d2e%27/%3E%3Cpolygon%20points%3D%2745%2C58%2092%2C120%20-2%2C120%27%20fill%3D%27%23123d2e%27/%3E%3Cpolygon%20points%3D%27130%2C52%20150%2C86%20110%2C86%27%20fill%3D%27%230b2a1f%27/%3E%3Cpolygon%20points%3D%27130%2C68%20158%2C120%20102%2C120%27%20fill%3D%27%230b2a1f%27/%3E%3C/svg%3E") repeat-x bottom/170px 120px,url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27300%27%20height%3D%27300%27%3E%3Ccircle%20cx%3D%27170%27%20cy%3D%2782%27%20r%3D%272.3%27%20fill%3D%27white%27%20fill-opacity%3D%270.47%27/%3E%3Ccircle%20cx%3D%27279%27%20cy%3D%2753%27%20r%3D%272.3%27%20fill%3D%27white%27%20fill-opacity%3D%270.48%27/%3E%3Ccircle%20cx%3D%27264%27%20cy%3D%27114%27%20r%3D%271.5%27%20fill%3D%27white%27%20fill-opacity%3D%270.65%27/%3E%3Ccircle%20cx%3D%2740%27%20cy%3D%27128%27%20r%3D%271.6%27%20fill%3D%27white%27%20fill-opacity%3D%270.64%27/%3E%3Ccircle%20cx%3D%27294%27%20cy%3D%2768%27%20r%3D%273.7%27%20fill%3D%27white%27%20fill-opacity%3D%270.73%27/%3E%3Ccircle%20cx%3D%2736%27%20cy%3D%27208%27%20r%3D%271.5%27%20fill%3D%27white%27%20fill-opacity%3D%270.55%27/%3E%3Ccircle%20cx%3D%27290%27%20cy%3D%2773%27%20r%3D%272.1%27%20fill%3D%27white%27%20fill-opacity%3D%270.51%27/%3E%3Ccircle%20cx%3D%2765%27%20cy%3D%27162%27%20r%3D%272.7%27%20fill%3D%27white%27%20fill-opacity%3D%270.76%27/%3E%3Ccircle%20cx%3D%2757%27%20cy%3D%27101%27%20r%3D%272.3%27%20fill%3D%27white%27%20fill-opacity%3D%270.70%27/%3E%3Ccircle%20cx%3D%2737%27%20cy%3D%27293%27%20r%3D%271.5%27%20fill%3D%27white%27%20fill-opacity%3D%270.54%27/%3E%3Ccircle%20cx%3D%27277%27%20cy%3D%27223%27%20r%3D%273.3%27%20fill%3D%27white%27%20fill-opacity%3D%270.66%27/%3E%3Ccircle%20cx%3D%27237%27%20cy%3D%27190%27%20r%3D%272.1%27%20fill%3D%27white%27%20fill-opacity%3D%270.81%27/%3E%3Ccircle%20cx%3D%27129%27%20cy%3D%2746%27%20r%3D%272.8%27%20fill%3D%27white%27%20fill-opacity%3D%270.69%27/%3E%3Ccircle%20cx%3D%27180%27%20cy%3D%27234%27%20r%3D%272.1%27%20fill%3D%27white%27%20fill-opacity%3D%270.89%27/%3E%3Ccircle%20cx%3D%2765%27%20cy%3D%27267%27%20r%3D%272.4%27%20fill%3D%27white%27%20fill-opacity%3D%270.79%27/%3E%3Ccircle%20cx%3D%2782%27%20cy%3D%27255%27%20r%3D%272.4%27%20fill%3D%27white%27%20fill-opacity%3D%270.88%27/%3E%3Ccircle%20cx%3D%2744%27%20cy%3D%27290%27%20r%3D%272.8%27%20fill%3D%27white%27%20fill-opacity%3D%270.84%27/%3E%3Ccircle%20cx%3D%27165%27%20cy%3D%27179%27%20r%3D%273.1%27%20fill%3D%27white%27%20fill-opacity%3D%270.72%27/%3E%3Ccircle%20cx%3D%27238%27%20cy%3D%2740%27%20r%3D%273.4%27%20fill%3D%27white%27%20fill-opacity%3D%270.88%27/%3E%3Ccircle%20cx%3D%27247%27%20cy%3D%2738%27%20r%3D%271.5%27%20fill%3D%27white%27%20fill-opacity%3D%270.77%27/%3E%3Ccircle%20cx%3D%27233%27%20cy%3D%27150%27%20r%3D%273.1%27%20fill%3D%27white%27%20fill-opacity%3D%270.85%27/%3E%3Ccircle%20cx%3D%27182%27%20cy%3D%2716%27%20r%3D%273.7%27%20fill%3D%27white%27%20fill-opacity%3D%270.61%27/%3E%3Ccircle%20cx%3D%2764%27%20cy%3D%27257%27%20r%3D%271.5%27%20fill%3D%27white%27%20fill-opacity%3D%270.80%27/%3E%3Ccircle%20cx%3D%2771%27%20cy%3D%27131%27%20r%3D%272.4%27%20fill%3D%27white%27%20fill-opacity%3D%270.86%27/%3E%3Ccircle%20cx%3D%27259%27%20cy%3D%2746%27%20r%3D%271.8%27%20fill%3D%27white%27%20fill-opacity%3D%270.63%27/%3E%3Ccircle%20cx%3D%27147%27%20cy%3D%2775%27%20r%3D%273.4%27%20fill%3D%27white%27%20fill-opacity%3D%270.84%27/%3E%3Ccircle%20cx%3D%27147%27%20cy%3D%27217%27%20r%3D%273.8%27%20fill%3D%27white%27%20fill-opacity%3D%270.76%27/%3E%3Ccircle%20cx%3D%27199%27%20cy%3D%27123%27%20r%3D%271.8%27%20fill%3D%27white%27%20fill-opacity%3D%270.53%27/%3E%3Ccircle%20cx%3D%27123%27%20cy%3D%27124%27%20r%3D%271.4%27%20fill%3D%27white%27%20fill-opacity%3D%270.82%27/%3E%3Ccircle%20cx%3D%2798%27%20cy%3D%27139%27%20r%3D%272.1%27%20fill%3D%27white%27%20fill-opacity%3D%270.52%27/%3E%3Ccircle%20cx%3D%27278%27%20cy%3D%27194%27%20r%3D%272.9%27%20fill%3D%27white%27%20fill-opacity%3D%270.59%27/%3E%3Ccircle%20cx%3D%2769%27%20cy%3D%27268%27%20r%3D%273.7%27%20fill%3D%27white%27%20fill-opacity%3D%270.74%27/%3E%3Ccircle%20cx%3D%2732%27%20cy%3D%27238%27%20r%3D%273.6%27%20fill%3D%27white%27%20fill-opacity%3D%270.80%27/%3E%3Ccircle%20cx%3D%27291%27%20cy%3D%27205%27%20r%3D%272.4%27%20fill%3D%27white%27%20fill-opacity%3D%270.63%27/%3E%3C/svg%3E") 0 0/300px 300px,linear-gradient(180deg,#0b2538,#0f3a2c 70%,#0d2a24)}
-html[data-theme=birthday]{--bg:#ffe3ec;--panel:rgba(255,255,255,.94);--pad:20px;--gap:0px;--card:#fff;--ink:#2a2236;--mute:#6b5f7a;--line:#eadff5;--pine:#5a3d9a;--berry:#d6336c;--on-pine:#fff;--done:#f4eefc;--display:Fredoka,"Trebuchet MS",sans-serif;
---bgimg:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27260%27%20height%3D%27190%27%3E%3Cellipse%20cx%3D%2740%27%20cy%3D%2745%27%20rx%3D%2724%27%20ry%3D%2730%27%20fill%3D%27%23ff6b9d%27/%3E%3Cpath%20d%3D%27M36%2075%20L44%2075%20L40%2082%20Z%27%20fill%3D%27%23ff6b9d%27/%3E%3Cpath%20d%3D%27M40%2082%20q-7%2014%200%2028%20t0%2028%27%20stroke%3D%27%238a8a99%27%20fill%3D%27none%27%20stroke-width%3D%271.5%27/%3E%3Cellipse%20cx%3D%27120%27%20cy%3D%2780%27%20rx%3D%2724%27%20ry%3D%2730%27%20fill%3D%27%23ffd166%27/%3E%3Cpath%20d%3D%27M116%20110%20L124%20110%20L120%20117%20Z%27%20fill%3D%27%23ffd166%27/%3E%3Cpath%20d%3D%27M120%20117%20q-7%2014%200%2028%20t0%2028%27%20stroke%3D%27%238a8a99%27%20fill%3D%27none%27%20stroke-width%3D%271.5%27/%3E%3Cellipse%20cx%3D%27205%27%20cy%3D%2750%27%20rx%3D%2724%27%20ry%3D%2730%27%20fill%3D%27%234cc9f0%27/%3E%3Cpath%20d%3D%27M201%2080%20L209%2080%20L205%2087%20Z%27%20fill%3D%27%234cc9f0%27/%3E%3Cpath%20d%3D%27M205%2087%20q-7%2014%200%2028%20t0%2028%27%20stroke%3D%27%238a8a99%27%20fill%3D%27none%27%20stroke-width%3D%271.5%27/%3E%3C/svg%3E") repeat-x bottom/260px 190px,url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27240%27%20height%3D%27240%27%3E%3Crect%20x%3D%27168%27%20y%3D%27108%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%239b5de5%27%20transform%3D%27rotate%2817%20168%20108%29%27/%3E%3Crect%20x%3D%27118%27%20y%3D%2747%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ffd166%27%20transform%3D%27rotate%28153%20118%2047%29%27/%3E%3Ccircle%20cx%3D%2732%27%20cy%3D%276%27%20r%3D%273.5%27%20fill%3D%27%23ff6b9d%27/%3E%3Ccircle%20cx%3D%2731%27%20cy%3D%2799%27%20r%3D%273.5%27%20fill%3D%27%2352b788%27/%3E%3Ccircle%20cx%3D%27229%27%20cy%3D%2759%27%20r%3D%273.5%27%20fill%3D%27%23ff6b9d%27/%3E%3Ccircle%20cx%3D%27168%27%20cy%3D%2770%27%20r%3D%273.5%27%20fill%3D%27%23ffd166%27/%3E%3Crect%20x%3D%2799%27%20y%3D%27127%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%2352b788%27%20transform%3D%27rotate%28124%2099%20127%29%27/%3E%3Crect%20x%3D%27128%27%20y%3D%27129%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%239b5de5%27%20transform%3D%27rotate%2836%20128%20129%29%27/%3E%3Ccircle%20cx%3D%27197%27%20cy%3D%2793%27%20r%3D%273.5%27%20fill%3D%27%23ff6b9d%27/%3E%3Crect%20x%3D%27218%27%20y%3D%27183%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%239b5de5%27%20transform%3D%27rotate%285%20218%20183%29%27/%3E%3Crect%20x%3D%27141%27%20y%3D%2798%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ffd166%27%20transform%3D%27rotate%28139%20141%2098%29%27/%3E%3Crect%20x%3D%27200%27%20y%3D%27141%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ff6b9d%27%20transform%3D%27rotate%28164%20200%20141%29%27/%3E%3Crect%20x%3D%27184%27%20y%3D%27222%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ff6b9d%27%20transform%3D%27rotate%2893%20184%20222%29%27/%3E%3Crect%20x%3D%2797%27%20y%3D%27203%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ffd166%27%20transform%3D%27rotate%28138%2097%20203%29%27/%3E%3Crect%20x%3D%2790%27%20y%3D%27168%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%2352b788%27%20transform%3D%27rotate%2849%2090%20168%29%27/%3E%3Ccircle%20cx%3D%27215%27%20cy%3D%27108%27%20r%3D%273.5%27%20fill%3D%27%23ffd166%27/%3E%3Crect%20x%3D%2757%27%20y%3D%27138%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ffd166%27%20transform%3D%27rotate%287%2057%20138%29%27/%3E%3Crect%20x%3D%27208%27%20y%3D%2777%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ff6b9d%27%20transform%3D%27rotate%2849%20208%2077%29%27/%3E%3Crect%20x%3D%27160%27%20y%3D%2794%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ff9f1c%27%20transform%3D%27rotate%2889%20160%2094%29%27/%3E%3Crect%20x%3D%2726%27%20y%3D%2762%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%234cc9f0%27%20transform%3D%27rotate%28120%2026%2062%29%27/%3E%3Crect%20x%3D%2792%27%20y%3D%2758%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ffd166%27%20transform%3D%27rotate%28156%2092%2058%29%27/%3E%3Crect%20x%3D%27128%27%20y%3D%27173%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ff6b9d%27%20transform%3D%27rotate%28164%20128%20173%29%27/%3E%3Crect%20x%3D%27219%27%20y%3D%27175%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ff6b9d%27%20transform%3D%27rotate%2899%20219%20175%29%27/%3E%3Crect%20x%3D%27198%27%20y%3D%2757%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%23ff9f1c%27%20transform%3D%27rotate%2845%20198%2057%29%27/%3E%3Crect%20x%3D%27208%27%20y%3D%27168%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%239b5de5%27%20transform%3D%27rotate%28101%20208%20168%29%27/%3E%3Ccircle%20cx%3D%27108%27%20cy%3D%27196%27%20r%3D%273.5%27%20fill%3D%27%239b5de5%27/%3E%3Ccircle%20cx%3D%2746%27%20cy%3D%2749%27%20r%3D%273.5%27%20fill%3D%27%23ff9f1c%27/%3E%3Ccircle%20cx%3D%2744%27%20cy%3D%27157%27%20r%3D%273.5%27%20fill%3D%27%23ff6b9d%27/%3E%3Ccircle%20cx%3D%2743%27%20cy%3D%27162%27%20r%3D%273.5%27%20fill%3D%27%23ff9f1c%27/%3E%3Crect%20x%3D%27174%27%20y%3D%2795%27%20width%3D%276%27%20height%3D%2713%27%20rx%3D%271%27%20fill%3D%27%239b5de5%27%20transform%3D%27rotate%28140%20174%2095%29%27/%3E%3C/svg%3E") 0 0/240px 240px,linear-gradient(160deg,#ffe3ec,#ffd6a5 45%,#d7c6ff)}
-html[data-theme=ocean]{--bg:#e6f1f7;--card:#fff;--ink:#12293a;--mute:#566b7a;--line:#cddbe5;--pine:#0b5f8a;--berry:#c8431f;--on-pine:#fff;--done:#d9e8f1;--bgimg:linear-gradient(180deg,#d8eaf6,#eef6fb)}
-html[data-theme=sunset]{--bg:#fff1e6;--card:#fff;--ink:#3a2218;--mute:#7a5f52;--line:#f0d8c8;--pine:#c2410c;--berry:#be185d;--on-pine:#fff;--done:#fbe6d6;--bgimg:linear-gradient(160deg,#ffe8d6,#ffd9e3)}
-html[data-theme=rose]{--bg:#fbeef1;--card:#fff;--ink:#3b2229;--mute:#7d5c66;--line:#efd3da;--pine:#8b2347;--berry:#0e7c86;--on-pine:#fff;--done:#f6dde3;--bgimg:linear-gradient(180deg,#fbe6eb,#fdf3f5)}
-html[data-theme=midnight]{--bg:#0e1420;--card:#182030;--ink:#e7ecf5;--mute:#9aa7bd;--line:#2a3550;--pine:#8ab4ff;--berry:#ff7a90;--on-pine:#0e1420;--on-berry:#1a0b10;--done:#121a2a;--bgimg:linear-gradient(180deg,#0b101a,#111a2b)}
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--bgimg)}
 main{background:var(--panel);padding:var(--pad);border-radius:16px}
 .top select{margin:0}
@@ -92,7 +84,7 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 <body>
 <main>
   <div class="top"><label class="sr" for="theme">Theme</label>
-    <select id="theme"><option value="legacy">Christmas Legacy</option><option value="christmas">Christmas</option><option value="birthday">Birthday</option><option value="ocean">Ocean</option><option value="sunset">Sunset</option><option value="rose">Rose</option><option value="midnight">Midnight</option></select>
+    <select id="theme"></select>
     <span id="acct" hidden><span id="who"></span><button class="link" id="groupsBtn">Groups</button><button class="link" id="accountBtn">Account</button><button class="link" id="logout">Log out</button></span></div>
   <h1 id="title">Christmas List</h1>
   <p class="sub" id="sub"></p>
@@ -154,6 +146,13 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
     <p class="note">If you forget your password, answering this lets you pick a new one. Pick something others can’t guess. The answer ignores capital letters. Leave both boxes empty and save to remove it.</p>
   </form>
   <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+  <form id="nform">
+    <label for="n-new">Change username</label><input id="n-new" maxlength="30" autocomplete="off" required>
+    <label for="n-pw">Current password</label><input id="n-pw" type="password" autocomplete="current-password" required>
+    <div class="row"><button class="btn">Change username</button></div>
+    <p class="note">Your list, groups and surprise gifts all move with you. You log in with the new name from now on.</p>
+  </form>
+  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
   <form id="pform">
     <label for="p-cur">Current password</label><input id="p-cur" type="password" autocomplete="current-password" required>
     <label for="p-new">New password</label><input id="p-new" type="password" autocomplete="new-password" required>
@@ -177,10 +176,16 @@ const $ = id => document.getElementById(id);
 let token = '', me = '', groups = [], gf = '', people = [], person = '', items = [], filter = 'all', editing = null, signup = false;
 try { token = localStorage.getItem('giftToken') || ''; } catch (e) {}
 try { person = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
-let theme = 'legacy';
-try { theme = localStorage.getItem('giftTheme') || 'legacy'; } catch (e) {}
-if (!THEMES[theme]) theme = 'legacy';
-function applyTheme() { document.documentElement.dataset.theme = theme; $('theme').value = theme; $('title').textContent = THEMES[theme]; document.title = THEMES[theme] + (person ? ' - ' + person : ''); }
+const themeOf = id => THEMES.find(t => t.id === id) || THEMES[0];
+let theme = THEMES[0].id;
+try { theme = localStorage.getItem('giftTheme') || theme; } catch (e) {}
+theme = themeOf(theme).id;
+THEMES.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.name; $('theme').append(o); });
+function applyTheme() {
+  const t = themeOf(theme);
+  document.documentElement.dataset.theme = t.id; $('themecss').href = 'themes/' + t.id + '.css';
+  $('theme').value = t.id; $('title').textContent = t.title; document.title = t.title + (person ? ' - ' + person : '');
+}
 $('theme').onchange = () => { theme = $('theme').value; try { localStorage.setItem('giftTheme', theme); } catch (e) {} applyTheme(); };
 applyTheme();
 
@@ -260,7 +265,7 @@ function render() {
     const b = document.createElement('button'); b.textContent = n.toLowerCase() === me.toLowerCase() ? 'My list' : n;
     b.setAttribute('aria-pressed', n === person); b.onclick = () => pick(n); box.append(b);
   });
-  document.title = THEMES[theme] + (person ? ' - ' + person : '');
+  document.title = themeOf(theme).title + (person ? ' - ' + person : '');
   $('sub').textContent = !person ? '' : mine ? 'Your list. For the surprise, you can\u2019t see what has been bought.' : 'Tick what you\u2019ve bought for ' + person + '. Use Add surprise gift for anything not on their list; ' + person + ' won\u2019t see it.';
   $('add').textContent = mine ? 'Add gift' : 'Add surprise gift';
   $('seg').hidden = mine; $('l-done').hidden = mine; $('l-left').firstChild.textContent = mine ? 'Total wish list: ' : 'Still to buy: ';
@@ -358,6 +363,15 @@ $('eform').onsubmit = async e => {
   e.preventDefault();
   try { await api({action: 'setQuestion', question: $('e-q').value.trim(), answer: $('e-a').value, password: $('e-pw').value}); $('e-pw').value = $('e-q').value = $('e-a').value = ''; showEmail(await api({action: 'account'})); toast('Recovery question saved'); }
   catch (err) { toast(err.message); }
+};
+$('nform').onsubmit = async e => {
+  e.preventDefault();
+  try {
+    const old = me, j = await api({action: 'renameUser', newName: $('n-new').value.trim(), password: $('n-pw').value});
+    $('n-new').value = $('n-pw').value = '';
+    if (person.toLowerCase() === old.toLowerCase()) { person = j.name; try { history.replaceState(null, '', '#' + encodeURIComponent(j.name)); } catch (e) {} }
+    await load(); showEmail(await api({action: 'account'})); toast('Username changed to ' + j.name);
+  } catch (err) { toast(err.message); }
 };
 $('pform').onsubmit = async e => {
   e.preventDefault();

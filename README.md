@@ -67,4 +67,4 @@ The full walkthrough, with troubleshooting, is in **[SETUP.md](SETUP.md)**.
 
 ## License
 
-Add a `LICENSE` file of your choice (for example MIT) before publishing.
+GPL3

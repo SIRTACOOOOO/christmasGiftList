@@ -1,603 +1,313 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="themes/themes.js"></script>
-<link id="themecss" rel="stylesheet">
-<title>Christmas List</title>
-<link rel="icon" href="icons/favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-:root{--on-berry:#fff;--display:Fraunces,Georgia,serif;--panel:transparent;--pad:0px;--gap:0px;--bgimg:none;--bg:#eef1ec;--card:#fff;--ink:#1c2b27;--mute:#5d6b66;--line:#d5dcd6;--pine:#1f4a3d;--berry:#a3293f;--on-pine:#fff;--done:#e3e9e4}
-@media (prefers-color-scheme:dark){:root{--bg:#121a17;--card:#1a2420;--ink:#e8eee9;--mute:#9aa9a2;--line:#2c3a34;--pine:#7fc4a8;--berry:#e8798c;--on-pine:#10201a;--on-berry:#2a0f16;--done:#16201c}}
-*{box-sizing:border-box}
-[hidden]{display:none!important}
-body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--bgimg)}
-main{background:var(--panel);padding:var(--pad);border-radius:16px}
-.top select{margin:0}
-.sync{color:var(--mute);font-size:.85rem}
-.top>span{display:flex;gap:10px;align-items:center}
-.sr{position:absolute;left:-9999px}
-
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Instrument Sans",system-ui,sans-serif;padding:calc(max(20px,env(safe-area-inset-top)) + var(--gap)) 16px 64px}
-main{max-width:720px;margin:0 auto}
-h1{font:700 2.4rem/1.1 var(--display);margin:16px 0 4px;color:var(--pine)}
-.top{display:flex;justify-content:flex-end;gap:10px;align-items:center;color:var(--mute);font-size:.92rem}
-.sub{color:var(--mute);margin:0 0 18px}
-.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-input,textarea,button{font:inherit;color:inherit}
-input,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
-.bar input{flex:1 1 180px;width:auto}
-.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.seg button{border:0;background:var(--card);padding:10px 14px;cursor:pointer}
-.seg button[aria-pressed=true]{background:var(--pine);color:var(--on-pine)}
-.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:10px 14px;cursor:pointer}
-.btn.primary{background:var(--berry);border-color:var(--berry);color:var(--on-berry);font-weight:600}
-.btn.danger{color:var(--berry)}
-.link{border:0;background:none;color:var(--pine);text-decoration:underline;cursor:pointer;padding:0}
-button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--pine);outline-offset:2px}
-#people{display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;padding-bottom:8px;margin:0 0 10px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
-#people button{flex:0 0 auto;scroll-snap-align:start;white-space:nowrap}
-#psearch{margin:0 0 10px}
-.io{margin:-4px 0 12px;color:var(--mute);font-size:.92rem}
-.members{max-height:120px;overflow:auto}
-.prev{max-height:160px;overflow:auto;font-size:.9rem;color:var(--mute);padding-left:18px}
-#people button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 16px;cursor:pointer}
-#people button[aria-pressed=true]{background:var(--pine);color:var(--on-pine);border-color:var(--pine)}
-select{padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);margin:0 0 12px}
-.grp{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:10px 0}
-.grp b{font:500 1.05rem var(--display)}
-.grp code{background:var(--bg);padding:2px 6px;border-radius:4px;letter-spacing:.08em;font-weight:600}
-.grp p{margin:4px 0}
-.inline{display:flex;gap:8px;margin-top:8px}
-.inline input{flex:1}
-.totals{display:flex;gap:20px;margin:0 0 12px;color:var(--mute);font-size:.95rem}
-.totals b{color:var(--ink)}
-ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
-li{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;padding:14px 4px;border-bottom:1px solid var(--line)}
-li.mine{grid-template-columns:1fr auto}
-li.done{background:var(--done)}
-li.done .name{text-decoration:line-through;color:var(--mute)}
-.chk{width:24px;height:24px;margin-top:2px;accent-color:var(--pine);cursor:pointer}
-.name{font:500 1.1rem/1.3 var(--display)}
-.meta{color:var(--mute);font-size:.92rem}
-.meta a{color:var(--pine)}
-.tag{display:inline-block;font-size:.8rem;font-weight:600;color:var(--berry);border:1px solid var(--berry);border-radius:999px;padding:0 8px;margin-top:4px}
-.price{font-weight:600;white-space:nowrap}
-.edit{border:0;background:none;color:var(--mute);cursor:pointer;padding:0;font-size:.9rem;text-decoration:underline}
-.empty{padding:32px 0;color:var(--mute)}
-#msg{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90%}
-#msg.show{opacity:1}
-dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);width:min(440px,calc(100% - 24px));padding:20px}
-dialog::backdrop{background:rgba(0,0,0,.45)}
-dialog h2{margin:0;font:700 1.3rem var(--display)}
-dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
-.note{color:var(--mute);font-size:.9rem;margin:6px 0 0}
-.err{color:var(--berry);min-height:1.4em;margin:10px 0 0;font-size:.92rem}
-.row{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
-.row .del{margin-right:auto}
-@media (prefers-reduced-motion:reduce){#msg{transition:none}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123c36">
+  <title>Private Development Checklist</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --green: #17483f;
+      --green-2: #236b58;
+      --red: #a73535;
+      --gold: #c69b45;
+      --ink: #202b28;
+      --muted: #697570;
+      --paper: #fffdf8;
+      --line: #e8e4d9;
+      --soft: #f3f1e9;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at top, rgba(198,155,69,.13), transparent 38rem),
+        #f4f3ed;
+      font: 16px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    header {
+      color: #fff;
+      background: linear-gradient(135deg, #123c36, #205b4d);
+      padding: 32px 20px 28px;
+      border-bottom: 4px solid var(--gold);
+    }
+    .wrap { width: min(900px, calc(100% - 32px)); margin: 0 auto; }
+    .eyebrow {
+      color: #e7d4a8; text-transform: uppercase; letter-spacing: .15em;
+      font-size: .75rem; font-weight: 800;
+    }
+    h1 { margin: 6px 0 4px; font-size: clamp(1.8rem, 5vw, 2.6rem); line-height: 1.12; }
+    header p { margin: 8px 0 0; color: #e3ece7; max-width: 650px; }
+    main { padding: 24px 0 48px; }
+    .notice {
+      border: 1px solid #e5d4a8; background: #fff9e9; color: #5c4a24;
+      border-radius: 12px; padding: 12px 14px; font-size: .9rem; margin-bottom: 18px;
+    }
+    .panel, .category {
+      background: var(--paper); border: 1px solid var(--line);
+      border-radius: 16px; box-shadow: 0 5px 20px rgba(28,45,37,.045);
+    }
+    .panel { padding: 18px; margin-bottom: 18px; }
+    .progress-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .progress-top strong { font-size: 1.05rem; }
+    #progressText { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .track { height: 10px; background: #e9e8df; border-radius: 99px; overflow:hidden; margin: 12px 0 15px; }
+    #bar { width:0%; height:100%; background: linear-gradient(90deg, var(--green-2), #73a77b); transition: width .2s; }
+    .toolbar { display:flex; flex-wrap:wrap; gap:9px; align-items:center; }
+    button, select {
+      border:1px solid #d9ddd7; border-radius:10px; padding:9px 12px;
+      background:#fff; color:var(--ink); font:inherit; cursor:pointer;
+    }
+    button.primary { color:#fff; background:var(--green); border-color:var(--green); }
+    button:hover { filter:brightness(.97); }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline:3px solid rgba(35,107,88,.25); outline-offset:2px;
+    }
+    .category { margin: 16px 0; overflow:hidden; }
+    .category-head {
+      padding: 15px 18px; display:flex; justify-content:space-between; align-items:center;
+      gap:12px; background:#fbfaf5; border-bottom:1px solid var(--line);
+    }
+    h2 { font-size:1.08rem; margin:0; color:var(--green); }
+    .count { font-size:.82rem; color:var(--muted); white-space:nowrap; }
+    ul { list-style:none; margin:0; padding:5px 18px 12px; }
+    li { border-bottom:1px solid #efeee8; }
+    li:last-child { border-bottom:0; }
+    label.task {
+      display:flex; align-items:flex-start; gap:12px; padding:11px 0;
+      cursor:pointer;
+    }
+    input[type=checkbox] {
+      width:19px; height:19px; margin:2px 0 0; accent-color:var(--green-2); flex:0 0 auto;
+    }
+    .task-text { flex:1; }
+    .task.done .task-text { color:#89918c; text-decoration:line-through; }
+    .empty { color:var(--muted); padding:18px; text-align:center; }
+    footer { text-align:center; color:var(--muted); font-size:.82rem; padding:0 0 28px; }
+    .small { font-size:.83rem; color:var(--muted); }
+    @media (max-width:560px) {
+      header { padding-top:25px; }
+      .panel { padding:14px; }
+      .toolbar button, .toolbar select { flex:1 1 auto; }
+      .category-head { padding:13px 14px; }
+      ul { padding-left:14px; padding-right:14px; }
+    }
+  </style>
 </head>
 <body>
-<main>
-  <div class="top"><span class="sync" id="sync" hidden>Syncing…</span><label class="sr" for="theme">Theme</label>
-    <select id="theme"></select>
-    <span id="acct" hidden><span id="who"></span><button class="link" id="groupsBtn">Groups</button><button class="link" id="accountBtn">Account</button><button class="link" id="logout">Log out</button></span></div>
-  <h1 id="title">Christmas List</h1>
-  <p class="sub" id="sub"></p>
-  <select id="gsel" hidden aria-label="Show people from group"></select>
-  <input id="psearch" type="search" placeholder="Find a person" aria-label="Find a person" hidden>
-  <div id="people" role="group" aria-label="Lists"></div>
-  <div class="bar">
-    <input id="q" type="search" placeholder="Search gifts" aria-label="Search gifts">
-    <div class="seg" id="seg" role="group" aria-label="Filter">
-      <button data-f="all" aria-pressed="true">All</button>
-      <button data-f="todo" aria-pressed="false">To buy</button>
-      <button data-f="done" aria-pressed="false">Bought</button>
-    </div>
-    <button class="btn primary" id="add">Add gift</button>
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Christmas Gift List · Project planning</div>
+    <h1>Development checklist</h1>
+    <p>A private-to-your-workflow checklist for tracking ideas and features you want to build.</p>
   </div>
-  <p class="io" id="io" hidden><button class="link" id="exp">Export my list (CSV)</button> &middot; <button class="link" id="imp">Import from CSV</button><input type="file" id="impfile" accept=".csv,text/csv,text/plain" hidden></p>
-  <p class="totals"><span id="l-left">Still to buy: <b id="t-left">$0</b></span><span id="l-done">Bought: <b id="t-done">$0</b></span></p>
-  <ul id="list"></ul>
-  <p class="empty" id="empty" hidden></p>
+</header>
+
+<main class="wrap">
+  <div class="notice">
+    <strong>Privacy note:</strong> This page is not linked from the main website, but GitHub Pages makes its files public.
+    Checkmarks are saved only in this browser. Anyone who knows the URL can open the page, and progress will not sync to other devices.
+  </div>
+
+  <section class="panel" aria-label="Checklist progress">
+    <div class="progress-top">
+      <strong>Development progress</strong>
+      <span id="progressText">0 / 30 complete</span>
+    </div>
+    <div class="track" role="progressbar" aria-label="Checklist completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack">
+      <div id="bar"></div>
+    </div>
+    <div class="toolbar">
+      <select id="filter" aria-label="Filter tasks">
+        <option value="all">Show all tasks</option>
+        <option value="open">Show incomplete</option>
+        <option value="done">Show completed</option>
+      </select>
+      <button id="exportBtn" type="button">Export progress JSON</button>
+      <button id="importBtn" type="button">Import progress JSON</button>
+      <input id="fileInput" type="file" accept="application/json,.json" hidden>
+      <button id="resetBtn" type="button">Reset checkmarks</button>
+    </div>
+    <p class="small">Your progress is saved automatically in this browser. Export a JSON backup if you want to move it to another browser or computer.</p>
+  </section>
+
+  <div id="checklist"></div>
 </main>
 
-<dialog id="auth">
-  <form id="aform">
-    <h2 id="atitle">Log in</h2>
-    <p class="note" id="a-note" hidden></p>
-    <div id="b-name"><label for="a-name">Username</label><input id="a-name" maxlength="30" autocomplete="username" required></div>
-    <p class="note" id="b-shownq" hidden style="color:var(--ink)">Your question: <b id="a-shownq"></b></p>
-    <div id="b-ans" hidden><label for="a-ans" id="l-ans">Answer</label><input id="a-ans" autocomplete="off" maxlength="100"></div>
-    <div id="b-pw"><label for="a-pw" id="l-pw">Password</label><input id="a-pw" type="password" autocomplete="current-password"></div>
-    <div id="b-q" hidden><label for="a-q">Recovery question</label><input id="a-q" maxlength="120" placeholder="A question only you know the answer to"></div>
-    <div id="b-codes" hidden>
-      <label for="a-signup">Sign-up code (if you were given one)</label><input id="a-signup" autocomplete="off">
-      <label for="a-claim">Claim code (only if you had an account on the old site)</label><input id="a-claim" autocomplete="off" autocapitalize="characters">
-    </div>
-    <p class="err" id="a-err" role="alert"></p>
-    <div class="row"><span style="margin-right:auto;display:flex;gap:12px;flex-wrap:wrap"><button type="button" class="link" id="a-switch">Create an account</button><button type="button" class="link" id="a-forgot">Forgot password?</button></span><button class="btn primary" id="a-go">Log in</button></div>
-  </form>
-</dialog>
-
-<dialog id="dlg">
-  <form id="form">
-    <h2 id="dtitle">Add gift</h2>
-    <p class="note" id="dnote" hidden></p>
-    <label for="f-name">Gift name</label><input id="f-name" required>
-    <label for="f-price">Approx. price</label><input id="f-price" inputmode="decimal" placeholder="20.00">
-    <label for="f-link">Link</label><input id="f-link" placeholder="Paste a link (optional)">
-    <label for="f-notes">Notes</label><textarea id="f-notes" rows="2"></textarea>
-    <div class="row">
-      <button type="button" class="btn danger del" id="del">Delete</button>
-      <button type="button" class="btn" id="cancel">Cancel</button>
-      <button class="btn primary" id="save">Save gift</button>
-    </div>
-  </form>
-</dialog>
-<dialog id="adlg">
-  <h2>Account</h2>
-  <p class="note" id="e-now"></p>
-  <form id="nform">
-    <label for="n-new">Change username</label><input id="n-new" maxlength="30" autocomplete="off" required>
-    <div class="row"><button class="btn">Change username</button></div>
-    <p class="note">Your list, groups and surprise gifts all move with you.</p>
-  </form>
-  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
-  <form id="pform">
-    <label for="p-cur">Current password</label><input id="p-cur" type="password" autocomplete="current-password" required>
-    <label for="p-new">New password (8 or more characters)</label><input id="p-new" type="password" minlength="8" autocomplete="new-password" required>
-    <label for="p-new2">New password again</label><input id="p-new2" type="password" minlength="8" autocomplete="new-password" required>
-    <div class="row"><button class="btn">Change password</button></div>
-  </form>
-  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
-  <form id="qform">
-    <label for="q-q">Recovery question</label><input id="q-q" maxlength="120" required placeholder="A question only you know the answer to">
-    <label for="q-a">Answer</label><input id="q-a" autocomplete="off" maxlength="100" required>
-    <label for="q-pw">Current password</label><input id="q-pw" type="password" autocomplete="current-password" required>
-    <div class="row"><button class="btn">Save question</button></div>
-    <p class="note">Used if you forget your password. Saving replaces your current question. The answer ignores capital letters.</p>
-  </form>
-  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
-  <form id="dform">
-    <label for="d-pw">Delete my account</label><input id="d-pw" type="password" autocomplete="current-password" required placeholder="Current password">
-    <div class="row"><button class="btn danger">Delete my account</button></div>
-    <p class="note">Permanently removes your login, your list and your group memberships. Surprise gifts you added for others stay hidden from them. Export your list first if you want a copy.</p>
-  </form>
-  <div class="row"><button type="button" class="btn" id="aclose">Close</button></div>
-</dialog>
-<dialog id="idlg">
-  <h2>Import gifts</h2>
-  <p class="note" id="i-sum"></p>
-  <ol class="prev" id="i-prev"></ol>
-  <div class="row"><button type="button" class="btn" id="i-cancel">Cancel</button><button type="button" class="btn primary" id="i-go">Import</button></div>
-</dialog>
-<dialog id="gdlg">
-  <h2>Groups</h2>
-  <p class="note">People in the same group can see each other’s lists. You can be in as many groups as you like, and your list is the same in all of them.</p>
-  <div id="glist"></div>
-  <form id="gcreate" class="inline"><input id="g-new" placeholder="New group name" aria-label="New group name"><button class="btn primary">Create</button></form>
-  <form id="gjoin" class="inline"><input id="g-code" placeholder="Invite code" aria-label="Invite code" autocapitalize="characters"><button class="btn">Join</button></form>
-  <div class="row"><button type="button" class="btn" id="gclose">Close</button></div>
-</dialog>
-<div id="msg" role="status"></div>
+<footer class="wrap">Christmas Gift List · Development notes</footer>
 
 <script>
-const $ = id => document.getElementById(id);
-const CFG = window.GIFT_CONFIG || {};
-let sb = null, session = null, myId = '', me = '', groups = [], gf = '', people = [], person = '', items = [], filter = 'all', editing = null;
-try { person = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
-const themeOf = id => THEMES.find(t => t.id === id) || THEMES[0];
-let theme = THEMES[0].id;
-try { theme = localStorage.getItem('giftTheme') || theme; } catch (e) {}
-theme = themeOf(theme).id;
-THEMES.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.name; $('theme').append(o); });
-function applyTheme() {
-  const t = themeOf(theme);
-  document.documentElement.dataset.theme = t.id; $('themecss').href = 'themes/' + t.id + '.css';
-  $('theme').value = t.id; $('title').textContent = t.title; document.title = t.title + (person ? ' - ' + person : '');
-}
-$('theme').onchange = () => { theme = $('theme').value; try { localStorage.setItem('giftTheme', theme); } catch (e) {} applyTheme(); };
-applyTheme();
+(() => {
+  const STORAGE_KEY = "christmasGiftListDevChecklist_v1";
+  const sections = [
+    { title: "Account & Profiles", tasks: [
+      "Remove mandatory recovery question",
+      "Add profile pictures",
+      "Add JSON backup and restore for users' gift lists"
+    ]},
+    { title: "Gift Lists", tasks: [
+      "Potentially add gift images/previews when selecting a gift",
+      "Add sorting by price",
+      "Add sorting by name",
+      "Add sorting by want/priority",
+      "Add sorting by website/store",
+      "Move bought gifts to the bottom of the list",
+      "Remove the 'Still to Buy $' total",
+      "Remove the 'Bought $' total",
+      "Clarify the gift notes field: 'Specify size, color, model, or other preferences'"
+    ]},
+    { title: "Groups & Communication", tasks: [
+      "Add group chat",
+      "Consider optional anonymous messages in group chat",
+      "Support @mentions in group chat",
+      "Notify group members when someone joins a group",
+      "Notify group members when someone updates their wishlist",
+      "Notify group members about recently added gifts",
+      "Add QR-code group invitations without removing invitation codes"
+    ]},
+    { title: "Budgets & Secret Santa", tasks: [
+      "Add a group budget / maximum spending limit for Secret Santa",
+      "Add a personal budget tracker for amounts spent or reserved",
+      "Secret Santa drawing: prevent duplicate assignments and drawing yourself",
+      "Allow participants to draw multiple names"
+    ]},
+    { title: "Countdowns", tasks: [
+      "Add a Christmas countdown",
+      "Add an optional birthday countdown",
+      "Let users choose Christmas, birthday, or no countdown",
+      "Make birthday year optional so birthdays can repeat annually"
+    ]},
+    { title: "Export & Printing", tasks: [
+      "Export gift lists to PDF",
+      "Add a printable gift shopping checklist",
+      "Add a 'Letter to Santa' style printable gift list"
+    ]}
+  ];
 
-const money = n => '$' + (n || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-const num = v => parseFloat(String(v).replace(/[^0-9.]/g, '')) || 0;
-const fixLink = v => { v = String(v || '').trim(); return v && !/^[a-z][a-z0-9+.-]*:/i.test(v) && /^[^\s]+\.[^\s]{2,}/.test(v) ? 'https://' + v : v; };
-const isUrl = v => /^https?:\/\//i.test(v);
-const isMine = () => person.toLowerCase() === me.toLowerCase();
-function toast(t) { const m = $('msg'); m.textContent = t; m.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => m.classList.remove('show'), 3000); }
+  const allTasks = sections.flatMap((s, si) => s.tasks.map((task, ti) => ({ id: `${si}-${ti}`, task })));
+  const checklist = document.getElementById("checklist");
+  const filter = document.getElementById("filter");
+  let checked = load();
 
-let busy = 0, loadSeq = 0, lists = {}, byName = {}, names = {}, mode = 'login', scrollToPerson = false;
-const track = async p => { busy++; $('sync').hidden = false; try { return await p; } finally { if (--busy === 0) $('sync').hidden = true; } };
-function errMsg(e) {
-  const m = String((e && e.message) || e || '');
-  if (/failed to fetch|networkerror|load failed/i.test(m)) return 'Network problem. Check your connection and try again.';
-  if (e && (e.status === 401 || /jwt/i.test(m))) { setTimeout(() => sb && sb.auth.signOut(), 0); return 'Your session expired. Please log in again.'; }
-  if (e && (e.code === '42501' || e.status === 403)) return 'You are not allowed to do that.';
-  if (e && e.code === 'P0001') return m;                              // our own friendly messages from the database
-  if (e && e.code && /^(23|22)/.test(e.code)) return 'Please check what you entered and try again.';
-  return e && e.code ? 'Something went wrong. Please try again.' : (m || 'Something went wrong. Please try again.');
-}
-function clearState() { myId = me = ''; items = []; people = []; groups = []; lists = {}; byName = {}; render(); }
-
-/* ---- sign in ---- */
-async function fn(body) {      // calls the trusted "account" Edge Function
-  const r = await track(sb.functions.invoke('account', {body}));
-  if (r.error) {
-    let m = 'Something went wrong. Please try again.';
-    try { const j = await r.error.context.json(); if (j && j.error) m = j.error; }
-    catch (e) { if (/failed to send|fetch/i.test(String(r.error.message))) m = 'Network problem. Check your connection and try again.'; }
-    throw new Error(m);
+  function load() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch { return {}; }
   }
-  return r.data;
-}
-function showAuth() { $('acct').hidden = true; if (!$('auth').open) $('auth').showModal(); }
-$('auth').addEventListener('cancel', e => e.preventDefault());
-function setMode(m, msg) {
-  mode = m; $('a-err').textContent = msg || '';
-  const T = {login: 'Log in', signup: 'Create an account', forgot: 'Reset your password', reset: 'Answer your question'};
-  const G = {login: 'Log in', signup: 'Create account', forgot: 'Continue', reset: 'Change password'};
-  const N = {signup: 'Pick a recovery question only you can answer. It is the only way back in if you forget your password.', forgot: 'Enter your username to see your recovery question.'};
-  $('atitle').textContent = T[m]; $('a-go').textContent = G[m];
-  $('a-note').textContent = N[m] || ''; $('a-note').hidden = !N[m];
-  $('b-pw').hidden = m === 'forgot'; $('a-pw').required = m !== 'forgot'; $('a-pw').minLength = (m === 'signup' || m === 'reset') ? 8 : 0;
-  $('l-pw').textContent = m === 'reset' ? 'New password (8 or more characters)' : m === 'signup' ? 'Password (8 or more characters)' : 'Password';
-  $('a-pw').autocomplete = m === 'login' ? 'current-password' : 'new-password';
-  $('a-name').readOnly = m === 'reset';
-  $('b-q').hidden = m !== 'signup'; $('a-q').required = m === 'signup';
-  $('b-ans').hidden = !(m === 'signup' || m === 'reset'); $('a-ans').required = !$('b-ans').hidden;
-  $('b-shownq').hidden = m !== 'reset'; $('b-codes').hidden = m !== 'signup';
-  $('a-switch').textContent = m === 'login' ? 'Create an account' : 'Back to log in';
-  $('a-forgot').hidden = m !== 'login';
-}
-$('a-switch').onclick = () => setMode(mode === 'login' ? 'signup' : 'login');
-$('a-forgot').onclick = () => setMode('forgot');
-$('aform').onsubmit = async e => {
-  e.preventDefault(); $('a-err').textContent = ''; $('a-go').disabled = true;
-  const username = $('a-name').value.trim(), password = $('a-pw').value;
-  try {
-    if (mode === 'login' || mode === 'signup') {
-      const d = mode === 'login' ? await fn({action: 'login', username, password})
-        : await fn({action: 'signup', username, password, question: $('a-q').value.trim(), answer: $('a-ans').value, signupCode: $('a-signup').value.trim(), claimCode: $('a-claim').value.trim()});
-      if (!d.session) throw new Error('Could not log in. Please try again.');
-      const r = await sb.auth.setSession(d.session); if (r.error) throw r.error;
-      $('a-pw').value = $('a-ans').value = $('a-claim').value = '';
-    } else if (mode === 'forgot') {
-      const d = await fn({action: 'question', username}); $('a-shownq').textContent = d.question; $('a-pw').value = ''; setMode('reset');
-    } else if (mode === 'reset') {
-      await fn({action: 'reset', username, answer: $('a-ans').value, newPassword: password});
-      $('a-ans').value = $('a-pw').value = ''; setMode('login', 'Password changed. Log in with your new password.');
-    }
-  } catch (err) { $('a-err').textContent = errMsg(err); }
-  $('a-go').disabled = false;
-};
-$('logout').onclick = () => sb.auth.signOut();
-
-async function afterSignIn() {
-  if (!session) return;
-  const r = await track(sb.rpc('my_profile'));
-  if (r.error) return toast(errMsg(r.error));
-  if (!r.data || !r.data.length) { toast('This login has no profile. Please contact the site owner.'); return void sb.auth.signOut(); }
-  myId = r.data[0].id; me = r.data[0].username; if (!person) person = me;
-  if ($('auth').open) $('auth').close();
-  scrollToPerson = true; await load();
-}
-function isServiceKey(k) {
-  if (/^sb_secret_/.test(k)) return true;
-  try { return JSON.parse(atob(k.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).role === 'service_role'; } catch (e) { return false; }
-}
-function init() {
-  if (!CFG.SUPABASE_URL || !CFG.SUPABASE_KEY) { $('sub').textContent = 'Add your Supabase URL and publishable key to config.js to connect the site.'; return; }
-  if (isServiceKey(CFG.SUPABASE_KEY)) { $('sub').textContent = 'config.js contains a secret key. Remove it and use the publishable key instead.'; return; }
-  sb = supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_KEY);
-  sb.auth.onAuthStateChange((ev, s) => {
-    session = s;
-    if (ev === 'SIGNED_OUT') { clearState(); setMode('login'); showAuth(); return; }
-    if (ev === 'INITIAL_SESSION' && !s) { setMode('login'); showAuth(); return; }
-    if (s && (ev === 'INITIAL_SESSION' || ev === 'SIGNED_IN')) setTimeout(afterSignIn, 0);   // never call the API inside this callback directly
-  });
-}
-
-/* ---- data ---- */
-// Big groups: pages of 1,000 rows for the directory, and only the SELECTED person's gifts are loaded.
-async function fetchAll(table, cols, orders) {
-  const out = [];
-  for (let from = 0; ; from += 1000) {
-    let q = sb.from(table).select(cols); orders.forEach(o => { q = q.order(o); });
-    const r = await q.range(from, from + 999); if (r.error) throw r.error;
-    out.push(...r.data); if (r.data.length < 1000) return out;
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(checked));
+    updateProgress();
   }
-}
-async function loadDirectory() {
-  const [pr, gr, gm] = await Promise.all([fetchAll('profiles', 'id,username', ['id']), fetchAll('groups', 'id,name,invite_code', ['id']), fetchAll('group_members', 'group_id,profile_id,role', ['group_id', 'profile_id'])]);
-  names = {}; byName = {};
-  pr.forEach(p => { names[p.id] = p.username; byName[p.username.toLowerCase()] = p.id; });
-  me = names[myId] || me;
-  people = pr.map(p => p.username).sort((a, b) => (b === me) - (a === me) || a.localeCompare(b));
-  groups = gr.map(g => ({id: g.id, name: g.name, code: g.invite_code,
-    members: gm.filter(m => m.group_id === g.id).map(m => ({id: m.profile_id, name: names[m.profile_id] || '?', role: m.role})),
-    owner: gm.some(m => m.group_id === g.id && m.profile_id === myId && m.role === 'owner')}));
-  if (gf && !groups.some(g => g.id === gf)) gf = '';
-}
-async function loadList(name) {
-  const id = byName[name.toLowerCase()]; if (!id) return;
-  const r = await sb.from('gifts').select('id,owner_id,created_by,name,price,link,notes,updated_at,purchases(gift_id)').eq('owner_id', id).order('created_at').limit(1000);
-  if (r.error) throw r.error;
-  lists[name] = r.data.map(g => {
-    const surprise = g.created_by !== g.owner_id, isBought = Array.isArray(g.purchases) ? g.purchases.length > 0 : !!g.purchases;
-    return {id: g.id, name: g.name, price: Number(g.price) || 0, link: g.link || '', notes: g.notes || '', stamp: g.updated_at,
-      bought: g.owner_id !== myId && isBought, by: surprise ? (names[g.created_by] || 'someone') : '', byId: g.created_by};
-  });
-}
-async function load() {
-  if (!sb || !session || !myId) return;
-  const seq = ++loadSeq;
-  try {
-    await track(loadDirectory()); if (seq !== loadSeq) return;
-    person = people.find(n => n.toLowerCase() === person.toLowerCase()) || me;
-    await track(loadList(person)); if (seq !== loadSeq) return;
-    items = lists[person] || []; render();
-  } catch (e) { toast(errMsg(e)); $('empty').hidden = false; $('empty').textContent = 'Could not load your lists. ' + errMsg(e); }
-}
-function pick(n) {
-  person = n; scrollToPerson = true;
-  try { history.replaceState(null, '', '#' + encodeURIComponent(n)); } catch (e) {}
-  items = lists[n] || []; render();                 // cached copy straight away, then a fresh one
-  const seq = ++loadSeq;
-  track(loadList(n)).then(() => { if (seq === loadSeq && person === n) { items = lists[n] || []; render(); } }).catch(e => toast(errMsg(e)));
-}
-
-/* ---- render ---- */
-function render() {
-  const mine = isMine();
-  $('acct').hidden = !me; $('who').textContent = me ? 'Signed in as ' + me : '';
-  const gs = $('gsel'); gs.hidden = groups.length < 2; gs.innerHTML = '';
-  [['', 'All groups'], ...groups.map(g => [g.id, g.name])].forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; o.selected = v === gf; gs.append(o); });
-  const gm = gf && groups.find(g => g.id === gf);
-  const ps = $('psearch'); ps.hidden = people.length <= 12; const pq = ps.value.toLowerCase();
-  const box = $('people'); box.innerHTML = '';
-  people.filter(n => (!gm || n === me || gm.members.some(m => m.name === n)) && (n === me || n === person || n.toLowerCase().includes(pq))).forEach(n => {
-    const b = document.createElement('button'); b.textContent = n === me ? 'My list' : n;
-    b.setAttribute('aria-pressed', n === person); b.onclick = () => pick(n); box.append(b);
-    if (n === person && scrollToPerson) { scrollToPerson = false; requestAnimationFrame(() => b.scrollIntoView({inline: 'center', block: 'nearest'})); }
-  });
-  $('io').hidden = !isMine() || !me;
-  document.title = themeOf(theme).title + (person ? ' - ' + person : '');
-  $('sub').textContent = !person ? '' : mine ? 'Your list. For the surprise, you can\u2019t see what has been bought.' : 'Tick what you\u2019ve bought for ' + person + '. Use Add surprise gift for anything not on their list; ' + person + ' won\u2019t see it.';
-  $('add').textContent = mine ? 'Add gift' : 'Add surprise gift';
-  $('seg').hidden = mine; $('l-done').hidden = mine; $('l-left').firstChild.textContent = mine ? 'Total wish list: ' : 'Still to buy: ';
-  const q = $('q').value.toLowerCase();
-  const shown = items.filter(i => (mine || filter === 'all' || (filter === 'done') === i.bought) && (i.name + i.notes).toLowerCase().includes(q));
-  $('list').innerHTML = '';
-  shown.forEach(i => {
-    const li = document.createElement('li'); li.className = (mine ? 'mine ' : '') + (i.bought ? 'done' : '');
-    if (!mine) {
-      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'chk'; cb.checked = i.bought; cb.disabled = !!i.by || !!i.pending;
-      cb.setAttribute('aria-label', 'Bought: ' + i.name); cb.onchange = () => toggle(i, cb.checked); li.append(cb);
-    }
-    const mid = document.createElement('div');
-    const nm = document.createElement('div'); nm.className = 'name'; nm.textContent = i.name; mid.append(nm);
-    const meta = document.createElement('div'); meta.className = 'meta';
-    if (i.link) { if (isUrl(i.link)) { const a = document.createElement('a'); a.href = i.link; a.target = '_blank'; a.rel = 'noopener'; let h = i.link; try { h = new URL(i.link).hostname.replace(/^www\./, ''); } catch (e) {} a.textContent = h; meta.append(a); } else meta.append(i.link); }
-    if (i.notes) meta.append((i.link ? ' \u00b7 ' : '') + i.notes);
-    if (meta.childNodes.length) mid.append(meta);
-    if (i.by) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'Surprise gift from ' + (i.by.toLowerCase() === me.toLowerCase() ? 'you' : i.by); mid.append(t); }
-    const right = document.createElement('div'); right.style.textAlign = 'right';
-    const p = document.createElement('div'); p.className = 'price'; p.textContent = i.price ? money(i.price) : ''; right.append(p);
-    if (!i.pending && (mine || (i.by && i.byId === myId))) { const eb = document.createElement('button'); eb.className = 'edit'; eb.textContent = 'Edit'; eb.onclick = () => openDlg(i); right.append(eb); }
-    li.append(mid, right); $('list').append(li);
-  });
-  $('empty').hidden = !me || (shown.length > 0 && groups.length > 0); $('empty').textContent = groups.length ? 'No gifts to show yet.' : 'Create a group or join one with an invite code (Groups, top right) to see other people\u2019s lists.';
-  if ($('gdlg').open) renderGroups();
-  $('t-left').textContent = money(items.filter(i => mine || !i.bought).reduce((s, i) => s + i.price, 0));
-  $('t-done').textContent = money(items.filter(i => i.bought).reduce((s, i) => s + i.price, 0));
-}
-
-async function toggle(i, v) {
-  const old = i.bought; i.bought = v; render();
-  try {
-    const r = v ? await track(sb.from('purchases').insert({gift_id: i.id, bought_by: myId})) : await track(sb.from('purchases').delete().eq('gift_id', i.id));
-    if (r.error && r.error.code !== '23505') throw r.error;     // 23505 = already marked (a retry), which is fine
-  } catch (e) { i.bought = old; render(); toast(errMsg(e)); }
-}
-
-function openDlg(i) {
-  editing = i || null; const mine = isMine();
-  $('dtitle').textContent = i ? 'Edit gift' : mine ? 'Add gift' : 'Add surprise gift for ' + person;
-  $('dnote').hidden = mine; $('dnote').textContent = person + ' will not see this. Everyone else sees it as already bought.';
-  $('f-name').value = i ? i.name : ''; $('f-price').value = i && i.price ? i.price : '';
-  $('f-link').value = i ? i.link : ''; $('f-notes').value = i ? i.notes : '';
-  $('del').style.display = i ? '' : 'none';
-  $('dlg').showModal(); $('f-name').focus();
-}
-$('add').onclick = () => openDlg(null);
-$('cancel').onclick = () => $('dlg').close();
-$('q').oninput = render; $('psearch').oninput = render;
-document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
-  filter = b.dataset.f; document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); render();
-});
-
-$('form').onsubmit = e => {
-  e.preventDefault();
-  const mine = isMine(), name = $('f-name').value.trim(); if (!name) return;
-  const price = $('f-price').value.trim(), link = fixLink($('f-link').value), notes = $('f-notes').value.trim();
-  const d = {name, price: price === '' ? null : num(price), link: link || null, notes: notes || null};
-  const shown = {name, price: d.price || 0, link, notes};
-  let job;
-  if (editing) {
-    const stamp = editing.stamp; Object.assign(editing, shown);          // shown straight away, confirmed by the database
-    job = track(sb.from('gifts').update(d).eq('id', editing.id).eq('updated_at', stamp).select('id')).then(r => {
-      if (r.error) throw r.error;
-      if (!r.data.length) toast('This gift was changed somewhere else. Showing the latest version.'); else toast('Gift saved');
+  function updateProgress() {
+    const total = allTasks.length;
+    const done = allTasks.filter(t => checked[t.id] === true).length;
+    const percent = total ? Math.round(done / total * 100) : 0;
+    document.getElementById("progressText").textContent = `${done} / ${total} complete`;
+    document.getElementById("bar").style.width = `${percent}%`;
+    const track = document.getElementById("progressTrack");
+    track.setAttribute("aria-valuenow", percent);
+    track.setAttribute("aria-valuetext", `${percent}% complete`);
+  }
+  function render() {
+    checklist.innerHTML = "";
+    const mode = filter.value;
+    sections.forEach((section, si) => {
+      const visible = section.tasks.map((task, ti) => ({
+        id: `${si}-${ti}`, task, done: checked[`${si}-${ti}`] === true
+      })).filter(item => mode === "all" || (mode === "done" ? item.done : !item.done));
+      if (!visible.length) return;
+      const article = document.createElement("section");
+      article.className = "category";
+      const head = document.createElement("div");
+      head.className = "category-head";
+      const heading = document.createElement("h2");
+      heading.textContent = section.title;
+      const count = document.createElement("span");
+      count.className = "count";
+      const sectionDone = section.tasks.filter((_, ti) => checked[`${si}-${ti}`] === true).length;
+      count.textContent = `${sectionDone}/${section.tasks.length} complete`;
+      head.append(heading, count);
+      const list = document.createElement("ul");
+      visible.forEach(item => {
+        const li = document.createElement("li");
+        const label = document.createElement("label");
+        label.className = `task${item.done ? " done" : ""}`;
+        const box = document.createElement("input");
+        box.type = "checkbox";
+        box.checked = item.done;
+        box.addEventListener("change", () => {
+          checked[item.id] = box.checked;
+          save();
+          render();
+        });
+        const span = document.createElement("span");
+        span.className = "task-text";
+        span.textContent = item.task;
+        label.append(box, span);
+        li.append(label);
+        list.append(li);
+      });
+      article.append(head, list);
+      checklist.append(article);
     });
-  } else {
-    const id = crypto.randomUUID();                                         // the same id on a retry means no duplicate gift
-    items.push({id, ...shown, pending: true, bought: !mine, by: mine ? '' : me, byId: myId});
-    job = track(sb.from('gifts').insert({id, owner_id: byName[person.toLowerCase()], ...d})).then(r => {
-      if (r.error && r.error.code !== '23505') throw r.error; toast('Gift saved');
-    });
-  }
-  $('dlg').close(); render();
-  job.catch(err => toast(errMsg(err))).finally(load);
-};
-$('del').onclick = () => {
-  if (!editing || !confirm('Delete "' + editing.name + '"?')) return;
-  const g = editing, k = items.indexOf(g); if (k > -1) items.splice(k, 1);
-  $('dlg').close(); render();
-  track(sb.from('gifts').delete().eq('id', g.id)).then(r => { if (r.error) throw r.error; toast('Gift deleted'); })
-    .catch(err => toast(errMsg(err))).finally(load);
-};
-
-/* ---- groups ---- */
-$('gsel').onchange = () => { gf = $('gsel').value; render(); };
-const lnk = (t, f) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'link'; b.textContent = t; b.onclick = f; return b; };
-async function act(fn, ok) {
-  try { const r = await track(fn()); if (r.error) throw r.error; if (ok) toast(ok); await load(); return r; }
-  catch (e) { toast(errMsg(e)); }
-}
-function renderGroups() {
-  const box = $('glist'); box.innerHTML = '';
-  if (!groups.length) { const p = document.createElement('p'); p.className = 'note'; p.textContent = 'You are not in a group yet. Create one or join with an invite code.'; box.append(p); }
-  groups.forEach(g => {
-    const d = document.createElement('div'); d.className = 'grp';
-    const t = document.createElement('b'); t.textContent = g.name;
-    const c = document.createElement('p'); c.append('Invite code: '); const k = document.createElement('code'); k.textContent = g.code; c.append(k);
-    const m = document.createElement('p'); m.className = 'meta members'; m.append('Members: ');
-    g.members.forEach((x, n) => {
-      if (n) m.append(', '); m.append(x.name);
-      if (g.owner && x.id !== myId) m.append(' ', lnk('(remove)', () => confirm('Remove ' + x.name + '?') && act(() => sb.rpc('remove_member', {p_group: g.id, p_profile: x.id}), 'Member removed')));
-    });
-    const bar = document.createElement('p');
-    bar.append(lnk('Leave group', () => confirm('Leave "' + g.name + '"?') && act(() => sb.rpc('leave_group', {p_group: g.id}), 'You left the group')));
-    if (g.owner) {
-      bar.append(' ', lnk('New invite code', async () => { const r = await act(() => sb.rpc('rotate_invite_code', {p_group: g.id})); if (r && r.data) toast('New invite code: ' + r.data); }));
-      bar.append(' ', lnk('Delete group', () => confirm('Delete "' + g.name + '" for everyone?') && act(() => sb.rpc('delete_group', {p_group: g.id}), 'Group deleted')));
+    if (!checklist.children.length) {
+      const empty = document.createElement("div");
+      empty.className = "panel empty";
+      empty.textContent = "Nothing in this filter. Nice work!";
+      checklist.append(empty);
     }
-    d.append(t, c, m, bar); box.append(d);
-  });
-}
-$('groupsBtn').onclick = () => { renderGroups(); $('gdlg').showModal(); };
-$('gclose').onclick = () => $('gdlg').close();
-$('gcreate').onsubmit = async e => {
-  e.preventDefault(); const name = $('g-new').value.trim(); if (!name) return;
-  const r = await act(() => sb.rpc('create_group', {p_name: name}), 'Group created'); if (r) $('g-new').value = '';
-};
-$('gjoin').onsubmit = async e => {
-  e.preventDefault(); const code = $('g-code').value.trim(); if (!code) return;
-  const r = await act(() => sb.rpc('join_group', {p_code: code}));
-  if (r) { if (r.data) { $('g-code').value = ''; toast('Joined the group'); } else toast('No group with that code'); }
-};
-
-/* ---- account ---- */
-$('accountBtn').onclick = () => { $('e-now').textContent = 'Signed in as ' + me; $('n-new').value = me; $('adlg').showModal(); };
-$('aclose').onclick = () => $('adlg').close();
-$('nform').onsubmit = async e => {
-  e.preventDefault(); const v = $('n-new').value.trim(); if (!v || v === me) return;
-  const was = isMine();
-  const r = await act(() => sb.rpc('change_username', {p_username: v}));
-  if (r) { if (was) person = v; me = v; try { history.replaceState(null, '', '#' + encodeURIComponent(person)); } catch (x) {} await load(); $('e-now').textContent = 'Signed in as ' + me; toast('Username changed to ' + v); }
-};
-$('pform').onsubmit = async e => {
-  e.preventDefault();
-  if ($('p-new').value !== $('p-new2').value) return toast('The new passwords do not match');
-  try {
-    const v = await track(sb.auth.signInWithPassword({email: session.user.email, password: $('p-cur').value}));
-    if (v.error) throw new Error('Current password is wrong');
-    const u = await track(sb.auth.updateUser({password: $('p-new').value})); if (u.error) throw u.error;
-    $('p-cur').value = $('p-new').value = $('p-new2').value = ''; toast('Password changed');
-  } catch (err) { toast(errMsg(err)); }
-};
-$('qform').onsubmit = async e => {
-  e.preventDefault();
-  try { await fn({action: 'setQuestion', question: $('q-q').value.trim(), answer: $('q-a').value, password: $('q-pw').value}); $('q-q').value = $('q-a').value = $('q-pw').value = ''; toast('Recovery question saved'); }
-  catch (err) { toast(errMsg(err)); }
-};
-$('dform').onsubmit = async e => {
-  e.preventDefault();
-  if (!confirm('Delete your account, list and group memberships for good? This cannot be undone.')) return;
-  try { await fn({action: 'deleteAccount', password: $('d-pw').value}); $('d-pw').value = ''; $('adlg').close(); await sb.auth.signOut({scope: 'local'}); toast('Your account was deleted'); }
-  catch (err) { toast(errMsg(err)); }
-};
-
-/* ---- export / import (CSV that opens in Google Sheets and Excel) ---- */
-const CSV_HEAD = ['Gift names', 'Approx. price', 'Links', 'notes'];
-const safeCell = v => { v = String(v == null ? '' : v); if (/^[=+@\t\r-]/.test(v)) v = "'" + v; return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };   // stops spreadsheet formula injection
-const unsafeCell = v => String(v).replace(/^'([=+@\t\r-])/, '$1').trim();
-$('exp').onclick = () => {
-  const rows = [CSV_HEAD.join(',')].concat(items.filter(i => !i.by).map(i => [i.name, i.price ? i.price.toFixed(2) : '', i.link, i.notes].map(safeCell).join(',')));
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\ufeff' + rows.join('\r\n') + '\r\n'], {type: 'text/csv;charset=utf-8'}));
-  a.download = 'gift-list-' + me.replace(/[^A-Za-z0-9._-]+/g, '-') + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  toast('Exported ' + (rows.length - 1) + ' gifts. In Google Sheets use File > Import > Upload.');
-};
-function parseCSV(text) {
-  text = text.replace(/^\ufeff/, '');
-  const first = text.split(/\r?\n/)[0] || '', d = (first.match(/;/g) || []).length > (first.match(/,/g) || []).length ? ';' : ',';
-  const rows = []; let row = [], cell = '', q = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
-    else if (c === '"') q = true;
-    else if (c === d) { row.push(cell); cell = ''; }
-    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
-    else cell += c;
+    updateProgress();
   }
-  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
-  return rows.filter(r => r.some(x => String(x).trim() !== ''));
-}
-function readGifts(text) {
-  const rows = parseCSV(text), H = {name: /^(gift names?|gifts?|name|item|title)$/i, price: /^(approx\.? ?price|price|cost)$/i, link: /^(links?|url|urls|website)$/i, notes: /^(notes?|description|comments?)$/i};
-  let col = {name: 0, price: 1, link: 2, notes: 3}, start = 0;
-  for (let k = 0; k < Math.min(rows.length, 5); k++) {
-    const m = {}; rows[k].forEach((c, ix) => { for (const key in H) if (m[key] === undefined && H[key].test(String(c).trim())) m[key] = ix; });
-    if (m.name !== undefined) { col = {name: m.name, price: m.price, link: m.link, notes: m.notes}; start = k + 1; break; }
-  }
-  const have = new Set(items.filter(i => !i.by).map(i => (i.name + '|' + i.link).toLowerCase())), good = [], skipped = [];
-  let dupes = 0;
-  rows.slice(start).forEach((r, ix) => {
-    const cell = k => k === undefined ? '' : unsafeCell(r[k] === undefined ? '' : r[k]);
-    const name = cell(col.name), link = cell(col.link), notes = cell(col.notes), pr = cell(col.price).replace(/[$,\s]/g, '');
-    if (!name || name.charAt(0) === '~') return;
-    const price = pr === '' ? null : Number(pr);
-    if (name.length > 200 || link.length > 1000 || notes.length > 1000 || (price !== null && !(price >= 0 && price < 1e8))) { skipped.push('Row ' + (start + ix + 1) + ': ' + name.slice(0, 40)); return; }
-    const key = (name + '|' + link).toLowerCase(); if (have.has(key)) { dupes++; return; } have.add(key);
-    good.push({name, price, link: fixLink(link) || null, notes: notes || null});
-  });
-  return {good, dupes, skipped};
-}
-$('imp').onclick = () => $('impfile').click();
-let pending = [];
-$('impfile').onchange = async () => {
-  const f = $('impfile').files[0]; $('impfile').value = ''; if (!f) return;
-  if (f.size > 1e6) return toast('That file is too big (1 MB maximum).');
-  const {good, dupes, skipped} = readGifts(await f.text());
-  if (items.length + good.length > 1000) return toast('That would go over the 1,000 gift limit.');
-  if (good.length > 500) return toast('Please import 500 gifts or fewer at a time.');
-  pending = good;
-  $('i-sum').textContent = good.length + ' gift(s) ready to import. ' + dupes + ' duplicate(s) and ' + skipped.length + ' problem row(s) will be skipped.';
-  $('i-prev').innerHTML = ''; good.slice(0, 8).forEach(g => { const li = document.createElement('li'); li.textContent = g.name + (g.price ? ' (' + money(g.price) + ')' : ''); $('i-prev').append(li); });
-  skipped.slice(0, 3).forEach(t => { const li = document.createElement('li'); li.textContent = 'Skipped: ' + t; $('i-prev').append(li); });
-  $('i-go').disabled = !good.length; $('i-go').textContent = good.length ? 'Import ' + good.length : 'Nothing to import'; $('idlg').showModal();
-};
-$('i-cancel').onclick = () => { pending = []; $('idlg').close(); };
-$('i-go').onclick = async () => {
-  const rows = pending.map(g => ({id: crypto.randomUUID(), owner_id: myId, ...g})); $('i-go').disabled = true;
-  try { const r = await track(sb.from('gifts').insert(rows)); if (r.error) throw r.error; toast('Imported ' + rows.length + ' gifts'); }
-  catch (e) { toast(errMsg(e)); }
-  pending = []; $('idlg').close(); await load();
-};
 
-document.addEventListener('visibilitychange', () => { if (!document.hidden && session && myId) load(); });
-setTimeout(() => THEMES.forEach(t => fetch('themes/' + t.id + '.css').catch(() => {})), 2000);   // warm the cache so switching themes is instant
-init();
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    const payload = {
+      app: "Christmas Gift List development checklist",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      checked
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "christmas-gift-list-checklist-backup.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById("importBtn").addEventListener("click", () => document.getElementById("fileInput").click());
+  document.getElementById("fileInput").addEventListener("change", async event => {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      const imported = data.checked && typeof data.checked === "object" ? data.checked : data;
+      if (!imported || typeof imported !== "object" || Array.isArray(imported)) throw new Error("Invalid file");
+      checked = {};
+      allTasks.forEach(t => { checked[t.id] = imported[t.id] === true; });
+      save();
+      render();
+      alert("Checklist progress imported.");
+    } catch {
+      alert("That file could not be read as a checklist backup.");
+    }
+    event.target.value = "";
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    if (!confirm("Reset every checkmark? This cannot be undone unless you exported a backup.")) return;
+    checked = {};
+    save();
+    render();
+  });
+
+  filter.addEventListener("change", render);
+  render();
+})();
 </script>
 </body>
 </html>

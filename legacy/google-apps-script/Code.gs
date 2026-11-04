@@ -32,6 +32,21 @@ function findUser_(name) {
 function checkName_(name) {
   if (!/^[A-Za-z0-9][A-Za-z0-9 '.\-]{0,29}$/.test(name)) throw new Error('Names can use letters, numbers, spaces and - . \' (30 max)');
 }
+function itemsOf_(s, mine) {
+  const n = s.getLastRow(), items = [];
+  if (n < 2) return items;
+  s.getRange(2, 1, n - 1, 7).getValues().forEach((r, i) => {
+    const name = String(r[0]).trim(), by = String(r[6]).trim();
+    if (!name || name.charAt(0) === '~') return;
+    if (mine && by) return;                      // surprise gifts are hidden from the receiver
+    items.push({
+      row: i + 2, name: name, price: r[1], link: String(r[2] || ''), notes: String(r[3] || ''),
+      bought: mine ? false : (by ? true : (r[5] === true || /^(true|yes|x)$/i.test(String(r[5]).trim()))),
+      by: mine ? '' : by
+    });
+  });
+  return items;
+}
 function norm_(a) { return String(a || '').trim().toLowerCase().replace(/\s+/g, ' '); }
 function checkPw_(pw) { if (String(pw || '').length < 6) throw new Error('Password must be at least 6 characters'); }
 function setPassword_(u, pw) {
@@ -40,7 +55,7 @@ function setPassword_(u, pw) {
 }
 function dropSessions_(name, keepToken) {
   const t = tab_('_sessions'), v = t.getDataRange().getValues();
-  for (let i = v.length - 1; i >= 0; i--) if (v[i][0] && same_(v[i][1], name) && v[i][0] !== keepToken) t.deleteRow(i + 1);
+  for (let i = v.length - 1; i >= 0; i--) if (v[i][0] && same_(v[i][1], name) && v[i][0] !== keepToken) { CacheService.getScriptCache().remove('s' + v[i][0]); t.deleteRow(i + 1); }
 }
 function newSession_(name) {
   const t = Utilities.getUuid() + Utilities.getUuid();
@@ -49,8 +64,10 @@ function newSession_(name) {
 }
 function who_(token) {
   if (!token) return null;
+  const cache = CacheService.getScriptCache(), hit = cache.get('s' + token);
+  if (hit) return hit;
   const v = tab_('_sessions').getDataRange().getValues();
-  for (let i = 0; i < v.length; i++) if (v[i][0] === token) return v[i][1];
+  for (let i = 0; i < v.length; i++) if (v[i][0] === token) { cache.put('s' + token, String(v[i][1]), 21600); return v[i][1]; }
   return null;
 }
 function makeList_(name) {
@@ -144,6 +161,7 @@ function act_(d) {
   if (d.action === 'logout') {
     const t = tab_('_sessions'), v = t.getDataRange().getValues();
     for (let i = v.length - 1; i >= 0; i--) if (v[i][0] === d.token) t.deleteRow(i + 1);
+    CacheService.getScriptCache().remove('s' + d.token);
     return { ok: true };
   }
 
@@ -208,6 +226,7 @@ function act_(d) {
     const other = ss_().getSheets().find(t => same_(t.getName(), nn));
     if (other && (!own || other.getSheetId() !== own.getSheetId())) throw new Error('That name is taken');
     const old = u.name;
+    tab_('_sessions').getDataRange().getValues().forEach(r => { if (r[0] && same_(r[1], old)) CacheService.getScriptCache().remove('s' + r[0]); });
     const ut = tab_('_users');
     ut.getRange(u.row, 1).setValue(nn);
     if (own) own.setName(nn);
@@ -232,24 +251,18 @@ function act_(d) {
   groups.forEach(g => g.members.forEach(m => { visible[m.toLowerCase()] = true; }));
   const people = people_().filter(n => visible[n.toLowerCase()]);
   let tabName = people.find(n => same_(n, d.person || me));
-  if (!tabName && d.action === 'list') tabName = people.find(n => same_(n, me));
+  if (!tabName && (d.action === 'list' || d.action === 'listAll')) tabName = people.find(n => same_(n, me));
   if (!tabName) throw new Error('No such list');
   const s = ss_().getSheetByName(tabName);
   const mine = same_(tabName, me);
 
   if (d.action === 'list') {
-    const n = s.getLastRow(), items = [];
-    if (n >= 2) s.getRange(2, 1, n - 1, 7).getValues().forEach((r, i) => {
-      const name = String(r[0]).trim(), by = String(r[6]).trim();
-      if (!name || name.charAt(0) === '~') return;
-      if (mine && by) return;                      // surprise gifts are hidden from the receiver
-      items.push({
-        row: i + 2, name: name, price: r[1], link: String(r[2] || ''), notes: String(r[3] || ''),
-        bought: mine ? false : (by ? true : (r[5] === true || /^(true|yes|x)$/i.test(String(r[5]).trim()))),
-        by: mine ? '' : by
-      });
-    });
-    return { me: me, people: people, person: tabName, items: items, groups: groups };
+    return { me: me, people: people, person: tabName, items: itemsOf_(s, mine), groups: groups };
+  }
+  if (d.action === 'listAll') {   // every visible list in one request, so switching people is instant
+    const lists = {};
+    people.forEach(n => { lists[n] = itemsOf_(ss_().getSheetByName(n), same_(n, me)); });
+    return { me: me, people: people, person: tabName, lists: lists, groups: groups };
   }
 
   if (d.action === 'toggle') {

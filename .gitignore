@@ -1,0 +1,5 @@
+.env
+node_modules/
+migration/out/
+*.export.json
+gift-list-export.json

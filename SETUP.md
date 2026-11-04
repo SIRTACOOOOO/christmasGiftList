@@ -1,93 +1,127 @@
 # Setup guide
 
-This takes about 15 minutes and costs nothing. You need a Google account and a GitHub account (or any other place that hosts simple web pages).
+You need a free [Supabase](https://supabase.com) account, a GitHub repository with GitHub Pages turned on, Node.js (for the CLI and tests), and about 30 minutes. Use a **separate development project** first.
 
-The site has two parts:
+## 1. Create the Supabase project
 
-- **The website** (`index.html` and the `themes` folder) is what people see. You host it on GitHub Pages.
-- **The backend** (`backend/Code.gs`) lives inside a Google Sheet and runs on Google's servers. It stores the gifts and checks logins.
+1. In Supabase, click **New project**. Pick a name, a region near your users and a strong database password. Save the password in a password manager.
+2. Open **Project Settings → API Keys** and note the **Project URL** and the **publishable key** (starts with `sb_publishable_`). If your project only shows the older "anon" key, use that.
 
-Tip: use a Google account you don't mind other people seeing the name of. A dedicated free Gmail account just for this is a good idea.
+## 2. Build the database
 
----
+In **SQL Editor → New query**, paste each file below **in this order** and click **Run**. Each must finish without errors.
 
-## Part 1: Create the Google Sheet and backend
+1. `supabase/migrations/20261103000001_schema.sql`
+2. `supabase/migrations/20261103000002_security.sql`
+3. `supabase/migrations/20261103000003_rpc.sql`
+4. `supabase/migrations/20261104000004_username_auth.sql`
 
-1. Go to [sheets.google.com](https://sheets.google.com) and create a **blank spreadsheet**. Name it anything, for example "Gift List".
-2. Right-click the default tab at the bottom (usually "Sheet1") and **rename it to `_unused`**. Tabs starting with an underscore are ignored by the site. (You can delete it instead, but a sheet needs at least one tab.)
-3. Open **Extensions → Apps Script**. A code editor opens.
-4. Delete everything in the editor, then paste in the whole contents of `backend/Code.gs`.
-5. Near the top, find this line and change the value to a family code of your own:
-   ```js
-   const SIGNUP_CODE = 'change-me';
-   ```
-   People need this code to create an account. Leave it as `''` (empty) if anyone with the link should be able to sign up.
-6. Click the **Save** icon.
+(Or with the Supabase CLI: `supabase link --project-ref YOUR-REF` then `supabase db push`.)
 
-## Part 2: Publish the backend
+These files have not yet been run on a real project. If one fails, copy the error and fix it before continuing. Then run `supabase/tests/rls_check.sql` and confirm: every table has `rls_enabled = true`, the `anon` queries return no rows, and `authenticated` can read only `id`, `username` and `created_at` on `profiles`.
 
-1. Click the blue **Deploy** button (top right) and choose **New deployment**.
-2. Click the gear icon next to "Select type" and pick **Web app**.
-3. Set **Execute as** to **Me**, and **Who has access** to **Anyone**.
-4. Click **Deploy** and then **Authorize access**. Choose your account. If Google says "hasn't verified this app", click **Advanced → Go to (project name)** and **Allow**. This is your own script asking to edit your own sheet.
-5. Copy the **Web app URL**. It must start with `https://script.google.com/` and end in `/exec`.
+## 3. Deploy the Edge Function
 
-## Part 3: Connect the website
+The function lets people sign in with a username instead of an email. It holds the only privileged key, inside Supabase.
 
-1. Open `index.html` in a text editor (Notepad is fine).
-2. Near the top, paste your URL between the quotes:
-   ```js
-   const SCRIPT_URL = 'https://script.google.com/macros/s/XXXXXXXX/exec';
-   ```
-3. Save the file.
+```
+npm install -g supabase            # or: npx supabase ...
+supabase login
+supabase link --project-ref YOUR-REF
+supabase functions deploy account --no-verify-jwt
+supabase secrets set ALLOWED_ORIGINS=https://sirtacooooo.github.io,http://localhost:8000
+```
 
-## Part 4: Put the website online (GitHub Pages)
+Optional secrets (set with `supabase secrets set NAME=value`):
 
-1. Create a free account at [github.com](https://github.com) and click **New repository**. Name it (for example `gift-list`) and choose **Public**.
-2. On the repository page, click **uploading an existing file**. Drag in `index.html` **and the whole `themes` folder**. Keep the folder structure as it is.
-3. Click **Commit changes**.
-4. Go to **Settings → Pages**. Under *Build and deployment*, set *Source* to **Deploy from a branch**, pick the **main** branch and **/ (root)**, and save.
-5. After a minute or two, the Pages settings show your site's address, such as `https://yourname.github.io/gift-list/`.
+| Secret | Purpose |
+|---|---|
+| `SIGNUP_CODE` | If set, new accounts must enter this code. Good for private family sites. Leave unset for open sign-up |
+| `SIGNUP_LIMIT_PER_HOUR` | New accounts allowed per network address per hour (default 5) |
+| `EMAIL_DOMAIN` | Domain for the placeholder login addresses (default `users.giftlist.invalid`). Nothing is ever emailed. If Supabase rejects the default, use a domain you own |
 
-Do **not** upload `backend/Code.gs` to a public repository if you've put your real family code in it. It already lives in your sheet.
+`ALLOWED_ORIGINS` takes website origins only (scheme and host, no path).
 
-## Part 5: First use
+## 4. Configure sign-in (Authentication)
 
-1. Open your site. Click **Create an account**, choose a name and password (6 or more characters), and enter your family code.
-2. Click **Groups** (top right), type a group name such as "Family", and click **Create**. You get a 6-character invite code.
-3. Send people the site link and the invite code. They create their own accounts, then click **Groups → Join** and enter the code.
-4. In **Account**, each person can add a recovery question for forgotten passwords, change their password, or change their username (their list and groups move with them).
+| Where in the dashboard | Setting |
+|---|---|
+| **Sign In / Providers → User Signups** | Turn **off** "Allow new users to sign up". Accounts are created only through the Edge Function, so nobody can bypass its sign-up code and limits. The Email provider itself must stay enabled |
+| **Sign In / Providers → Anonymous sign-ins** | Off |
+| **Password requirements** | Minimum length 8 |
+| **URL Configuration → Site URL** | Your live address, e.g. `https://sirtacooooo.github.io/christmasGiftList/` |
+| **Redirect URLs** | Not used by sign-in. You may add your site and `http://localhost:8000/**` anyway |
 
-Each person gets their own list. People in the same group can see each other's lists, tick off gifts, and add surprise gifts that the list owner can't see.
+You do **not** need to set up email sending: no emails are sent.
 
----
+## 5. Connect the website
 
-## Updating later
+Fill in `config.js`:
 
-- **Changed `Code.gs`?** Paste the new version into Apps Script, then **Deploy → Manage deployments → pencil icon → Version: New version → Deploy**. Saving alone does not update the live site. The `/exec` URL stays the same.
-- **Changed the website or a theme?** Upload the changed files to GitHub again. If the page looks the same, do a hard refresh (Ctrl+Shift+R, or Cmd+Shift+R on Mac).
+```js
+window.GIFT_CONFIG = {
+  SUPABASE_URL: 'https://YOUR-PROJECT-REF.supabase.co',
+  SUPABASE_KEY: 'sb_publishable_...'
+};
+```
 
-## Moving an existing list into the site
+### What is public and what is secret
 
-If you already have a list in a tab, rename that tab to the person's exact name (for example `Anthony`) **before** they sign up. When they create an account with that name, they take over the tab and keep the gifts. The columns are: A gift name, B price, C link, D notes, F "bought" checkbox, G surprise gift from. Row 1 holds the headers.
+| Value | Where it may live |
+|---|---|
+| Project URL | Public. In `config.js` |
+| Publishable (or anon) key | Public. In `config.js`. Security comes from the database rules, not from hiding this key |
+| `service_role` / secret key (`sb_secret_…`) | **Secret.** Never in the website or git. Supabase gives it to the Edge Function automatically. You only use it yourself for `migration/import.mjs` and `scripts/admin-reset-password.mjs`, in your own terminal |
+| Database password, `SIGNUP_CODE` | **Secret.** Never in git |
 
-## Someone forgot their password and their recovery answer
+The website refuses to start if `config.js` contains a secret key. GitHub Pages serves static files and Actions variables don't reach them, so the public values go straight in `config.js`.
 
-In Apps Script, open `adminResetPassword`, fill in `NAME` and `NEW_PASSWORD` inside the function, choose `adminResetPassword` in the function dropdown, and click **Run**. Tell the person their new password, and ask them to change it in Account.
+## 6. Try it locally
+
+```
+python3 -m http.server 8000
+```
+
+Open `http://localhost:8000`, create an account (username, password, recovery question), create a group, add a gift, then try Export and Import in the Account area.
+
+## 7. Run the tests (development project only)
+
+```
+npm install
+DEV_PROJECT_CONFIRM=yes SUPABASE_URL=https://YOUR-REF.supabase.co SUPABASE_PUBLISHABLE_KEY=sb_publishable_... npm test
+```
+
+If you set `SIGNUP_CODE`, also set it in your shell. The tests create four throwaway users through the real sign-up, check permissions and surprise-gift privacy through the real API, test sign-in, recovery and deletion, then delete the users. They sign up from one network address, so on a dev project you may need `supabase secrets set SIGNUP_LIMIT_PER_HOUR=50`. They refuse to run without `DEV_PROJECT_CONFIRM=yes`. **Never run them against production.**
+
+Also check by hand with two browsers: tick a gift in one and confirm the owner's browser never shows it. Add a surprise gift and confirm the owner can't see it.
+
+## 8. Deploy to GitHub Pages
+
+1. Commit and push the project to the branch Pages serves.
+2. **Settings → Pages → Build and deployment:** *Deploy from a branch*, branch *main*, folder */ (root)*. There is no build step.
+3. Open your site once it's deployed.
+
+## 9. Move existing data
+
+Follow [docs/MIGRATION.md](docs/MIGRATION.md).
+
+## Someone forgot their password and their answer
+
+```
+SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node scripts/admin-reset-password.mjs "Username" "TemporaryPassword1"
+```
+
+Tell them the temporary password privately and ask them to change it in Account.
 
 ## Troubleshooting
 
-| What you see | What to do |
+| Problem | Fix |
 |---|---|
-| "Could not load the sheet" | Check `SCRIPT_URL`: it must start with `script.google.com` and end in `/exec`. A link starting with `script.googleusercontent.com` is wrong. |
-| "Failed to fetch" | **Who has access** must be **Anyone**, not "Anyone with Google account". Then redeploy with **New version**. Try a private window to rule out a browser extension. |
-| Changes to `Code.gs` do nothing | You need **Deploy → Manage deployments → pencil → New version → Deploy**. |
-| "Wrong family code" | The code typed must match `SIGNUP_CODE` exactly, including capitals. |
-| Page looks unstyled or the theme won't change | The `themes` folder must be uploaded next to `index.html`. |
-| You see everyone's old logins after updating | Everyone logs in again after the URL changes. Their accounts are kept. |
-
-## Good to know
-
-- Passwords are stored as salted hashes, but the site checks them through a normal web request. It's meant for family gift lists, not sensitive data. Don't reuse an important password.
-- Anyone who can open the Google Sheet can see everything in it, including who bought what and every surprise gift. Don't share the sheet with the people it's a surprise for.
-- Google's free limits are far above what a family needs.
+| "Add your Supabase URL and publishable key" | `config.js` is empty or not uploaded |
+| "Network problem" when signing in | The Edge Function isn't deployed, or `ALLOWED_ORIGINS` doesn't include your site's origin |
+| "Could not create the account" | Check the function logs in the dashboard. If it mentions an invalid email, set the `EMAIL_DOMAIN` secret |
+| "That sign-up code is not right" | Match the `SIGNUP_CODE` secret exactly |
+| "Too many attempts" | Rate limits. Wait 15 minutes (or an hour for sign-ups) |
+| Lists are empty | Join or create a group. People only see lists of group-mates |
+| An SQL file fails | Run files in order on a fresh project and send me the error message |
+| Changed `config.js` but nothing changes | Hard refresh (Ctrl+Shift+R or Cmd+Shift+R) |

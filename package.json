@@ -1,0 +1,10 @@
+{
+  "name": "christmas-gift-list",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/security.test.mjs",
+    "import": "node migration/import.mjs"
+  },
+  "devDependencies": { "@supabase/supabase-js": "^2.45.4" }
+}

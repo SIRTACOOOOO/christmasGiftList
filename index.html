@@ -3,13 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script>
-// ================= SETTINGS (edit this) =================
-// Your Apps Script web app URL. It starts with https://script.google.com and ends in /exec
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPSIUTTEeQdgaAHIvFtEcBVyXAJL4HyhKsZ6gW5MTULy7Lv-K5Ktaex3OkgqdTwmJ_mg/exec';
-// Themes live in the "themes" folder. See themes/README.md.
-// ========================================================
-</script>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="themes/themes.js"></script>
 <link id="themecss" rel="stylesheet">
 <title>Christmas List</title>
@@ -47,7 +42,12 @@ input,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-
 .btn.danger{color:var(--berry)}
 .link{border:0;background:none;color:var(--pine);text-decoration:underline;cursor:pointer;padding:0}
 button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--pine);outline-offset:2px}
-#people{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
+#people{display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;padding-bottom:8px;margin:0 0 10px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+#people button{flex:0 0 auto;scroll-snap-align:start;white-space:nowrap}
+#psearch{margin:0 0 10px}
+.io{margin:-4px 0 12px;color:var(--mute);font-size:.92rem}
+.members{max-height:120px;overflow:auto}
+.prev{max-height:160px;overflow:auto;font-size:.9rem;color:var(--mute);padding-left:18px}
 #people button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 16px;cursor:pointer}
 #people button[aria-pressed=true]{background:var(--pine);color:var(--on-pine);border-color:var(--pine)}
 select{padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);margin:0 0 12px}
@@ -93,6 +93,7 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
   <h1 id="title">Christmas List</h1>
   <p class="sub" id="sub"></p>
   <select id="gsel" hidden aria-label="Show people from group"></select>
+  <input id="psearch" type="search" placeholder="Find a person" aria-label="Find a person" hidden>
   <div id="people" role="group" aria-label="Lists"></div>
   <div class="bar">
     <input id="q" type="search" placeholder="Search gifts" aria-label="Search gifts">
@@ -103,6 +104,7 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
     </div>
     <button class="btn primary" id="add">Add gift</button>
   </div>
+  <p class="io" id="io" hidden><button class="link" id="exp">Export my list (CSV)</button> &middot; <button class="link" id="imp">Import from CSV</button><input type="file" id="impfile" accept=".csv,text/csv,text/plain" hidden></p>
   <p class="totals"><span id="l-left">Still to buy: <b id="t-left">$0</b></span><span id="l-done">Bought: <b id="t-done">$0</b></span></p>
   <ul id="list"></ul>
   <p class="empty" id="empty" hidden></p>
@@ -111,13 +113,15 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 <dialog id="auth">
   <form id="aform">
     <h2 id="atitle">Log in</h2>
-    <label for="a-name">Name</label><input id="a-name" autocomplete="username" required>
-    <div id="a-pw-box"><label for="a-pw">Password</label><input id="a-pw" type="password" autocomplete="current-password" required></div>
-    <div id="a-code-box" hidden><label for="a-code">Family code</label><input id="a-code"></div>
-    <div id="a-reset-box" hidden>
-      <p class="note" style="color:var(--ink)">Your question: <b id="a-q"></b></p>
-      <label for="a-ans">Your answer</label><input id="a-ans" autocomplete="off">
-      <label for="a-new">New password</label><input id="a-new" type="password" autocomplete="new-password">
+    <p class="note" id="a-note" hidden></p>
+    <div id="b-name"><label for="a-name">Username</label><input id="a-name" maxlength="30" autocomplete="username" required></div>
+    <p class="note" id="b-shownq" hidden style="color:var(--ink)">Your question: <b id="a-shownq"></b></p>
+    <div id="b-ans" hidden><label for="a-ans" id="l-ans">Answer</label><input id="a-ans" autocomplete="off" maxlength="100"></div>
+    <div id="b-pw"><label for="a-pw" id="l-pw">Password</label><input id="a-pw" type="password" autocomplete="current-password"></div>
+    <div id="b-q" hidden><label for="a-q">Recovery question</label><input id="a-q" maxlength="120" placeholder="A question only you know the answer to"></div>
+    <div id="b-codes" hidden>
+      <label for="a-signup">Sign-up code (if you were given one)</label><input id="a-signup" autocomplete="off">
+      <label for="a-claim">Claim code (only if you had an account on the old site)</label><input id="a-claim" autocomplete="off" autocapitalize="characters">
     </div>
     <p class="err" id="a-err" role="alert"></p>
     <div class="row"><span style="margin-right:auto;display:flex;gap:12px;flex-wrap:wrap"><button type="button" class="link" id="a-switch">Create an account</button><button type="button" class="link" id="a-forgot">Forgot password?</button></span><button class="btn primary" id="a-go">Log in</button></div>
@@ -142,28 +146,39 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 <dialog id="adlg">
   <h2>Account</h2>
   <p class="note" id="e-now"></p>
-  <form id="eform">
-    <label for="e-q">Recovery question</label><input id="e-q" maxlength="120" placeholder="A question only you know the answer to">
-    <label for="e-a">Answer</label><input id="e-a" autocomplete="off">
-    <label for="e-pw">Current password</label><input id="e-pw" type="password" autocomplete="current-password">
-    <div class="row"><button class="btn">Save question</button></div>
-    <p class="note">If you forget your password, answering this lets you pick a new one. Pick something others can’t guess. The answer ignores capital letters. Leave both boxes empty and save to remove it.</p>
-  </form>
-  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
   <form id="nform">
     <label for="n-new">Change username</label><input id="n-new" maxlength="30" autocomplete="off" required>
-    <label for="n-pw">Current password</label><input id="n-pw" type="password" autocomplete="current-password" required>
     <div class="row"><button class="btn">Change username</button></div>
-    <p class="note">Your list, groups and surprise gifts all move with you. You log in with the new name from now on.</p>
+    <p class="note">Your list, groups and surprise gifts all move with you.</p>
   </form>
   <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
   <form id="pform">
     <label for="p-cur">Current password</label><input id="p-cur" type="password" autocomplete="current-password" required>
-    <label for="p-new">New password</label><input id="p-new" type="password" autocomplete="new-password" required>
-    <label for="p-new2">New password again</label><input id="p-new2" type="password" autocomplete="new-password" required>
+    <label for="p-new">New password (8 or more characters)</label><input id="p-new" type="password" minlength="8" autocomplete="new-password" required>
+    <label for="p-new2">New password again</label><input id="p-new2" type="password" minlength="8" autocomplete="new-password" required>
     <div class="row"><button class="btn">Change password</button></div>
   </form>
+  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+  <form id="qform">
+    <label for="q-q">Recovery question</label><input id="q-q" maxlength="120" required placeholder="A question only you know the answer to">
+    <label for="q-a">Answer</label><input id="q-a" autocomplete="off" maxlength="100" required>
+    <label for="q-pw">Current password</label><input id="q-pw" type="password" autocomplete="current-password" required>
+    <div class="row"><button class="btn">Save question</button></div>
+    <p class="note">Used if you forget your password. Saving replaces your current question. The answer ignores capital letters.</p>
+  </form>
+  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+  <form id="dform">
+    <label for="d-pw">Delete my account</label><input id="d-pw" type="password" autocomplete="current-password" required placeholder="Current password">
+    <div class="row"><button class="btn danger">Delete my account</button></div>
+    <p class="note">Permanently removes your login, your list and your group memberships. Surprise gifts you added for others stay hidden from them. Export your list first if you want a copy.</p>
+  </form>
   <div class="row"><button type="button" class="btn" id="aclose">Close</button></div>
+</dialog>
+<dialog id="idlg">
+  <h2>Import gifts</h2>
+  <p class="note" id="i-sum"></p>
+  <ol class="prev" id="i-prev"></ol>
+  <div class="row"><button type="button" class="btn" id="i-cancel">Cancel</button><button type="button" class="btn primary" id="i-go">Import</button></div>
 </dialog>
 <dialog id="gdlg">
   <h2>Groups</h2>
@@ -177,8 +192,8 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 
 <script>
 const $ = id => document.getElementById(id);
-let token = '', me = '', groups = [], gf = '', people = [], person = '', items = [], filter = 'all', editing = null, signup = false;
-try { token = localStorage.getItem('giftToken') || ''; } catch (e) {}
+const CFG = window.GIFT_CONFIG || {};
+let sb = null, session = null, myId = '', me = '', groups = [], gf = '', people = [], person = '', items = [], filter = 'all', editing = null;
 try { person = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
 const themeOf = id => THEMES.find(t => t.id === id) || THEMES[0];
 let theme = THEMES[0].id;
@@ -200,84 +215,161 @@ const isUrl = v => /^https?:\/\//i.test(v);
 const isMine = () => person.toLowerCase() === me.toLowerCase();
 function toast(t) { const m = $('msg'); m.textContent = t; m.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => m.classList.remove('show'), 3000); }
 
-let busy = 0, loadSeq = 0, lists = {};
-async function api(body) {
-  busy++; $('sync').hidden = false;
-  try { return await rawApi(body); } finally { if (--busy === 0) $('sync').hidden = true; }
+let busy = 0, loadSeq = 0, lists = {}, byName = {}, names = {}, mode = 'login', scrollToPerson = false;
+const track = async p => { busy++; $('sync').hidden = false; try { return await p; } finally { if (--busy === 0) $('sync').hidden = true; } };
+function errMsg(e) {
+  const m = String((e && e.message) || e || '');
+  if (/failed to fetch|networkerror|load failed/i.test(m)) return 'Network problem. Check your connection and try again.';
+  if (e && (e.status === 401 || /jwt/i.test(m))) { setTimeout(() => sb && sb.auth.signOut(), 0); return 'Your session expired. Please log in again.'; }
+  if (e && (e.code === '42501' || e.status === 403)) return 'You are not allowed to do that.';
+  if (e && e.code === 'P0001') return m;                              // our own friendly messages from the database
+  if (e && e.code && /^(23|22)/.test(e.code)) return 'Please check what you entered and try again.';
+  return e && e.code ? 'Something went wrong. Please try again.' : (m || 'Something went wrong. Please try again.');
 }
-async function rawApi(body) {
-  body.token = token;
-  const r = await fetch(SCRIPT_URL + '?payload=' + encodeURIComponent(JSON.stringify(body)));
-  const j = await r.json();
-  if (j.error) {
-    if (j.error === 'Please sign in') { setToken(''); showAuth(); }
-    if (/list changed/i.test(j.error)) load();
-    throw new Error(j.error);
-  }
-  return j;
-}
-function setToken(t) { token = t; try { t ? localStorage.setItem('giftToken', t) : localStorage.removeItem('giftToken'); } catch (e) {} }
+function clearState() { myId = me = ''; items = []; people = []; groups = []; lists = {}; byName = {}; render(); }
 
 /* ---- sign in ---- */
-function showAuth() { $('acct').hidden = true; if (!$('auth').open) $('auth').showModal(); $('a-name').focus(); }
+async function fn(body) {      // calls the trusted "account" Edge Function
+  const r = await track(sb.functions.invoke('account', {body}));
+  if (r.error) {
+    let m = 'Something went wrong. Please try again.';
+    try { const j = await r.error.context.json(); if (j && j.error) m = j.error; }
+    catch (e) { if (/failed to send|fetch/i.test(String(r.error.message))) m = 'Network problem. Check your connection and try again.'; }
+    throw new Error(m);
+  }
+  return r.data;
+}
+function showAuth() { $('acct').hidden = true; if (!$('auth').open) $('auth').showModal(); }
 $('auth').addEventListener('cancel', e => e.preventDefault());
-let mode = 'login';
 function setMode(m, msg) {
   mode = m; $('a-err').textContent = msg || '';
-  $('atitle').textContent = {login: 'Log in', signup: 'Create an account', forgot: 'Reset your password', reset: 'Answer your question'}[m];
-  $('a-go').textContent = {login: 'Log in', signup: 'Create account', forgot: 'Continue', reset: 'Change password'}[m];
-  $('a-pw-box').hidden = m === 'forgot' || m === 'reset'; $('a-pw').required = !$('a-pw-box').hidden;
-  $('a-code-box').hidden = m !== 'signup'; $('a-reset-box').hidden = m !== 'reset';
-  $('a-ans').required = $('a-new').required = m === 'reset';
-  $('a-pw').autocomplete = m === 'signup' ? 'new-password' : 'current-password';
-  $('a-switch').textContent = m === 'login' ? 'Create an account' : m === 'signup' ? 'I already have an account' : 'Back to log in';
+  const T = {login: 'Log in', signup: 'Create an account', forgot: 'Reset your password', reset: 'Answer your question'};
+  const G = {login: 'Log in', signup: 'Create account', forgot: 'Continue', reset: 'Change password'};
+  const N = {signup: 'Pick a recovery question only you can answer. It is the only way back in if you forget your password.', forgot: 'Enter your username to see your recovery question.'};
+  $('atitle').textContent = T[m]; $('a-go').textContent = G[m];
+  $('a-note').textContent = N[m] || ''; $('a-note').hidden = !N[m];
+  $('b-pw').hidden = m === 'forgot'; $('a-pw').required = m !== 'forgot'; $('a-pw').minLength = (m === 'signup' || m === 'reset') ? 8 : 0;
+  $('l-pw').textContent = m === 'reset' ? 'New password (8 or more characters)' : m === 'signup' ? 'Password (8 or more characters)' : 'Password';
+  $('a-pw').autocomplete = m === 'login' ? 'current-password' : 'new-password';
+  $('a-name').readOnly = m === 'reset';
+  $('b-q').hidden = m !== 'signup'; $('a-q').required = m === 'signup';
+  $('b-ans').hidden = !(m === 'signup' || m === 'reset'); $('a-ans').required = !$('b-ans').hidden;
+  $('b-shownq').hidden = m !== 'reset'; $('b-codes').hidden = m !== 'signup';
+  $('a-switch').textContent = m === 'login' ? 'Create an account' : 'Back to log in';
   $('a-forgot').hidden = m !== 'login';
 }
 $('a-switch').onclick = () => setMode(mode === 'login' ? 'signup' : 'login');
 $('a-forgot').onclick = () => setMode('forgot');
 $('aform').onsubmit = async e => {
   e.preventDefault(); $('a-err').textContent = ''; $('a-go').disabled = true;
-  const name = $('a-name').value.trim();
+  const username = $('a-name').value.trim(), password = $('a-pw').value;
   try {
-    if (mode === 'forgot') { const q = await api({action: 'getQuestion', name}); $('a-q').textContent = q.question; setMode('reset'); }
-    else if (mode === 'reset') { await api({action: 'resetPassword', name, answer: $('a-ans').value, newPassword: $('a-new').value}); $('a-ans').value = $('a-new').value = ''; setMode('login', 'Password changed. You can log in now.'); }
-    else {
-      const j = await api({action: mode, name, password: $('a-pw').value, code: $('a-code').value.trim()});
-      setToken(j.token); me = j.name; person = me; $('a-pw').value = ''; $('auth').close(); await load();
+    if (mode === 'login' || mode === 'signup') {
+      const d = mode === 'login' ? await fn({action: 'login', username, password})
+        : await fn({action: 'signup', username, password, question: $('a-q').value.trim(), answer: $('a-ans').value, signupCode: $('a-signup').value.trim(), claimCode: $('a-claim').value.trim()});
+      if (!d.session) throw new Error('Could not log in. Please try again.');
+      const r = await sb.auth.setSession(d.session); if (r.error) throw r.error;
+      $('a-pw').value = $('a-ans').value = $('a-claim').value = '';
+    } else if (mode === 'forgot') {
+      const d = await fn({action: 'question', username}); $('a-shownq').textContent = d.question; $('a-pw').value = ''; setMode('reset');
+    } else if (mode === 'reset') {
+      await fn({action: 'reset', username, answer: $('a-ans').value, newPassword: password});
+      $('a-ans').value = $('a-pw').value = ''; setMode('login', 'Password changed. Log in with your new password.');
     }
-  } catch (err) { $('a-err').textContent = err.message; }
+  } catch (err) { $('a-err').textContent = errMsg(err); }
   $('a-go').disabled = false;
 };
-$('logout').onclick = async () => { try { await api({action: 'logout'}); } catch (e) {} setToken(''); items = []; people = []; render(); showAuth(); };
+$('logout').onclick = () => sb.auth.signOut();
+
+async function afterSignIn() {
+  if (!session) return;
+  const r = await track(sb.rpc('my_profile'));
+  if (r.error) return toast(errMsg(r.error));
+  if (!r.data || !r.data.length) { toast('This login has no profile. Please contact the site owner.'); return void sb.auth.signOut(); }
+  myId = r.data[0].id; me = r.data[0].username; if (!person) person = me;
+  if ($('auth').open) $('auth').close();
+  scrollToPerson = true; await load();
+}
+function isServiceKey(k) {
+  if (/^sb_secret_/.test(k)) return true;
+  try { return JSON.parse(atob(k.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).role === 'service_role'; } catch (e) { return false; }
+}
+function init() {
+  if (!CFG.SUPABASE_URL || !CFG.SUPABASE_KEY) { $('sub').textContent = 'Add your Supabase URL and publishable key to config.js to connect the site.'; return; }
+  if (isServiceKey(CFG.SUPABASE_KEY)) { $('sub').textContent = 'config.js contains a secret key. Remove it and use the publishable key instead.'; return; }
+  sb = supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_KEY);
+  sb.auth.onAuthStateChange((ev, s) => {
+    session = s;
+    if (ev === 'SIGNED_OUT') { clearState(); setMode('login'); showAuth(); return; }
+    if (ev === 'INITIAL_SESSION' && !s) { setMode('login'); showAuth(); return; }
+    if (s && (ev === 'INITIAL_SESSION' || ev === 'SIGNED_IN')) setTimeout(afterSignIn, 0);   // never call the API inside this callback directly
+  });
+}
 
 /* ---- data ---- */
+// Big groups: pages of 1,000 rows for the directory, and only the SELECTED person's gifts are loaded.
+async function fetchAll(table, cols, orders) {
+  const out = [];
+  for (let from = 0; ; from += 1000) {
+    let q = sb.from(table).select(cols); orders.forEach(o => { q = q.order(o); });
+    const r = await q.range(from, from + 999); if (r.error) throw r.error;
+    out.push(...r.data); if (r.data.length < 1000) return out;
+  }
+}
+async function loadDirectory() {
+  const [pr, gr, gm] = await Promise.all([fetchAll('profiles', 'id,username', ['id']), fetchAll('groups', 'id,name,invite_code', ['id']), fetchAll('group_members', 'group_id,profile_id,role', ['group_id', 'profile_id'])]);
+  names = {}; byName = {};
+  pr.forEach(p => { names[p.id] = p.username; byName[p.username.toLowerCase()] = p.id; });
+  me = names[myId] || me;
+  people = pr.map(p => p.username).sort((a, b) => (b === me) - (a === me) || a.localeCompare(b));
+  groups = gr.map(g => ({id: g.id, name: g.name, code: g.invite_code,
+    members: gm.filter(m => m.group_id === g.id).map(m => ({id: m.profile_id, name: names[m.profile_id] || '?', role: m.role})),
+    owner: gm.some(m => m.group_id === g.id && m.profile_id === myId && m.role === 'owner')}));
+  if (gf && !groups.some(g => g.id === gf)) gf = '';
+}
+async function loadList(name) {
+  const id = byName[name.toLowerCase()]; if (!id) return;
+  const r = await sb.from('gifts').select('id,owner_id,created_by,name,price,link,notes,updated_at,purchases(gift_id)').eq('owner_id', id).order('created_at').limit(1000);
+  if (r.error) throw r.error;
+  lists[name] = r.data.map(g => {
+    const surprise = g.created_by !== g.owner_id, isBought = Array.isArray(g.purchases) ? g.purchases.length > 0 : !!g.purchases;
+    return {id: g.id, name: g.name, price: Number(g.price) || 0, link: g.link || '', notes: g.notes || '', stamp: g.updated_at,
+      bought: g.owner_id !== myId && isBought, by: surprise ? (names[g.created_by] || 'someone') : '', byId: g.created_by};
+  });
+}
 async function load() {
-  if (!SCRIPT_URL) { $('sub').textContent = 'Add your Apps Script URL to SCRIPT_URL in index.html to connect the site.'; return; }
-  if (!token) return showAuth();
+  if (!sb || !session || !myId) return;
   const seq = ++loadSeq;
   try {
-    const j = await api({action: 'listAll', person});
-    if (seq !== loadSeq) return;              // a newer refresh is already on its way
-    me = j.me; groups = j.groups || []; if (gf && !groups.some(g => g.code === gf)) gf = ''; people = j.people; person = j.person;
-    lists = {}; Object.keys(j.lists).forEach(n => { lists[n] = j.lists[n].map(i => ({...i, price: num(i.price)})); });
-    items = lists[person] || [];
-    render();
-  } catch (e) { if (!$('auth').open) { $('empty').hidden = false; $('empty').textContent = 'Could not load the sheet: ' + e.message; } }
+    await track(loadDirectory()); if (seq !== loadSeq) return;
+    person = people.find(n => n.toLowerCase() === person.toLowerCase()) || me;
+    await track(loadList(person)); if (seq !== loadSeq) return;
+    items = lists[person] || []; render();
+  } catch (e) { toast(errMsg(e)); $('empty').hidden = false; $('empty').textContent = 'Could not load your lists. ' + errMsg(e); }
 }
-function pick(n) { person = n; try { history.replaceState(null, '', '#' + encodeURIComponent(n)); } catch (e) {} items = lists[n] || []; render(); }
+function pick(n) {
+  person = n; scrollToPerson = true;
+  try { history.replaceState(null, '', '#' + encodeURIComponent(n)); } catch (e) {}
+  items = lists[n] || []; render();                 // cached copy straight away, then a fresh one
+  const seq = ++loadSeq;
+  track(loadList(n)).then(() => { if (seq === loadSeq && person === n) { items = lists[n] || []; render(); } }).catch(e => toast(errMsg(e)));
+}
 
 /* ---- render ---- */
 function render() {
   const mine = isMine();
   $('acct').hidden = !me; $('who').textContent = me ? 'Signed in as ' + me : '';
   const gs = $('gsel'); gs.hidden = groups.length < 2; gs.innerHTML = '';
-  [['', 'All groups'], ...groups.map(g => [g.code, g.name])].forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; o.selected = v === gf; gs.append(o); });
-  const gm = gf && groups.find(g => g.code === gf);
+  [['', 'All groups'], ...groups.map(g => [g.id, g.name])].forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; o.selected = v === gf; gs.append(o); });
+  const gm = gf && groups.find(g => g.id === gf);
+  const ps = $('psearch'); ps.hidden = people.length <= 12; const pq = ps.value.toLowerCase();
   const box = $('people'); box.innerHTML = '';
-  [...people].filter(n => !gm || n.toLowerCase() === me.toLowerCase() || gm.members.some(m => m.toLowerCase() === n.toLowerCase())).sort((a, b) => (b.toLowerCase() === me.toLowerCase()) - (a.toLowerCase() === me.toLowerCase())).forEach(n => {
-    const b = document.createElement('button'); b.textContent = n.toLowerCase() === me.toLowerCase() ? 'My list' : n;
+  people.filter(n => (!gm || n === me || gm.members.some(m => m.name === n)) && (n === me || n === person || n.toLowerCase().includes(pq))).forEach(n => {
+    const b = document.createElement('button'); b.textContent = n === me ? 'My list' : n;
     b.setAttribute('aria-pressed', n === person); b.onclick = () => pick(n); box.append(b);
+    if (n === person && scrollToPerson) { scrollToPerson = false; requestAnimationFrame(() => b.scrollIntoView({inline: 'center', block: 'nearest'})); }
   });
+  $('io').hidden = !isMine() || !me;
   document.title = themeOf(theme).title + (person ? ' - ' + person : '');
   $('sub').textContent = !person ? '' : mine ? 'Your list. For the surprise, you can\u2019t see what has been bought.' : 'Tick what you\u2019ve bought for ' + person + '. Use Add surprise gift for anything not on their list; ' + person + ' won\u2019t see it.';
   $('add').textContent = mine ? 'Add gift' : 'Add surprise gift';
@@ -288,7 +380,7 @@ function render() {
   shown.forEach(i => {
     const li = document.createElement('li'); li.className = (mine ? 'mine ' : '') + (i.bought ? 'done' : '');
     if (!mine) {
-      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'chk'; cb.checked = i.bought; cb.disabled = !!i.by || !i.row;
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'chk'; cb.checked = i.bought; cb.disabled = !!i.by || !!i.pending;
       cb.setAttribute('aria-label', 'Bought: ' + i.name); cb.onchange = () => toggle(i, cb.checked); li.append(cb);
     }
     const mid = document.createElement('div');
@@ -300,7 +392,7 @@ function render() {
     if (i.by) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'Surprise gift from ' + (i.by.toLowerCase() === me.toLowerCase() ? 'you' : i.by); mid.append(t); }
     const right = document.createElement('div'); right.style.textAlign = 'right';
     const p = document.createElement('div'); p.className = 'price'; p.textContent = i.price ? money(i.price) : ''; right.append(p);
-    if (i.row && (mine || (i.by && i.by.toLowerCase() === me.toLowerCase()))) { const eb = document.createElement('button'); eb.className = 'edit'; eb.textContent = 'Edit'; eb.onclick = () => openDlg(i); right.append(eb); }
+    if (!i.pending && (mine || (i.by && i.byId === myId))) { const eb = document.createElement('button'); eb.className = 'edit'; eb.textContent = 'Edit'; eb.onclick = () => openDlg(i); right.append(eb); }
     li.append(mid, right); $('list').append(li);
   });
   $('empty').hidden = !me || (shown.length > 0 && groups.length > 0); $('empty').textContent = groups.length ? 'No gifts to show yet.' : 'Create a group or join one with an invite code (Groups, top right) to see other people\u2019s lists.';
@@ -311,8 +403,10 @@ function render() {
 
 async function toggle(i, v) {
   const old = i.bought; i.bought = v; render();
-  try { await api({action: 'toggle', person, row: i.row, was: i.name, bought: v}); }
-  catch (e) { i.bought = old; render(); toast(e.message); }
+  try {
+    const r = v ? await track(sb.from('purchases').insert({gift_id: i.id, bought_by: myId})) : await track(sb.from('purchases').delete().eq('gift_id', i.id));
+    if (r.error && r.error.code !== '23505') throw r.error;     // 23505 = already marked (a retry), which is fine
+  } catch (e) { i.bought = old; render(); toast(errMsg(e)); }
 }
 
 function openDlg(i) {
@@ -326,29 +420,49 @@ function openDlg(i) {
 }
 $('add').onclick = () => openDlg(null);
 $('cancel').onclick = () => $('dlg').close();
-$('q').oninput = render;
+$('q').oninput = render; $('psearch').oninput = render;
 document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
   filter = b.dataset.f; document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); render();
 });
 
 $('form').onsubmit = e => {
   e.preventDefault();
-  const mine = isMine();
-  const d = {action: 'save', person, row: editing ? editing.row : null, was: editing ? editing.name : '', name: $('f-name').value.trim(), price: $('f-price').value, link: fixLink($('f-link').value), notes: $('f-notes').value.trim()};
-  if (!d.name) return;
-  const target = editing || {row: 0, bought: !mine, by: mine ? '' : me};   // shown straight away, confirmed by the sheet
-  Object.assign(target, {name: d.name, price: num(d.price), link: d.link, notes: d.notes});
-  if (!editing) items.push(target);
+  const mine = isMine(), name = $('f-name').value.trim(); if (!name) return;
+  const price = $('f-price').value.trim(), link = fixLink($('f-link').value), notes = $('f-notes').value.trim();
+  const d = {name, price: price === '' ? null : num(price), link: link || null, notes: notes || null};
+  const shown = {name, price: d.price || 0, link, notes};
+  let job;
+  if (editing) {
+    const stamp = editing.stamp; Object.assign(editing, shown);          // shown straight away, confirmed by the database
+    job = track(sb.from('gifts').update(d).eq('id', editing.id).eq('updated_at', stamp).select('id')).then(r => {
+      if (r.error) throw r.error;
+      if (!r.data.length) toast('This gift was changed somewhere else. Showing the latest version.'); else toast('Gift saved');
+    });
+  } else {
+    const id = crypto.randomUUID();                                         // the same id on a retry means no duplicate gift
+    items.push({id, ...shown, pending: true, bought: !mine, by: mine ? '' : me, byId: myId});
+    job = track(sb.from('gifts').insert({id, owner_id: byName[person.toLowerCase()], ...d})).then(r => {
+      if (r.error && r.error.code !== '23505') throw r.error; toast('Gift saved');
+    });
+  }
   $('dlg').close(); render();
-  api(d).then(() => { toast('Gift saved'); load(); }).catch(err => { toast(err.message); load(); });
+  job.catch(err => toast(errMsg(err))).finally(load);
 };
 $('del').onclick = () => {
   if (!editing || !confirm('Delete "' + editing.name + '"?')) return;
-  const e = editing, k = items.indexOf(e); if (k > -1) items.splice(k, 1);
+  const g = editing, k = items.indexOf(g); if (k > -1) items.splice(k, 1);
   $('dlg').close(); render();
-  api({action: 'delete', person, row: e.row, was: e.name}).then(() => { toast('Gift deleted'); load(); }).catch(err => { toast(err.message); load(); });
+  track(sb.from('gifts').delete().eq('id', g.id)).then(r => { if (r.error) throw r.error; toast('Gift deleted'); })
+    .catch(err => toast(errMsg(err))).finally(load);
 };
+
+/* ---- groups ---- */
 $('gsel').onchange = () => { gf = $('gsel').value; render(); };
+const lnk = (t, f) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'link'; b.textContent = t; b.onclick = f; return b; };
+async function act(fn, ok) {
+  try { const r = await track(fn()); if (r.error) throw r.error; if (ok) toast(ok); await load(); return r; }
+  catch (e) { toast(errMsg(e)); }
+}
 function renderGroups() {
   const box = $('glist'); box.innerHTML = '';
   if (!groups.length) { const p = document.createElement('p'); p.className = 'note'; p.textContent = 'You are not in a group yet. Create one or join with an invite code.'; box.append(p); }
@@ -356,50 +470,134 @@ function renderGroups() {
     const d = document.createElement('div'); d.className = 'grp';
     const t = document.createElement('b'); t.textContent = g.name;
     const c = document.createElement('p'); c.append('Invite code: '); const k = document.createElement('code'); k.textContent = g.code; c.append(k);
-    const m = document.createElement('p'); m.className = 'meta'; m.textContent = 'Members: ' + g.members.join(', ');
-    const l = document.createElement('button'); l.className = 'link'; l.textContent = 'Leave group';
-    l.onclick = async () => { if (!confirm('Leave "' + g.name + '"?')) return; try { await api({action: 'leaveGroup', code: g.code}); await load(); } catch (e) { toast(e.message); } };
-    d.append(t, c, m, l); box.append(d);
+    const m = document.createElement('p'); m.className = 'meta members'; m.append('Members: ');
+    g.members.forEach((x, n) => {
+      if (n) m.append(', '); m.append(x.name);
+      if (g.owner && x.id !== myId) m.append(' ', lnk('(remove)', () => confirm('Remove ' + x.name + '?') && act(() => sb.rpc('remove_member', {p_group: g.id, p_profile: x.id}), 'Member removed')));
+    });
+    const bar = document.createElement('p');
+    bar.append(lnk('Leave group', () => confirm('Leave "' + g.name + '"?') && act(() => sb.rpc('leave_group', {p_group: g.id}), 'You left the group')));
+    if (g.owner) {
+      bar.append(' ', lnk('New invite code', async () => { const r = await act(() => sb.rpc('rotate_invite_code', {p_group: g.id})); if (r && r.data) toast('New invite code: ' + r.data); }));
+      bar.append(' ', lnk('Delete group', () => confirm('Delete "' + g.name + '" for everyone?') && act(() => sb.rpc('delete_group', {p_group: g.id}), 'Group deleted')));
+    }
+    d.append(t, c, m, bar); box.append(d);
   });
 }
 $('groupsBtn').onclick = () => { renderGroups(); $('gdlg').showModal(); };
 $('gclose').onclick = () => $('gdlg').close();
 $('gcreate').onsubmit = async e => {
   e.preventDefault(); const name = $('g-new').value.trim(); if (!name) return;
-  try { const j = await api({action: 'createGroup', name}); $('g-new').value = ''; await load(); toast('Group created. Invite code: ' + j.code); } catch (err) { toast(err.message); }
+  const r = await act(() => sb.rpc('create_group', {p_name: name}), 'Group created'); if (r) $('g-new').value = '';
 };
 $('gjoin').onsubmit = async e => {
   e.preventDefault(); const code = $('g-code').value.trim(); if (!code) return;
-  try { const j = await api({action: 'joinGroup', code}); $('g-code').value = ''; await load(); toast('Joined ' + j.name); } catch (err) { toast(err.message); }
+  const r = await act(() => sb.rpc('join_group', {p_code: code}));
+  if (r) { if (r.data) { $('g-code').value = ''; toast('Joined the group'); } else toast('No group with that code'); }
 };
 
-function showEmail(j) { $('e-now').textContent = j.question ? 'Recovery question: ' + j.question : 'No recovery question yet. Add one so you can reset a forgotten password.'; }
-$('accountBtn').onclick = async () => { try { showEmail(await api({action: 'account'})); $('adlg').showModal(); } catch (e) { toast(e.message); } };
+/* ---- account ---- */
+$('accountBtn').onclick = () => { $('e-now').textContent = 'Signed in as ' + me; $('n-new').value = me; $('adlg').showModal(); };
 $('aclose').onclick = () => $('adlg').close();
-$('eform').onsubmit = async e => {
-  e.preventDefault();
-  try { await api({action: 'setQuestion', question: $('e-q').value.trim(), answer: $('e-a').value, password: $('e-pw').value}); $('e-pw').value = $('e-q').value = $('e-a').value = ''; showEmail(await api({action: 'account'})); toast('Recovery question saved'); }
-  catch (err) { toast(err.message); }
-};
 $('nform').onsubmit = async e => {
-  e.preventDefault();
-  try {
-    const old = me, j = await api({action: 'renameUser', newName: $('n-new').value.trim(), password: $('n-pw').value});
-    $('n-new').value = $('n-pw').value = '';
-    if (person.toLowerCase() === old.toLowerCase()) { person = j.name; try { history.replaceState(null, '', '#' + encodeURIComponent(j.name)); } catch (e) {} }
-    await load(); showEmail(await api({action: 'account'})); toast('Username changed to ' + j.name);
-  } catch (err) { toast(err.message); }
+  e.preventDefault(); const v = $('n-new').value.trim(); if (!v || v === me) return;
+  const was = isMine();
+  const r = await act(() => sb.rpc('change_username', {p_username: v}));
+  if (r) { if (was) person = v; me = v; try { history.replaceState(null, '', '#' + encodeURIComponent(person)); } catch (x) {} await load(); $('e-now').textContent = 'Signed in as ' + me; toast('Username changed to ' + v); }
 };
 $('pform').onsubmit = async e => {
   e.preventDefault();
   if ($('p-new').value !== $('p-new2').value) return toast('The new passwords do not match');
-  try { await api({action: 'changePassword', password: $('p-cur').value, newPassword: $('p-new').value}); $('p-cur').value = $('p-new').value = $('p-new2').value = ''; toast('Password changed. Other devices were signed out.'); }
-  catch (err) { toast(err.message); }
+  try {
+    const v = await track(sb.auth.signInWithPassword({email: session.user.email, password: $('p-cur').value}));
+    if (v.error) throw new Error('Current password is wrong');
+    const u = await track(sb.auth.updateUser({password: $('p-new').value})); if (u.error) throw u.error;
+    $('p-cur').value = $('p-new').value = $('p-new2').value = ''; toast('Password changed');
+  } catch (err) { toast(errMsg(err)); }
+};
+$('qform').onsubmit = async e => {
+  e.preventDefault();
+  try { await fn({action: 'setQuestion', question: $('q-q').value.trim(), answer: $('q-a').value, password: $('q-pw').value}); $('q-q').value = $('q-a').value = $('q-pw').value = ''; toast('Recovery question saved'); }
+  catch (err) { toast(errMsg(err)); }
+};
+$('dform').onsubmit = async e => {
+  e.preventDefault();
+  if (!confirm('Delete your account, list and group memberships for good? This cannot be undone.')) return;
+  try { await fn({action: 'deleteAccount', password: $('d-pw').value}); $('d-pw').value = ''; $('adlg').close(); await sb.auth.signOut({scope: 'local'}); toast('Your account was deleted'); }
+  catch (err) { toast(errMsg(err)); }
 };
 
-document.addEventListener('visibilitychange', () => { if (!document.hidden && token && me) load(); });
+/* ---- export / import (CSV that opens in Google Sheets and Excel) ---- */
+const CSV_HEAD = ['Gift names', 'Approx. price', 'Links', 'notes'];
+const safeCell = v => { v = String(v == null ? '' : v); if (/^[=+@\t\r-]/.test(v)) v = "'" + v; return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };   // stops spreadsheet formula injection
+const unsafeCell = v => String(v).replace(/^'([=+@\t\r-])/, '$1').trim();
+$('exp').onclick = () => {
+  const rows = [CSV_HEAD.join(',')].concat(items.filter(i => !i.by).map(i => [i.name, i.price ? i.price.toFixed(2) : '', i.link, i.notes].map(safeCell).join(',')));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\ufeff' + rows.join('\r\n') + '\r\n'], {type: 'text/csv;charset=utf-8'}));
+  a.download = 'gift-list-' + me.replace(/[^A-Za-z0-9._-]+/g, '-') + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast('Exported ' + (rows.length - 1) + ' gifts. In Google Sheets use File > Import > Upload.');
+};
+function parseCSV(text) {
+  text = text.replace(/^\ufeff/, '');
+  const first = text.split(/\r?\n/)[0] || '', d = (first.match(/;/g) || []).length > (first.match(/,/g) || []).length ? ';' : ',';
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === d) { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += c;
+  }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(x => String(x).trim() !== ''));
+}
+function readGifts(text) {
+  const rows = parseCSV(text), H = {name: /^(gift names?|gifts?|name|item|title)$/i, price: /^(approx\.? ?price|price|cost)$/i, link: /^(links?|url|urls|website)$/i, notes: /^(notes?|description|comments?)$/i};
+  let col = {name: 0, price: 1, link: 2, notes: 3}, start = 0;
+  for (let k = 0; k < Math.min(rows.length, 5); k++) {
+    const m = {}; rows[k].forEach((c, ix) => { for (const key in H) if (m[key] === undefined && H[key].test(String(c).trim())) m[key] = ix; });
+    if (m.name !== undefined) { col = {name: m.name, price: m.price, link: m.link, notes: m.notes}; start = k + 1; break; }
+  }
+  const have = new Set(items.filter(i => !i.by).map(i => (i.name + '|' + i.link).toLowerCase())), good = [], skipped = [];
+  let dupes = 0;
+  rows.slice(start).forEach((r, ix) => {
+    const cell = k => k === undefined ? '' : unsafeCell(r[k] === undefined ? '' : r[k]);
+    const name = cell(col.name), link = cell(col.link), notes = cell(col.notes), pr = cell(col.price).replace(/[$,\s]/g, '');
+    if (!name || name.charAt(0) === '~') return;
+    const price = pr === '' ? null : Number(pr);
+    if (name.length > 200 || link.length > 1000 || notes.length > 1000 || (price !== null && !(price >= 0 && price < 1e8))) { skipped.push('Row ' + (start + ix + 1) + ': ' + name.slice(0, 40)); return; }
+    const key = (name + '|' + link).toLowerCase(); if (have.has(key)) { dupes++; return; } have.add(key);
+    good.push({name, price, link: fixLink(link) || null, notes: notes || null});
+  });
+  return {good, dupes, skipped};
+}
+$('imp').onclick = () => $('impfile').click();
+let pending = [];
+$('impfile').onchange = async () => {
+  const f = $('impfile').files[0]; $('impfile').value = ''; if (!f) return;
+  if (f.size > 1e6) return toast('That file is too big (1 MB maximum).');
+  const {good, dupes, skipped} = readGifts(await f.text());
+  if (items.length + good.length > 1000) return toast('That would go over the 1,000 gift limit.');
+  if (good.length > 500) return toast('Please import 500 gifts or fewer at a time.');
+  pending = good;
+  $('i-sum').textContent = good.length + ' gift(s) ready to import. ' + dupes + ' duplicate(s) and ' + skipped.length + ' problem row(s) will be skipped.';
+  $('i-prev').innerHTML = ''; good.slice(0, 8).forEach(g => { const li = document.createElement('li'); li.textContent = g.name + (g.price ? ' (' + money(g.price) + ')' : ''); $('i-prev').append(li); });
+  skipped.slice(0, 3).forEach(t => { const li = document.createElement('li'); li.textContent = 'Skipped: ' + t; $('i-prev').append(li); });
+  $('i-go').disabled = !good.length; $('i-go').textContent = good.length ? 'Import ' + good.length : 'Nothing to import'; $('idlg').showModal();
+};
+$('i-cancel').onclick = () => { pending = []; $('idlg').close(); };
+$('i-go').onclick = async () => {
+  const rows = pending.map(g => ({id: crypto.randomUUID(), owner_id: myId, ...g})); $('i-go').disabled = true;
+  try { const r = await track(sb.from('gifts').insert(rows)); if (r.error) throw r.error; toast('Imported ' + rows.length + ' gifts'); }
+  catch (e) { toast(errMsg(e)); }
+  pending = []; $('idlg').close(); await load();
+};
+
+document.addEventListener('visibilitychange', () => { if (!document.hidden && session && myId) load(); });
 setTimeout(() => THEMES.forEach(t => fetch('themes/' + t.id + '.css').catch(() => {})), 2000);   // warm the cache so switching themes is instant
-load();
+init();
 </script>
 </body>
 </html>

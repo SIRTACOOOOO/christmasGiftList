@@ -109,4 +109,4 @@ Unverified assumptions to check first: that Supabase accepts the placeholder log
 
 ## License
 
-Add a `LICENSE` file of your choice (for example MIT) before publishing.
+GPL3

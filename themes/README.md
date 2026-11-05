@@ -53,3 +53,4 @@ Optional extras for fancier themes (see `christmas.css` and `birthday.css`, whic
 - Images are written as inline SVG, so no extra files are needed. You can also use `url(your-image.png)` if you put the image in this folder and write `url(themes/your-image.png)`.
 - A theme can load its own font by starting the file with an `@import` line. `birthday.css` shows how.
 - A theme can follow the device's dark mode with `@media (prefers-color-scheme: dark) { ... }`. `legacy.css` shows how.
+Hiding something so it will retry deploying :(

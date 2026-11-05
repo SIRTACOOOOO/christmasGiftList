@@ -85,7 +85,8 @@ try {
   const forged = randomUUID();
   await bob.c.from('gifts').insert({ id: forged, owner_id: alice.id, created_by: alice.id, name: 'Forged as alice' });
   ok(rows(await alice.c.from('gifts').select('*').eq('id', forged)) === 0, 'created_by cannot be forged to dodge the surprise rule');
-  ok((await alice.c.from('profiles').select('claim_hash')).error, 'claim_hash is not readable');
+  ok((await alice.c.from('profiles').select('username')).error, 'other people\'s full names cannot be read');
+  ok(rows(await alice.c.from('profiles').select('first_name,last_initial')) >= 1, 'first names are readable');
 
   // --- purchases and surprise gifts ------------------------------------------------------------------------------------------
   ok(!(await bob.c.from('purchases').insert({ gift_id: gid, bought_by: bob.id })).error, 'bob marks the gift bought');

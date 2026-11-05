@@ -64,18 +64,20 @@ Deno.serve(async (req) => {
     const ip = await sha((req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? 'unknown').split(',')[0].trim());
     const username = typeof b.username === 'string' ? b.username.trim() : '';
 
+    if (b.action === 'config') return reply(req, { signupCodeRequired: SIGNUP_CODE !== '' });
+
     if (b.action === 'signup') {
       if (SIGNUP_CODE && b.signupCode !== SIGNUP_CODE) return fail(req, 'That sign-up code is not right.');
       if ((await hits('signup:' + ip, 3600)) >= SIGNUP_LIMIT) return fail(req, 'Too many new accounts from this network. Please try later.', 429);
       await record('signup:' + ip);
       if (!NAME_RE.test(username)) return fail(req, "Names can use letters, numbers, spaces and - . ' (30 characters at most).");
       if (typeof b.password !== 'string' || b.password.length < 8 || b.password.length > 72) return fail(req, 'Passwords need 8 to 72 characters.');
-      const q = String(b.question ?? '').trim(), a = String(b.answer ?? '').trim();
-      if (q.length < 8 || q.length > 120 || a.length < 2 || a.length > 100) return fail(req, 'Choose a recovery question (8 or more characters) and an answer.');
+      const q = String(b.question ?? '').trim(), a = String(b.answer ?? '').trim();   // both optional, but if one is given, both are needed
+      if ((q || a) && (q.length < 8 || q.length > 120 || a.length < 2 || a.length > 100)) return fail(req, 'For a recovery question, give both the question (8 or more characters) and an answer. Or leave both empty.');
       const email = `${crypto.randomUUID()}@${EMAIL_DOMAIN}`;
       const created = await admin.auth.admin.createUser({ email, password: b.password, email_confirm: true });
       if (created.error || !created.data.user) { console.error('createUser', created.error?.message); return fail(req, 'Could not create the account. Please try again.', 500); }
-      const p = await admin.rpc('service_create_profile', { p_auth_user_id: created.data.user.id, p_username: username, p_question: q, p_answer: a });
+      const p = await admin.rpc('service_create_profile', { p_auth_user_id: created.data.user.id, p_username: username, p_question: q || null, p_answer: a || null });
       if (p.error || !p.data) {
         await admin.auth.admin.deleteUser(created.data.user.id);
         return fail(req, p.error ? 'Could not create the account. Please try again.' : 'Someone already has that name. Add a middle name or initial.');
@@ -126,7 +128,7 @@ Deno.serve(async (req) => {
       if (c === 'bad') return fail(req, 'Current password is wrong.', 403);
       if (b.action === 'setQuestion') {
         const q = String(b.question ?? '').trim(), a = String(b.answer ?? '').trim();
-        if (q.length < 8 || q.length > 120 || a.length < 2 || a.length > 100) return fail(req, 'Choose a recovery question (8 or more characters) and an answer.');
+        if ((q || a) && (q.length < 8 || q.length > 120 || a.length < 2 || a.length > 100)) return fail(req, 'Give both the question (8 or more characters) and an answer, or leave both empty to remove it.');
         const r = await admin.rpc('service_set_recovery', { p_auth_user_id: user.id, p_question: q, p_answer: a });
         if (r.error) return fail(req, 'Could not save the question.', 500);
         return reply(req, { ok: true });

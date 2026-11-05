@@ -5,6 +5,7 @@
    Edit the colors below. See themes/README.md for what each variable does. */
 html[data-theme=christmas] {
   --display: "Young Serif", Georgia, serif;
+  --dw: 400;
   --body: "Albert Sans", system-ui, sans-serif;
   --bg:       oklch(0.21 0.04 235);
   --panel:    oklch(0.975 0.012 95 / 0.97);

@@ -60,6 +60,20 @@ try {
   ok(!(await call({ action: 'login', username: dave.name, password: 'Brand-new-pass-1' })).session, 'a deleted account cannot log in');
   delete users.dave;
 
+  // --- optional recovery question, priority, birthday ----------------------------------------------------------------
+  const noQ = await call({ action: 'signup', username: 'erin' + run, password: pw, signupCode: SIGNUP_CODE });
+  ok(!!noQ.session, 'sign-up works without a recovery question');
+  const eTok = noQ.session?.access_token;
+  ok(typeof (await call({ action: 'question', username: 'erin' + run })).question === 'string', 'a person with no question looks the same as everyone else');
+  if (eTok) await call({ action: 'deleteAccount', password: pw }, eTok);
+  ok((await alice.c.rpc('set_birthday', { p_month: 2, p_day: 30 })).error, 'an impossible birthday is refused');
+  ok(!(await alice.c.rpc('set_birthday', { p_month: 12, p_day: 25 })).error, 'a valid birthday is saved');
+  ok((await alice.c.from('gifts').insert({ owner_id: alice.id, name: 'Bad priority', priority: 4 })).error, 'a priority outside 1 to 3 is refused');
+  ok((await alice.c.rpc('set_avatar_url', { p_url: 'http://example.com/me.jpg' })).error, 'a picture link must be https');
+  ok((await alice.c.rpc('set_avatar_url', { p_url: 'javascript:alert(1)' })).error, 'a script link is refused as a picture');
+  ok(!(await alice.c.rpc('set_avatar_url', { p_url: 'https://example.com/me.jpg' })).error, 'an https picture link is saved');
+  ok((await alice.c.from('profiles').select('avatar_url').eq('id', alice.id).single()).data?.avatar_url === 'https://example.com/me.jpg', 'the picture link can be read back');
+
   // --- groups ------------------------------------------------------------------------------------------------------------------
   const g = await alice.c.rpc('create_group', { p_name: 'Family' }); ok(!g.error && g.data, 'alice creates a group');
   const code = (await alice.c.from('groups').select('invite_code').eq('id', g.data).single()).data.invite_code;

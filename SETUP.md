@@ -16,6 +16,7 @@ In **SQL Editor → New query**, paste each file below **in this order** and cli
 3. `supabase/migrations/20261103000003_rpc.sql`
 4. `supabase/migrations/20261104000004_username_auth.sql`
 5. `supabase/migrations/20261105000005_first_names.sql`
+6. `supabase/migrations/20261106000006_profiles_priorities_avatars.sql`
 
 (Or with the Supabase CLI: `npx supabase link --project-ref YOUR-REF` then `npx supabase db push`.)
 
@@ -39,6 +40,16 @@ If the deploy asks for Docker, add `--use-api` to the deploy command.
 **Without the command line:** in the dashboard open **Edge Functions → Deploy a new function → Via Editor**. Name it exactly `account`, paste in the whole of `supabase/functions/account/index.ts`, and deploy. Then open the function's settings and turn **off** "Verify JWT". Add the secrets under **Edge Functions → Secrets**.
 
 Check it worked: `curl -i -X OPTIONS "https://YOUR-REF.supabase.co/functions/v1/account" -H "Origin: http://localhost:8000" -H "Access-Control-Request-Method: POST"` should answer `204` (a `404 NOT_FOUND` means the function isn't deployed under that name).
+
+### What is the sign-up code?
+
+The sign-up code is a short shared password that **you** choose, to keep strangers from creating accounts on your site. It works like a door code for a private party:
+
+- **You set it once:** `npx supabase secrets set SIGNUP_CODE=SnowyPines24`.
+- **You share it with the people you invite** (in the same message as the site link). They type it in the "Sign-up code" box when creating their account.
+- **If you never set one,** anyone with the link can sign up, and the box doesn't appear on the sign-up form at all. When you do set one, the box appears and the code is required.
+- It is only checked when an account is **created**. It does not affect logging in later, and it is not the same as a group's invite code (which controls who can join a group and see its lists).
+- To change it, set a new value. Existing accounts keep working. To switch it off, run `npx supabase secrets unset SIGNUP_CODE`.
 
 Optional secrets (set with `npx supabase secrets set NAME=value`):
 
@@ -113,7 +124,18 @@ Also check by hand with two browsers: tick a gift in one and confirm the owner's
 
 Each person can bring their own list across in a minute: in the old sheet, open their tab and choose **File → Download → Comma Separated Values (.csv)**. Then they sign up on the new site and use **Import from CSV** under their own list. The import understands the old sheet's columns (Gift names, Approx. price, Links, notes), skips filler rows and duplicates, and shows a preview before adding anything.
 
-## 10. Install it on a phone
+## 10. Change the app icon
+
+`icons/maskable-512.png` is the **master icon**. Every other icon (the 192 px app icon, the iPhone icon, the browser tab icon and `favicon.ico`) is generated from it. To use your own: replace that file with a 512 x 512 PNG that fills the whole square with a solid background and keeps the artwork inside the middle 80%, then run:
+
+```
+pip install pillow
+python3 scripts/make-icons.py
+```
+
+Then bump `CACHE` in `sw.js` (for example `giftlist-v4`) so installed copies pick up the new icon.
+
+## 11. Install it on a phone
 
 The site is an installable app (PWA). It must be opened over `https` (GitHub Pages is) or on `localhost`.
 

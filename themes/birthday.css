@@ -5,6 +5,7 @@
    Edit the colors below. See themes/README.md for what each variable does. */
 html[data-theme=birthday] {
   --display: "Bagel Fat One", "Trebuchet MS", sans-serif;
+  --dw: 400;
   --body: "Figtree", system-ui, sans-serif;
   --bg:       oklch(0.45 0.2 264);
   --panel:    oklch(0.985 0.014 88 / 0.97);

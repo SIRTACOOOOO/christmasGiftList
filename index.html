@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--on-berry:#fff;--display:Fraunces,Georgia,serif;--body:"Instrument Sans",system-ui,sans-serif;--panel:transparent;--pad:0px;--gap:0px;--bgimg:none;--bg:#eef1ec;--card:#fff;--ink:#1c2b27;--mute:#5d6b66;--line:#d5dcd6;--pine:#1f4a3d;--berry:#a3293f;--on-pine:#fff;--done:#e3e9e4}
+:root{--dw:700;--on-berry:#fff;--display:Fraunces,Georgia,serif;--body:"Instrument Sans",system-ui,sans-serif;--panel:transparent;--pad:0px;--gap:0px;--bgimg:none;--bg:#eef1ec;--card:#fff;--ink:#1c2b27;--mute:#5d6b66;--line:#d5dcd6;--pine:#1f4a3d;--berry:#a3293f;--on-pine:#fff;--done:#e3e9e4}
 @media (prefers-color-scheme:dark){:root{--bg:#121a17;--card:#1a2420;--ink:#e8eee9;--mute:#9aa9a2;--line:#2c3a34;--pine:#7fc4a8;--berry:#e8798c;--on-pine:#10201a;--on-berry:#2a0f16;--done:#16201c}}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -64,8 +64,6 @@ select{padding:8px 12px;border:1px solid var(--line);border-radius:8px;backgroun
 .grp p{margin:4px 0}
 .inline{display:flex;gap:8px;margin-top:8px}
 .inline input{flex:1}
-.totals{display:flex;gap:20px;margin:0 0 12px;color:var(--mute);font-size:.95rem}
-.totals b{color:var(--ink)}
 ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 li{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;padding:14px 4px;border-bottom:1px solid var(--line)}
 li.mine{grid-template-columns:1fr auto}
@@ -101,6 +99,40 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 #menu select{margin:0 10px 8px;width:calc(100% - 20px)}
 #menu .out{margin-top:auto;color:var(--berry)}
 @media (prefers-reduced-motion:reduce){#menu,#menu.open{transition:none}}
+.av{--s:28px;display:inline-grid;place-items:center;width:var(--s);height:var(--s);border-radius:50%;overflow:hidden;flex:none;background:oklch(0.86 0.06 var(--h,200));color:oklch(0.3 0.06 var(--h,200));font-weight:600;font-size:calc(var(--s) * .45)}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+#people button{display:inline-flex;gap:8px;align-items:center}
+.phead{display:flex;gap:14px;align-items:center;margin:0 0 14px}
+.phead b{font:700 1.3rem var(--display);font-weight:var(--dw,700)}
+.phead small{display:block;color:var(--mute)}
+.countdown{margin:-6px 0 16px;font-size:1.05rem;color:var(--subtle,var(--mute))}
+.countdown b{font:700 1.7rem var(--display);font-weight:var(--dw,700);color:var(--title,var(--pine));margin-right:6px}
+.bar2{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:-4px 0 14px}
+.bar2 select{margin:0}
+.chkl{display:flex;gap:6px;align-items:center;font-size:.92rem;color:var(--mute)}
+.chkl input{width:auto;accent-color:var(--pine)}
+.grphead{display:block;padding:14px 4px 4px;font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);border-bottom:1px solid var(--line)}
+.tag.prio{margin-right:6px}
+.tag.p1{background:var(--berry);color:var(--on-berry);border-color:var(--berry)}
+.avrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#printHead{display:none}
+@media print{
+  body{background:#fff!important;color:#000;padding:0}
+  body::before,.top,#menu,#scrim,.sub,.countdown,h1,#gsel,#psearch,#people,.bar,.bar2,#io,#msg,.phead,dialog,.edit,.chk,.grp,.sync{display:none!important}
+  .panel{background:none;padding:0;border-radius:0}
+  #printHead{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:10px;font:700 18pt Georgia,serif}
+  #printHead span{font:10pt system-ui,sans-serif}
+  ul{border-top:0;color:#000}
+  li{break-inside:avoid;background:none!important;border-bottom:1px solid #999;padding:8px 2px;grid-template-columns:auto 1fr auto}
+  li.mine{grid-template-columns:1fr auto}
+  li:not(.mine):not(.grphead)::before{content:"\2610";font-size:14pt;line-height:1}
+  li.done:not(.mine)::before{content:"\2611"}
+  li.done .name{text-decoration:none;color:#000}
+  .name,.price,.meta,.meta a{color:#000!important;text-decoration:none}
+  .meta a::after{content:" - " attr(href);font-size:.85em;word-break:break-all}
+  .grphead{display:block!important;color:#000;border-bottom:1px solid #000}
+  .tag{border:1px solid #000;color:#000;background:none}
+}
 </style>
 </head>
 <body>
@@ -111,7 +143,10 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
   </div>
   <h1 id="title">Christmas List</h1>
   <p class="sub" id="sub"></p>
+  <p class="countdown" id="countdown" hidden></p>
   <div class="panel">
+  <div id="printHead"><b id="ph-name"></b><span id="ph-date"></span></div>
+  <div class="phead" id="phead"></div>
   <select id="gsel" hidden aria-label="Show people from group"></select>
   <input id="psearch" type="search" placeholder="Find a person" aria-label="Find a person" hidden>
   <div id="people" role="group" aria-label="Lists"></div>
@@ -124,9 +159,9 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
     </div>
     <button class="btn primary" id="add">Add gift</button>
   </div>
-  <p class="io" id="io" hidden><button class="link" id="exp">Export my list (CSV)</button> &middot; <button class="link" id="imp">Import from CSV</button><input type="file" id="impfile" accept=".csv,text/csv,text/plain" hidden></p>
-  <p class="totals"><span id="l-left">Still to buy: <b id="t-left">$0</b></span><span id="l-done">Bought: <b id="t-done">$0</b></span></p>
-  <ul id="list"></ul>
+  <div class="bar2"><label class="sr" for="sort">Sort by</label><select id="sort"><option value="added">Sort: order added</option><option value="priority">Sort: priority</option><option value="store">Sort: website / store</option><option value="name">Sort: name A to Z</option><option value="low">Sort: price, low to high</option><option value="high">Sort: price, high to low</option></select><label class="chkl"><input type="checkbox" id="boughtLast"> Move bought gifts to the bottom</label></div>
+  <p class="io" id="io" hidden><span id="ioMine"><button class="link" id="exp">Export CSV</button> &middot; <button class="link" id="expj">Backup (JSON)</button> &middot; <button class="link" id="imp">Import CSV or JSON</button> &middot; </span><button class="link" id="prn">Print / save as PDF</button><input type="file" id="impfile" accept=".csv,.json,text/csv,application/json,text/plain" hidden></p>
+    <ul id="list"></ul>
   <p class="empty" id="empty" hidden></p>
   </div>
 </main>
@@ -136,6 +171,7 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
   <button class="mi" id="groupsBtn">Groups</button>
   <button class="mi" id="accountBtn">Account</button>
   <label for="theme">Theme</label><select id="theme"></select>
+  <label for="cd">Countdown</label><select id="cd"><option value="christmas">Christmas</option><option value="birthday">Birthday</option><option value="none">No countdown</option></select>
   <button class="mi" id="installBtn" hidden>Install app on this device</button>
   <p class="note" id="iosHint" hidden style="margin:6px 10px">On iPhone or iPad: tap the Share button, then “Add to Home Screen”.</p>
   <button class="mi out" id="logout">Log out</button>
@@ -149,8 +185,8 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
     <p class="note" id="b-shownq" hidden style="color:var(--ink)">Your question: <b id="a-shownq"></b></p>
     <div id="b-ans" hidden><label for="a-ans" id="l-ans">Answer</label><input id="a-ans" autocomplete="off" maxlength="100"></div>
     <div id="b-pw"><label for="a-pw" id="l-pw">Password</label><input id="a-pw" type="password" autocomplete="current-password"></div>
-    <div id="b-q" hidden><label for="a-q">Recovery question</label><input id="a-q" maxlength="120" placeholder="A question only you know the answer to"></div>
-    <div id="b-codes" hidden><label for="a-signup">Sign-up code (if you were given one)</label><input id="a-signup" autocomplete="off"></div>
+    <div id="b-q" hidden><label for="a-q">Recovery question (optional)</label><input id="a-q" maxlength="120" placeholder="A question only you know the answer to"></div>
+    <div id="b-codes" hidden><label for="a-signup">Sign-up code</label><input id="a-signup" autocomplete="off"><p class="note">This site is invitation-only. The sign-up code is a short password chosen by the site owner to keep strangers out. Ask whoever invited you for it.</p></div>
     <p class="err" id="a-err" role="alert"></p>
     <div class="row"><span style="margin-right:auto;display:flex;gap:12px;flex-wrap:wrap"><button type="button" class="link" id="a-switch">Create an account</button><button type="button" class="link" id="a-forgot">Forgot password?</button></span><button class="btn primary" id="a-go">Log in</button></div>
   </form>
@@ -162,8 +198,9 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
     <p class="note" id="dnote" hidden></p>
     <label for="f-name">Gift name</label><input id="f-name" required>
     <label for="f-price">Approx. price</label><input id="f-price" inputmode="decimal" placeholder="20.00">
+    <label for="f-prio">Priority</label><select id="f-prio"><option value="">None</option><option value="1">High</option><option value="2">Medium</option><option value="3">Low</option></select>
     <label for="f-link">Link</label><input id="f-link" placeholder="Paste a link (optional)">
-    <label for="f-notes">Notes</label><textarea id="f-notes" rows="2"></textarea>
+    <label for="f-notes">Notes: specify size, color, model, or other preferences</label><textarea id="f-notes" rows="2" maxlength="1000" placeholder="For example: size M, navy blue, 2024 model"></textarea>
     <div class="row">
       <button type="button" class="btn danger del" id="del">Delete</button>
       <button type="button" class="btn" id="cancel">Cancel</button>
@@ -174,6 +211,19 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 <dialog id="adlg">
   <h2>Account</h2>
   <p class="note" id="e-now"></p>
+  <form id="avform">
+    <div class="avrow"><span id="avprev"></span><div style="flex:1;min-width:200px"><label for="av-url">Profile picture link</label><input id="av-url" type="url" inputmode="url" maxlength="500" placeholder="https://example.com/my-photo.jpg" autocomplete="off"></div></div>
+    <div class="row"><button type="button" class="btn" id="av-clear">Remove</button><button class="btn">Save picture</button></div>
+    <p class="note">Paste the web address of a picture that is already online. It must start with https://. Nothing is uploaded or stored here. People in your groups will see it, and the website hosting the picture can tell when it is viewed. Leave it empty to show your initial instead.</p>
+  </form>
+  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+  <form id="bform">
+    <label for="b-m">My birthday (optional)</label>
+    <div class="row" style="justify-content:flex-start"><select id="b-m"></select><select id="b-d" aria-label="Day"></select></div>
+    <div class="row"><button type="button" class="btn" id="b-clear">Clear</button><button class="btn">Save birthday</button></div>
+    <p class="note">Month and day only. People in your groups can see it, so they can shop in time. Leave it blank if you would rather not share.</p>
+  </form>
+  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
   <form id="nform">
     <label for="n-new">Change my full name</label><input id="n-new" maxlength="30" autocomplete="off" required>
     <div class="row"><button class="btn">Change name</button></div>
@@ -188,11 +238,11 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
   </form>
   <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
   <form id="qform">
-    <label for="q-q">Recovery question</label><input id="q-q" maxlength="120" required placeholder="A question only you know the answer to">
-    <label for="q-a">Answer</label><input id="q-a" autocomplete="off" maxlength="100" required>
+    <label for="q-q">Recovery question (optional)</label><input id="q-q" maxlength="120" placeholder="A question only you know the answer to">
+    <label for="q-a">Answer</label><input id="q-a" autocomplete="off" maxlength="100">
     <label for="q-pw">Current password</label><input id="q-pw" type="password" autocomplete="current-password" required>
     <div class="row"><button class="btn">Save question</button></div>
-    <p class="note">Used if you forget your password. Saving replaces your current question. The answer ignores capital letters.</p>
+    <p class="note">Used if you forget your password. Without one, only the site owner can reset it. Saving replaces your current question; leave both boxes empty and save to remove it. The answer ignores capital letters.</p>
   </form>
   <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
   <form id="dform">
@@ -248,6 +298,9 @@ const isUrl = v => /^https?:\/\//i.test(v);
 const isMine = () => person.toLowerCase() === me.toLowerCase();
 function toast(t) { const m = $('msg'); m.textContent = t; m.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => m.classList.remove('show'), 3000); }
 
+let signupNeeded = null, sortKey = 'added', boughtLast = false, cdMode = 'christmas', avUrl = {}, bday = {};
+const PRIO = {1: 'High', 2: 'Medium', 3: 'Low'}, MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+try { sortKey = localStorage.getItem('giftSort') || 'added'; boughtLast = localStorage.getItem('giftBoughtLast') === '1'; cdMode = localStorage.getItem('giftCountdown') || 'christmas'; } catch (e) {}
 let busy = 0, loadSeq = 0, lists = {}, byName = {}, names = {}, mode = 'login', scrollToPerson = false;
 // Every request gives up after 25 seconds, so "Syncing..." can never hang forever.
 const track = async (p, ms = 25000) => {
@@ -286,22 +339,26 @@ async function fn(body) {      // calls the trusted "account" Edge Function
   }
   return r.data;
 }
+async function ensureConfig() {
+  try { signupNeeded = !!(await fn({action: 'config'})).signupCodeRequired; } catch (e) { signupNeeded = null; return; }
+  if (mode === 'signup') $('b-codes').hidden = !signupNeeded;
+}
 function showAuth() { $('menuBtn').hidden = true; setMenu(false); if (!$('auth').open) $('auth').showModal(); }
 $('auth').addEventListener('cancel', e => e.preventDefault());
 function setMode(m, msg) {
   mode = m; $('a-err').textContent = msg || '';
   const T = {login: 'Log in', signup: 'Create an account', forgot: 'Reset your password', reset: 'Answer your question'};
   const G = {login: 'Log in', signup: 'Create account', forgot: 'Continue', reset: 'Change password'};
-  const N = {signup: 'Enter your full name. Other people only see your first name. Pick a recovery question only you can answer: it is the only way back in if you forget your password.', forgot: 'Enter your username to see your recovery question.'};
+  const N = {signup: 'Enter your full name. Other people only see your first name. A recovery question is optional, but without one only the site owner can reset a forgotten password.', forgot: 'Enter your username to see your recovery question.'};
   $('atitle').textContent = T[m]; $('a-go').textContent = G[m];
   $('a-note').textContent = N[m] || ''; $('a-note').hidden = !N[m];
   $('b-pw').hidden = m === 'forgot'; $('a-pw').required = m !== 'forgot'; $('a-pw').minLength = (m === 'signup' || m === 'reset') ? 8 : 0;
   $('l-pw').textContent = m === 'reset' ? 'New password (8 or more characters)' : m === 'signup' ? 'Password (8 or more characters)' : 'Password';
   $('a-pw').autocomplete = m === 'login' ? 'current-password' : 'new-password';
   $('a-name').readOnly = m === 'reset';
-  $('b-q').hidden = m !== 'signup'; $('a-q').required = m === 'signup';
-  $('b-ans').hidden = !(m === 'signup' || m === 'reset'); $('a-ans').required = !$('b-ans').hidden;
-  $('b-shownq').hidden = m !== 'reset'; $('b-codes').hidden = m !== 'signup';
+  $('b-q').hidden = m !== 'signup'; $('a-q').required = false;
+  $('b-ans').hidden = !(m === 'signup' || m === 'reset'); $('a-ans').required = m === 'reset';
+  $('b-shownq').hidden = m !== 'reset'; $('b-codes').hidden = !(m === 'signup' && signupNeeded !== false); if (m === 'signup' && signupNeeded === null) ensureConfig();
   $('a-switch').textContent = m === 'login' ? 'Create an account' : 'Back to log in';
   $('a-forgot').hidden = m !== 'login';
 }
@@ -311,6 +368,7 @@ $('aform').onsubmit = async e => {
   e.preventDefault(); $('a-err').textContent = ''; $('a-go').disabled = true;
   const username = $('a-name').value.trim(), password = $('a-pw').value;
   try {
+    if (mode === 'signup' && (!$('a-q').value.trim() !== !$('a-ans').value.trim())) throw new Error('For a recovery question, fill in both the question and the answer, or leave both empty.');
     if (mode === 'login' || mode === 'signup') {
       const d = mode === 'login' ? await fn({action: 'login', username, password})
         : await fn({action: 'signup', username, password, question: $('a-q').value.trim(), answer: $('a-ans').value, signupCode: $('a-signup').value.trim()});
@@ -375,9 +433,22 @@ function makeLabels(rows) {
   });
   return out;
 }
+function avatarEl(id, label, size) {      // a picture link if the person added one, otherwise a colored initial
+  const d = document.createElement('span'); d.className = 'av'; d.style.setProperty('--s', size + 'px');
+  const initial = () => { d.textContent = (label || '?').charAt(0).toUpperCase(); d.style.setProperty('--h', String([...String(id || label)].reduce((a, ch) => a + ch.charCodeAt(0), 0) % 360)); };
+  const u = id && avUrl[id];
+  if (u && /^https:\/\//i.test(u)) {
+    const im = document.createElement('img'); im.alt = ''; im.loading = 'lazy'; im.decoding = 'async'; im.referrerPolicy = 'no-referrer';
+    im.onerror = () => { im.remove(); initial(); };          // a broken link just falls back to the initial
+    im.src = u; d.append(im);
+  } else initial();
+  return d;
+}
 async function loadDirectory() {
-  const [pr, gr, gm] = await Promise.all([fetchAll('profiles', 'id,first_name,last_initial', ['id']), fetchAll('groups', 'id,name,invite_code', ['id']), fetchAll('group_members', 'group_id,profile_id,role', ['group_id', 'profile_id'])]);
+  const [pr, gr, gm] = await Promise.all([fetchAll('profiles', 'id,first_name,last_initial,birthday_month,birthday_day,avatar_url', ['id']), fetchAll('groups', 'id,name,invite_code', ['id']), fetchAll('group_members', 'group_id,profile_id,role', ['group_id', 'profile_id'])]);
   names = makeLabels(pr); byName = {};
+  bday = {}; pr.forEach(p => { if (p.birthday_month) bday[p.id] = {m: p.birthday_month, d: p.birthday_day}; });
+  avUrl = {}; pr.forEach(p => { if (p.avatar_url) avUrl[p.id] = p.avatar_url; });
   Object.keys(names).forEach(id => { byName[names[id].toLowerCase()] = id; });
   me = names[myId] || me;
   people = Object.keys(names).map(id => names[id]).sort((a, b) => (b === me) - (a === me) || a.localeCompare(b));
@@ -388,11 +459,11 @@ async function loadDirectory() {
 }
 async function loadList(name) {
   const id = byName[name.toLowerCase()]; if (!id) return;
-  const r = await sb.from('gifts').select('id,owner_id,created_by,name,price,link,notes,updated_at,purchases(gift_id)').eq('owner_id', id).order('created_at').limit(1000);
+  const r = await sb.from('gifts').select('id,owner_id,created_by,name,price,link,notes,priority,updated_at,purchases(gift_id)').eq('owner_id', id).order('created_at').limit(1000);
   if (r.error) throw r.error;
   lists[name] = r.data.map(g => {
     const surprise = g.created_by !== g.owner_id, isBought = Array.isArray(g.purchases) ? g.purchases.length > 0 : !!g.purchases;
-    return {id: g.id, name: g.name, price: Number(g.price) || 0, link: g.link || '', notes: g.notes || '', stamp: g.updated_at,
+    return {id: g.id, priority: g.priority || 0, name: g.name, price: Number(g.price) || 0, link: g.link || '', notes: g.notes || '', stamp: g.updated_at,
       bought: g.owner_id !== myId && isBought, by: surprise ? (names[g.created_by] || 'someone') : '', byId: g.created_by};
   });
 }
@@ -415,6 +486,30 @@ function pick(n) {
 }
 
 /* ---- render ---- */
+const storeOf = i => { try { return new URL(i.link).hostname.replace(/^www\./, ''); } catch (e) { return ''; } };
+function sortItems(list) {
+  const a = list.slice(), nm = (x, y) => x.name.localeCompare(y.name);
+  const by = {priority: (x, y) => ((x.priority || 9) - (y.priority || 9)) || nm(x, y),
+    store: (x, y) => { const p = storeOf(x), q = storeOf(y); return ((p ? 0 : 1) - (q ? 0 : 1)) || p.localeCompare(q) || nm(x, y); },
+    name: nm, low: (x, y) => (x.price || 0) - (y.price || 0), high: (x, y) => (y.price || 0) - (x.price || 0)}[sortKey];
+  if (by) a.sort(by);
+  if (boughtLast && !isMine()) a.sort((x, y) => (x.bought ? 1 : 0) - (y.bought ? 1 : 0));   // stable: keeps the chosen order inside each half
+  return a;
+}
+const headOf = i => sortKey === 'priority' ? (i.priority ? PRIO[i.priority] + ' priority' : 'No priority') : sortKey === 'store' ? (storeOf(i) || 'No website') : '';
+function daysUntil(m, d) {
+  const t = new Date(), today = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  let next = new Date(t.getFullYear(), m - 1, d); if (next < today) next = new Date(t.getFullYear() + 1, m - 1, d);
+  return Math.round((next - today) / 86400000);
+}
+function renderCountdown() {
+  const el = $('countdown'); el.hidden = true; el.textContent = ''; if (!me || cdMode === 'none') return;
+  const show = (n, tail, today) => { el.hidden = false; if (n === 0) { el.textContent = today; return; } const b = document.createElement('b'); b.textContent = n; el.append(b, (n === 1 ? 'day ' : 'days ') + tail); };
+  if (cdMode === 'christmas') return show(daysUntil(12, 25), 'until Christmas', 'Merry Christmas!');
+  const bd = bday[byName[person.toLowerCase()]], whose = isMine() ? 'your' : person + '\u2019s';
+  if (bd) return show(daysUntil(bd.m, bd.d), 'until ' + whose + ' birthday', 'It\u2019s ' + whose + ' birthday today!');
+  el.hidden = false; el.textContent = isMine() ? 'Add your birthday in Account to see this countdown.' : person + ' hasn\u2019t shared a birthday.';
+}
 function render() {
   const mine = isMine();
   $('menuBtn').hidden = !me; $('who').textContent = myFull ? 'Signed in as ' + myFull : '';
@@ -424,19 +519,24 @@ function render() {
   const ps = $('psearch'); ps.hidden = people.length <= 12; const pq = ps.value.toLowerCase();
   const box = $('people'); box.innerHTML = '';
   people.filter(n => (!gm || n === me || gm.members.some(m => m.name === n)) && (n === me || n === person || n.toLowerCase().includes(pq))).forEach(n => {
-    const b = document.createElement('button'); b.textContent = n === me ? 'My list' : n;
+    const b = document.createElement('button'); b.append(avatarEl(byName[n.toLowerCase()], n, 22), document.createTextNode(n === me ? 'My list' : n));
     b.setAttribute('aria-pressed', n === person); b.onclick = () => pick(n); box.append(b);
     if (n === person && scrollToPerson) { scrollToPerson = false; requestAnimationFrame(() => b.scrollIntoView({inline: 'center', block: 'nearest'})); }
   });
-  $('io').hidden = !isMine() || !me;
+  $('io').hidden = !me; $('ioMine').hidden = !mine;
+  const pid = byName[person.toLowerCase()], ph = $('phead'); ph.innerHTML = '';
+  if (person) { ph.append(avatarEl(pid, person, 56)); const w = document.createElement('div'), b = document.createElement('b'); b.textContent = mine ? person + ' (you)' : person; w.append(b); const bd = bday[pid]; if (bd) { const sm = document.createElement('small'); sm.textContent = 'Birthday: ' + MONTHS[bd.m - 1] + ' ' + bd.d; w.append(sm); } ph.append(w); }
+  renderCountdown();
   document.title = themeOf(theme).title + (person ? ' - ' + person : '');
   $('sub').textContent = !person ? '' : mine ? 'Your list. For the surprise, you can\u2019t see what has been bought.' : 'Tick what you\u2019ve bought for ' + person + '. Use Add surprise gift for anything not on their list; ' + person + ' won\u2019t see it.';
   $('add').textContent = mine ? 'Add gift' : 'Add surprise gift';
-  $('seg').hidden = mine; $('l-done').hidden = mine; $('l-left').firstChild.textContent = mine ? 'Total wish list: ' : 'Still to buy: ';
+  $('seg').hidden = mine; $('boughtLast').parentElement.hidden = mine;
   const q = $('q').value.toLowerCase();
   const shown = items.filter(i => (mine || filter === 'all' || (filter === 'done') === i.bought) && (i.name + i.notes).toLowerCase().includes(q));
   $('list').innerHTML = '';
-  shown.forEach(i => {
+  const view = sortItems(shown); let lastHead = '';
+  view.forEach(i => {
+    const hd = headOf(i); if (hd && hd !== lastHead) { const h = document.createElement('li'); h.className = 'grphead'; h.textContent = hd; $('list').append(h); lastHead = hd; }
     const li = document.createElement('li'); li.className = (mine ? 'mine ' : '') + (i.bought ? 'done' : '');
     if (!mine) {
       const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'chk'; cb.checked = i.bought; cb.disabled = !!i.by || !!i.pending;
@@ -449,6 +549,7 @@ function render() {
     if (i.notes) meta.append((i.link ? ' \u00b7 ' : '') + i.notes);
     if (meta.childNodes.length) mid.append(meta);
     if (i.by) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'Surprise gift from ' + (i.by.toLowerCase() === me.toLowerCase() ? 'you' : i.by); mid.append(t); }
+    if (i.priority) { const t = document.createElement('span'); t.className = 'tag prio p' + i.priority; t.textContent = PRIO[i.priority] + ' priority'; mid.append(t); }
     const right = document.createElement('div'); right.style.textAlign = 'right';
     const p = document.createElement('div'); p.className = 'price'; p.textContent = i.price ? money(i.price) : ''; right.append(p);
     if (!i.pending && (mine || (i.by && i.byId === myId))) { const eb = document.createElement('button'); eb.className = 'edit'; eb.textContent = 'Edit'; eb.onclick = () => openDlg(i); right.append(eb); }
@@ -456,8 +557,6 @@ function render() {
   });
   $('empty').hidden = !me || (shown.length > 0 && groups.length > 0); $('empty').textContent = groups.length ? 'No gifts to show yet.' : 'Create a group or join one with an invite code (Groups, top right) to see other people\u2019s lists.';
   if ($('gdlg').open) renderGroups();
-  $('t-left').textContent = money(items.filter(i => mine || !i.bought).reduce((s, i) => s + i.price, 0));
-  $('t-done').textContent = money(items.filter(i => i.bought).reduce((s, i) => s + i.price, 0));
 }
 
 async function toggle(i, v) {
@@ -473,13 +572,18 @@ function openDlg(i) {
   $('dtitle').textContent = i ? 'Edit gift' : mine ? 'Add gift' : 'Add surprise gift for ' + person;
   $('dnote').hidden = mine; $('dnote').textContent = person + ' will not see this. Everyone else sees it as already bought.';
   $('f-name').value = i ? i.name : ''; $('f-price').value = i && i.price ? i.price : '';
-  $('f-link').value = i ? i.link : ''; $('f-notes').value = i ? i.notes : '';
+  $('f-link').value = i ? i.link : ''; $('f-notes').value = i ? i.notes : ''; $('f-prio').value = i && i.priority ? i.priority : '';
   $('del').style.display = i ? '' : 'none';
   $('dlg').showModal(); $('f-name').focus();
 }
 $('add').onclick = () => openDlg(null);
 $('cancel').onclick = () => $('dlg').close();
 $('q').oninput = render; $('psearch').oninput = render;
+$('sort').value = sortKey; $('boughtLast').checked = boughtLast; $('cd').value = cdMode;
+const keep = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+$('sort').onchange = () => { sortKey = $('sort').value; keep('giftSort', sortKey); render(); };
+$('boughtLast').onchange = () => { boughtLast = $('boughtLast').checked; keep('giftBoughtLast', boughtLast ? '1' : '0'); render(); };
+$('cd').onchange = () => { cdMode = $('cd').value; keep('giftCountdown', cdMode); renderCountdown(); };
 document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
   filter = b.dataset.f; document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); render();
 });
@@ -488,8 +592,8 @@ $('form').onsubmit = e => {
   e.preventDefault();
   const mine = isMine(), name = $('f-name').value.trim(); if (!name) return;
   const price = $('f-price').value.trim(), link = fixLink($('f-link').value), notes = $('f-notes').value.trim();
-  const d = {name, price: price === '' ? null : num(price), link: link || null, notes: notes || null};
-  const shown = {name, price: d.price || 0, link, notes};
+  const d = {name, price: price === '' ? null : num(price), link: link || null, notes: notes || null, priority: $('f-prio').value ? Number($('f-prio').value) : null};
+  const shown = {name, price: d.price || 0, link, notes, priority: d.priority || 0};
   let job;
   if (editing) {
     const stamp = editing.stamp; Object.assign(editing, shown);          // shown straight away, confirmed by the database
@@ -556,7 +660,28 @@ $('gjoin').onsubmit = async e => {
 };
 
 /* ---- account ---- */
-$('accountBtn').onclick = () => { setMenu(false); $('e-now').textContent = 'Signed in as ' + myFull; $('n-new').value = myFull; $('adlg').showModal(); };
+function fillAccount() {
+  $('e-now').textContent = 'Signed in as ' + myFull; $('n-new').value = myFull;
+  const p = $('avprev'); p.innerHTML = ''; p.append(avatarEl(myId, me || '?', 64));
+  const bd = bday[myId] || {}; $('b-m').value = bd.m || ''; $('b-d').value = bd.d || ''; $('av-url').value = avUrl[myId] || '';
+}
+$('b-m').append(new Option('Month', '')); MONTHS.forEach((n, k) => $('b-m').append(new Option(n, k + 1)));
+$('b-d').append(new Option('Day', '')); for (let k = 1; k <= 31; k++) $('b-d').append(new Option(k, k));
+$('accountBtn').onclick = () => { setMenu(false); fillAccount(); $('adlg').showModal(); };
+async function saveBirthday(m, d) {
+  const r = await act(() => sb.rpc('set_birthday', {p_month: m, p_day: d}), m ? 'Birthday saved' : 'Birthday removed'); if (r) fillAccount();
+}
+$('bform').onsubmit = e => { e.preventDefault(); const m = $('b-m').value, d = $('b-d').value; if (!m || !d) return toast('Choose both a month and a day.'); saveBirthday(Number(m), Number(d)); };
+$('b-clear').onclick = () => saveBirthday(null, null);
+async function setAvatar(v) {
+  const r = await act(() => sb.rpc('set_avatar_url', {p_url: v}), v ? 'Picture saved' : 'Picture removed'); if (r) fillAccount();
+}
+$('avform').onsubmit = e => {
+  e.preventDefault(); const v = $('av-url').value.trim();
+  if (v && !/^https:\/\/\S+$/i.test(v)) return toast('Use a link that starts with https://');
+  setAvatar(v || null);
+};
+$('av-clear').onclick = () => setAvatar(null);
 $('aclose').onclick = () => $('adlg').close();
 $('nform').onsubmit = async e => {
   e.preventDefault(); const v = $('n-new').value.trim(); if (!v || v === myFull) return;
@@ -587,16 +712,29 @@ $('dform').onsubmit = async e => {
 };
 
 /* ---- export / import (CSV that opens in Google Sheets and Excel) ---- */
-const CSV_HEAD = ['Gift names', 'Approx. price', 'Links', 'notes'];
+const CSV_HEAD = ['Gift names', 'Approx. price', 'Links', 'notes', 'Priority'];
 const safeCell = v => { v = String(v == null ? '' : v); if (/^[=+@\t\r-]/.test(v)) v = "'" + v; return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };   // stops spreadsheet formula injection
 const unsafeCell = v => String(v).replace(/^'([=+@\t\r-])/, '$1').trim();
+function download(text, type, name) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const fileSlug = () => myFull.replace(/[^A-Za-z0-9._-]+/g, '-');
 $('exp').onclick = () => {
-  const rows = [CSV_HEAD.join(',')].concat(items.filter(i => !i.by).map(i => [i.name, i.price ? i.price.toFixed(2) : '', i.link, i.notes].map(safeCell).join(',')));
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\ufeff' + rows.join('\r\n') + '\r\n'], {type: 'text/csv;charset=utf-8'}));
-  a.download = 'gift-list-' + myFull.replace(/[^A-Za-z0-9._-]+/g, '-') + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  const rows = [CSV_HEAD.join(',')].concat(items.filter(i => !i.by).map(i => [i.name, i.price ? i.price.toFixed(2) : '', i.link, i.notes, PRIO[i.priority] || ''].map(safeCell).join(',')));
+  download('\ufeff' + rows.join('\r\n') + '\r\n', 'text/csv;charset=utf-8', 'gift-list-' + fileSlug() + '.csv');
   toast('Exported ' + (rows.length - 1) + ' gifts. In Google Sheets use File > Import > Upload.');
 };
+$('expj').onclick = () => {
+  const mineBd = bday[myId];
+  const data = {app: 'christmas-gift-list', version: 1, exportedAt: new Date().toISOString(), name: myFull,
+    birthday: mineBd ? {month: mineBd.m, day: mineBd.d} : null,
+    settings: {countdown: cdMode, sort: sortKey, boughtLast, theme},
+    gifts: items.filter(i => !i.by).map(i => ({name: i.name, price: i.price || null, link: i.link || null, notes: i.notes || null, priority: i.priority || null}))};
+  download(JSON.stringify(data, null, 2), 'application/json', 'gift-list-backup-' + fileSlug() + '-' + new Date().toISOString().slice(0, 10) + '.json');
+  toast('Backup saved (' + data.gifts.length + ' gifts).');
+};
+$('prn').onclick = () => { $('ph-name').textContent = person + '\u2019s gift list'; $('ph-date').textContent = new Date().toLocaleDateString(undefined, {dateStyle: 'long'}); window.print(); };
 function parseCSV(text) {
   text = text.replace(/^\ufeff/, '');
   const first = text.split(/\r?\n/)[0] || '', d = (first.match(/;/g) || []).length > (first.match(/,/g) || []).length ? ';' : ',';
@@ -612,32 +750,42 @@ function parseCSV(text) {
   if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
   return rows.filter(r => r.some(x => String(x).trim() !== ''));
 }
-function readGifts(text) {
-  const rows = parseCSV(text), H = {name: /^(gift names?|gifts?|name|item|title)$/i, price: /^(approx\.? ?price|price|cost)$/i, link: /^(links?|url|urls|website)$/i, notes: /^(notes?|description|comments?)$/i};
-  let col = {name: 0, price: 1, link: 2, notes: 3}, start = 0;
-  for (let k = 0; k < Math.min(rows.length, 5); k++) {
-    const m = {}; rows[k].forEach((c, ix) => { for (const key in H) if (m[key] === undefined && H[key].test(String(c).trim())) m[key] = ix; });
-    if (m.name !== undefined) { col = {name: m.name, price: m.price, link: m.link, notes: m.notes}; start = k + 1; break; }
-  }
+const prioOf = v => ({'1': 1, high: 1, '2': 2, medium: 2, med: 2, '3': 3, low: 3})[String(v == null ? '' : v).trim().toLowerCase()] || null;
+function vet(raws) {      // checks every row the same way, whether it came from a CSV or a JSON backup
   const have = new Set(items.filter(i => !i.by).map(i => (i.name + '|' + i.link).toLowerCase())), good = [], skipped = [];
   let dupes = 0;
-  rows.slice(start).forEach((r, ix) => {
-    const cell = k => k === undefined ? '' : unsafeCell(r[k] === undefined ? '' : r[k]);
-    const name = cell(col.name), link = cell(col.link), notes = cell(col.notes), pr = cell(col.price).replace(/[$,\s]/g, '');
+  raws.forEach((r, ix) => {
+    const name = String(r.name == null ? '' : r.name).trim(), link = String(r.link == null ? '' : r.link).trim(), notes = String(r.notes == null ? '' : r.notes).trim();
+    const pr = String(r.price == null ? '' : r.price).replace(/[$,\s]/g, ''), price = pr === '' ? null : Number(pr);
     if (!name || name.charAt(0) === '~') return;
-    const price = pr === '' ? null : Number(pr);
-    if (name.length > 200 || link.length > 1000 || notes.length > 1000 || (price !== null && !(price >= 0 && price < 1e8))) { skipped.push('Row ' + (start + ix + 1) + ': ' + name.slice(0, 40)); return; }
+    if (name.length > 200 || link.length > 1000 || notes.length > 1000 || (price !== null && !(price >= 0 && price < 1e8))) { skipped.push('Row ' + (ix + 1) + ': ' + name.slice(0, 40)); return; }
     const key = (name + '|' + link).toLowerCase(); if (have.has(key)) { dupes++; return; } have.add(key);
-    good.push({name, price, link: fixLink(link) || null, notes: notes || null});
+    good.push({name, price, link: fixLink(link) || null, notes: notes || null, priority: prioOf(r.priority)});
   });
   return {good, dupes, skipped};
+}
+function readGifts(text) {
+  const rows = parseCSV(text), H = {name: /^(gift names?|gifts?|name|item|title)$/i, price: /^(approx\.? ?price|price|cost)$/i, link: /^(links?|url|urls|website)$/i, notes: /^(notes?|description|comments?)$/i, priority: /^priority$/i};
+  let col = {name: 0, price: 1, link: 2, notes: 3, priority: 4}, start = 0;
+  for (let k = 0; k < Math.min(rows.length, 5); k++) {
+    const m = {}; rows[k].forEach((c, ix) => { for (const key in H) if (m[key] === undefined && H[key].test(String(c).trim())) m[key] = ix; });
+    if (m.name !== undefined) { col = m; start = k + 1; break; }
+  }
+  const cell = (r, k) => k === undefined ? '' : unsafeCell(r[k] === undefined ? '' : r[k]);
+  return vet(rows.slice(start).map(r => ({name: cell(r, col.name), price: cell(r, col.price), link: cell(r, col.link), notes: cell(r, col.notes), priority: cell(r, col.priority)})));
+}
+function readJson(text) {
+  let data; try { data = JSON.parse(text); } catch (e) { return {good: [], dupes: 0, skipped: ['That file is not valid JSON']}; }
+  const list = Array.isArray(data) ? data : data && data.gifts;
+  if (!Array.isArray(list)) return {good: [], dupes: 0, skipped: ['No gifts found in that file']};
+  return vet(list.map(g => ({name: g && g.name, price: g && g.price, link: g && g.link, notes: g && g.notes, priority: g && g.priority})));
 }
 $('imp').onclick = () => $('impfile').click();
 let pending = [];
 $('impfile').onchange = async () => {
   const f = $('impfile').files[0]; $('impfile').value = ''; if (!f) return;
   if (f.size > 1e6) return toast('That file is too big (1 MB maximum).');
-  const {good, dupes, skipped} = readGifts(await f.text());
+  const txt = await f.text(), {good, dupes, skipped} = (/\.json$/i.test(f.name) || /^\s*[\[{]/.test(txt)) ? readJson(txt) : readGifts(txt);
   if (items.length + good.length > 1000) return toast('That would go over the 1,000 gift limit.');
   if (good.length > 500) return toast('Please import 500 gifts or fewer at a time.');
   pending = good;

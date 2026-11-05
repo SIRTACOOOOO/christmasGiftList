@@ -1,4 +1,4 @@
-// Edge Function "account": username + password sign-in without email, recovery question, and account deletion.
+// Edge Function "account": sign-in with a full name + password (no email), recovery question, and account deletion.
 // Deploy:  supabase functions deploy account --no-verify-jwt
 // Secrets: supabase secrets set ALLOWED_ORIGINS=https://yourname.github.io  [SIGNUP_CODE=...]  [SIGNUP_LIMIT_PER_HOUR=5]
 // The service role key exists only here, inside Supabase. It is never sent to the browser.
@@ -10,7 +10,9 @@ const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const SIGNUP_CODE = Deno.env.get('SIGNUP_CODE') ?? '';
 const SIGNUP_LIMIT = Number(Deno.env.get('SIGNUP_LIMIT_PER_HOUR') ?? '5');
 const EMAIL_DOMAIN = Deno.env.get('EMAIL_DOMAIN') ?? 'users.giftlist.invalid';   // never receives mail; Supabase just needs an address
-const ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+// Accepts full addresses too (path and trailing slash are ignored), so https://you.github.io/site/ works like https://you.github.io
+const ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map((s) => s.trim()).filter(Boolean)
+  .map((s) => { try { return new URL(s).origin; } catch { return s; } });
 
 const admin = createClient(SB_URL, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 const anonClient = () => createClient(SB_URL, ANON, { auth: { persistSession: false, autoRefreshToken: false } });
@@ -66,17 +68,17 @@ Deno.serve(async (req) => {
       if (SIGNUP_CODE && b.signupCode !== SIGNUP_CODE) return fail(req, 'That sign-up code is not right.');
       if ((await hits('signup:' + ip, 3600)) >= SIGNUP_LIMIT) return fail(req, 'Too many new accounts from this network. Please try later.', 429);
       await record('signup:' + ip);
-      if (!NAME_RE.test(username)) return fail(req, "Usernames can use letters, numbers, spaces and - . ' (30 max).");
+      if (!NAME_RE.test(username)) return fail(req, "Names can use letters, numbers, spaces and - . ' (30 characters at most).");
       if (typeof b.password !== 'string' || b.password.length < 8 || b.password.length > 72) return fail(req, 'Passwords need 8 to 72 characters.');
       const q = String(b.question ?? '').trim(), a = String(b.answer ?? '').trim();
       if (q.length < 8 || q.length > 120 || a.length < 2 || a.length > 100) return fail(req, 'Choose a recovery question (8 or more characters) and an answer.');
       const email = `${crypto.randomUUID()}@${EMAIL_DOMAIN}`;
       const created = await admin.auth.admin.createUser({ email, password: b.password, email_confirm: true });
       if (created.error || !created.data.user) { console.error('createUser', created.error?.message); return fail(req, 'Could not create the account. Please try again.', 500); }
-      const p = await admin.rpc('service_create_profile', { p_auth_user_id: created.data.user.id, p_username: username, p_claim_code: b.claimCode ? String(b.claimCode) : null, p_question: q, p_answer: a });
+      const p = await admin.rpc('service_create_profile', { p_auth_user_id: created.data.user.id, p_username: username, p_question: q, p_answer: a });
       if (p.error || !p.data) {
         await admin.auth.admin.deleteUser(created.data.user.id);
-        return fail(req, p.error ? 'Could not create the account. Please try again.' : 'That username is taken, or the claim code is wrong.');
+        return fail(req, p.error ? 'Could not create the account. Please try again.' : 'Someone already has that name. Add a middle name or initial.');
       }
       return reply(req, { session: await signIn(email, b.password) });
     }

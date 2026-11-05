@@ -2,7 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" id="tcolor" content="#1f4a3d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gift List">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="themes/themes.js"></script>
@@ -14,22 +20,22 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--on-berry:#fff;--display:Fraunces,Georgia,serif;--panel:transparent;--pad:0px;--gap:0px;--bgimg:none;--bg:#eef1ec;--card:#fff;--ink:#1c2b27;--mute:#5d6b66;--line:#d5dcd6;--pine:#1f4a3d;--berry:#a3293f;--on-pine:#fff;--done:#e3e9e4}
+:root{--on-berry:#fff;--display:Fraunces,Georgia,serif;--body:"Instrument Sans",system-ui,sans-serif;--panel:transparent;--pad:0px;--gap:0px;--bgimg:none;--bg:#eef1ec;--card:#fff;--ink:#1c2b27;--mute:#5d6b66;--line:#d5dcd6;--pine:#1f4a3d;--berry:#a3293f;--on-pine:#fff;--done:#e3e9e4}
 @media (prefers-color-scheme:dark){:root{--bg:#121a17;--card:#1a2420;--ink:#e8eee9;--mute:#9aa9a2;--line:#2c3a34;--pine:#7fc4a8;--berry:#e8798c;--on-pine:#10201a;--on-berry:#2a0f16;--done:#16201c}}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--bgimg)}
-main{background:var(--panel);padding:var(--pad);border-radius:16px}
+.panel{background:var(--panel);padding:var(--pad);border-radius:var(--radius,16px)}
 .top select{margin:0}
-.sync{color:var(--mute);font-size:.85rem}
+.sync{color:var(--subtle,var(--mute));font-size:.85rem}
 .top>span{display:flex;gap:10px;align-items:center}
 .sr{position:absolute;left:-9999px}
 
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Instrument Sans",system-ui,sans-serif;padding:calc(max(20px,env(safe-area-inset-top)) + var(--gap)) 16px 64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);padding:calc(max(20px,env(safe-area-inset-top)) + var(--gap)) 16px 64px}
 main{max-width:720px;margin:0 auto}
-h1{font:700 2.4rem/1.1 var(--display);margin:16px 0 4px;color:var(--pine)}
-.top{display:flex;justify-content:flex-end;gap:10px;align-items:center;color:var(--mute);font-size:.92rem}
-.sub{color:var(--mute);margin:0 0 18px}
+h1{font:700 2.4rem/1.1 var(--display);margin:16px 0 4px;color:var(--title,var(--pine))}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:center;color:var(--subtle,var(--mute));font-size:.92rem;min-height:40px}
+.sub{color:var(--subtle,var(--mute));margin:0 0 18px}
 .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
 input,textarea,button{font:inherit;color:inherit}
 input,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
@@ -42,7 +48,8 @@ input,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-
 .btn.danger{color:var(--berry)}
 .link{border:0;background:none;color:var(--pine);text-decoration:underline;cursor:pointer;padding:0}
 button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--pine);outline-offset:2px}
-#people{display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;padding-bottom:8px;margin:0 0 10px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+#people{display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;padding-bottom:8px;margin:0 0 10px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none}
+#people::-webkit-scrollbar{display:none}
 #people button{flex:0 0 auto;scroll-snap-align:start;white-space:nowrap}
 #psearch{margin:0 0 10px}
 .io{margin:-4px 0 12px;color:var(--mute);font-size:.92rem}
@@ -83,15 +90,28 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 .row{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
 .row .del{margin-right:auto}
 @media (prefers-reduced-motion:reduce){#msg{transition:none}}
+.menu-btn{display:inline-flex;gap:8px;align-items:center;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:500}
+#scrim{position:fixed;inset:0;background:oklch(0.2 0.03 260 / .55);z-index:20}
+#menu{position:fixed;top:0;bottom:0;left:0;width:min(320px,86vw);background:var(--card);color:var(--ink);border-right:1px solid var(--line);z-index:30;padding:calc(env(safe-area-inset-top) + 20px) 18px 24px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;transform:translateX(-102%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s .28s}
+#menu.open{transform:none;visibility:visible;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s}
+#menu .who{margin:0 0 10px;color:var(--mute);font-size:.9rem;overflow-wrap:anywhere}
+.mi{text-align:left;border:0;background:none;padding:12px 10px;border-radius:8px;font-size:1.05rem;cursor:pointer}
+.mi:hover,.mi:focus-visible{background:var(--done)}
+#menu label{margin:14px 10px 4px;font-size:.85rem;color:var(--mute)}
+#menu select{margin:0 10px 8px;width:calc(100% - 20px)}
+#menu .out{margin-top:auto;color:var(--berry)}
+@media (prefers-reduced-motion:reduce){#menu,#menu.open{transition:none}}
 </style>
 </head>
 <body>
 <main>
-  <div class="top"><span class="sync" id="sync" hidden>Syncing…</span><label class="sr" for="theme">Theme</label>
-    <select id="theme"></select>
-    <span id="acct" hidden><span id="who"></span><button class="link" id="groupsBtn">Groups</button><button class="link" id="accountBtn">Account</button><button class="link" id="logout">Log out</button></span></div>
+  <div class="top">
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="menu" hidden><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg><span>Menu</span></button>
+    <span class="sync" id="sync" hidden>Syncing…</span>
+  </div>
   <h1 id="title">Christmas List</h1>
   <p class="sub" id="sub"></p>
+  <div class="panel">
   <select id="gsel" hidden aria-label="Show people from group"></select>
   <input id="psearch" type="search" placeholder="Find a person" aria-label="Find a person" hidden>
   <div id="people" role="group" aria-label="Lists"></div>
@@ -108,21 +128,29 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
   <p class="totals"><span id="l-left">Still to buy: <b id="t-left">$0</b></span><span id="l-done">Bought: <b id="t-done">$0</b></span></p>
   <ul id="list"></ul>
   <p class="empty" id="empty" hidden></p>
+  </div>
 </main>
+<div id="scrim" hidden></div>
+<nav id="menu" aria-label="Menu" aria-hidden="true" inert>
+  <p class="who" id="who"></p>
+  <button class="mi" id="groupsBtn">Groups</button>
+  <button class="mi" id="accountBtn">Account</button>
+  <label for="theme">Theme</label><select id="theme"></select>
+  <button class="mi" id="installBtn" hidden>Install app on this device</button>
+  <p class="note" id="iosHint" hidden style="margin:6px 10px">On iPhone or iPad: tap the Share button, then “Add to Home Screen”.</p>
+  <button class="mi out" id="logout">Log out</button>
+</nav>
 
 <dialog id="auth">
   <form id="aform">
     <h2 id="atitle">Log in</h2>
     <p class="note" id="a-note" hidden></p>
-    <div id="b-name"><label for="a-name">Username</label><input id="a-name" maxlength="30" autocomplete="username" required></div>
+    <div id="b-name"><label for="a-name" id="l-name">Full name</label><input id="a-name" maxlength="30" autocomplete="username" required></div>
     <p class="note" id="b-shownq" hidden style="color:var(--ink)">Your question: <b id="a-shownq"></b></p>
     <div id="b-ans" hidden><label for="a-ans" id="l-ans">Answer</label><input id="a-ans" autocomplete="off" maxlength="100"></div>
     <div id="b-pw"><label for="a-pw" id="l-pw">Password</label><input id="a-pw" type="password" autocomplete="current-password"></div>
     <div id="b-q" hidden><label for="a-q">Recovery question</label><input id="a-q" maxlength="120" placeholder="A question only you know the answer to"></div>
-    <div id="b-codes" hidden>
-      <label for="a-signup">Sign-up code (if you were given one)</label><input id="a-signup" autocomplete="off">
-      <label for="a-claim">Claim code (only if you had an account on the old site)</label><input id="a-claim" autocomplete="off" autocapitalize="characters">
-    </div>
+    <div id="b-codes" hidden><label for="a-signup">Sign-up code (if you were given one)</label><input id="a-signup" autocomplete="off"></div>
     <p class="err" id="a-err" role="alert"></p>
     <div class="row"><span style="margin-right:auto;display:flex;gap:12px;flex-wrap:wrap"><button type="button" class="link" id="a-switch">Create an account</button><button type="button" class="link" id="a-forgot">Forgot password?</button></span><button class="btn primary" id="a-go">Log in</button></div>
   </form>
@@ -147,9 +175,9 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
   <h2>Account</h2>
   <p class="note" id="e-now"></p>
   <form id="nform">
-    <label for="n-new">Change username</label><input id="n-new" maxlength="30" autocomplete="off" required>
-    <div class="row"><button class="btn">Change username</button></div>
-    <p class="note">Your list, groups and surprise gifts all move with you.</p>
+    <label for="n-new">Change my full name</label><input id="n-new" maxlength="30" autocomplete="off" required>
+    <div class="row"><button class="btn">Change name</button></div>
+    <p class="note">Other people only see your first name. Your list, groups and surprise gifts all move with you.</p>
   </form>
   <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
   <form id="pform">
@@ -193,17 +221,22 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 <script>
 const $ = id => document.getElementById(id);
 const CFG = window.GIFT_CONFIG || {};
-let sb = null, session = null, myId = '', me = '', groups = [], gf = '', people = [], person = '', items = [], filter = 'all', editing = null;
+let sb = null, session = null, myId = '', myFull = '', me = '', groups = [], gf = '', people = [], person = '', items = [], filter = 'all', editing = null;
 try { person = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
 const themeOf = id => THEMES.find(t => t.id === id) || THEMES[0];
 let theme = THEMES[0].id;
 try { theme = localStorage.getItem('giftTheme') || theme; } catch (e) {}
 theme = themeOf(theme).id;
 THEMES.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.name; $('theme').append(o); });
+function toHex(c) {   // turns any CSS color (including oklch) into #rrggbb, for the phone's address-bar color
+  const cv = document.createElement('canvas'); cv.width = cv.height = 1; const x = cv.getContext('2d'); x.fillStyle = c; x.fillRect(0, 0, 1, 1);
+  const d = x.getImageData(0, 0, 1, 1).data; return '#' + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+function setThemeColor() { try { const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(); if (bg) $('tcolor').content = toHex(bg); } catch (e) {} }
 function applyTheme() {
   const t = themeOf(theme);
-  document.documentElement.dataset.theme = t.id; $('themecss').href = 'themes/' + t.id + '.css';
-  $('theme').value = t.id; $('title').textContent = t.title; document.title = t.title + (person ? ' - ' + person : '');
+  document.documentElement.dataset.theme = t.id; $('themecss').onload = setThemeColor; $('themecss').href = 'themes/' + t.id + '.css';
+  $('theme').value = t.id; $('title').textContent = t.title; document.title = t.title + (person ? ' - ' + person : ''); setThemeColor();
 }
 $('theme').onchange = () => { theme = $('theme').value; try { localStorage.setItem('giftTheme', theme); } catch (e) {} applyTheme(); };
 applyTheme();
@@ -216,7 +249,12 @@ const isMine = () => person.toLowerCase() === me.toLowerCase();
 function toast(t) { const m = $('msg'); m.textContent = t; m.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => m.classList.remove('show'), 3000); }
 
 let busy = 0, loadSeq = 0, lists = {}, byName = {}, names = {}, mode = 'login', scrollToPerson = false;
-const track = async p => { busy++; $('sync').hidden = false; try { return await p; } finally { if (--busy === 0) $('sync').hidden = true; } };
+// Every request gives up after 25 seconds, so "Syncing..." can never hang forever.
+const track = async (p, ms = 25000) => {
+  busy++; $('sync').hidden = false; let t;
+  try { return await Promise.race([p, new Promise((_, rej) => { t = setTimeout(() => rej(new Error('That took too long. Check your connection and try again.')), ms); })]); }
+  finally { clearTimeout(t); if (--busy === 0) $('sync').hidden = true; }
+};
 function errMsg(e) {
   const m = String((e && e.message) || e || '');
   if (/failed to fetch|networkerror|load failed/i.test(m)) return 'Network problem. Check your connection and try again.';
@@ -226,26 +264,35 @@ function errMsg(e) {
   if (e && e.code && /^(23|22)/.test(e.code)) return 'Please check what you entered and try again.';
   return e && e.code ? 'Something went wrong. Please try again.' : (m || 'Something went wrong. Please try again.');
 }
-function clearState() { myId = me = ''; items = []; people = []; groups = []; lists = {}; byName = {}; render(); }
+function clearState() { myId = myFull = me = ''; items = []; people = []; groups = []; lists = {}; byName = {}; render(); }
 
 /* ---- sign in ---- */
 async function fn(body) {      // calls the trusted "account" Edge Function
   const r = await track(sb.functions.invoke('account', {body}));
   if (r.error) {
-    let m = 'Something went wrong. Please try again.';
-    try { const j = await r.error.context.json(); if (j && j.error) m = j.error; }
-    catch (e) { if (/failed to send|fetch/i.test(String(r.error.message))) m = 'Network problem. Check your connection and try again.'; }
+    console.error('account function failed:', r.error);                       // open the browser console (F12) to see details
+    let m = 'Could not reach the sign-in service. Check your connection and try again.';
+    const ctx = r.error.context;
+    if (ctx && typeof ctx.json === 'function') {
+      m = 'Something went wrong. Please try again.';
+      try {
+        const j = await ctx.json();
+        if (j && j.error) m = j.error;
+        else if (j && /not found/i.test(j.message || '')) m = 'The sign-in service is not set up yet (the "account" function is not deployed).';
+        else if (j && /jwt/i.test(j.message || '')) m = 'The sign-in service rejected the request (deploy the function with --no-verify-jwt).';
+      } catch (e) {}
+    }
     throw new Error(m);
   }
   return r.data;
 }
-function showAuth() { $('acct').hidden = true; if (!$('auth').open) $('auth').showModal(); }
+function showAuth() { $('menuBtn').hidden = true; setMenu(false); if (!$('auth').open) $('auth').showModal(); }
 $('auth').addEventListener('cancel', e => e.preventDefault());
 function setMode(m, msg) {
   mode = m; $('a-err').textContent = msg || '';
   const T = {login: 'Log in', signup: 'Create an account', forgot: 'Reset your password', reset: 'Answer your question'};
   const G = {login: 'Log in', signup: 'Create account', forgot: 'Continue', reset: 'Change password'};
-  const N = {signup: 'Pick a recovery question only you can answer. It is the only way back in if you forget your password.', forgot: 'Enter your username to see your recovery question.'};
+  const N = {signup: 'Enter your full name. Other people only see your first name. Pick a recovery question only you can answer: it is the only way back in if you forget your password.', forgot: 'Enter your username to see your recovery question.'};
   $('atitle').textContent = T[m]; $('a-go').textContent = G[m];
   $('a-note').textContent = N[m] || ''; $('a-note').hidden = !N[m];
   $('b-pw').hidden = m === 'forgot'; $('a-pw').required = m !== 'forgot'; $('a-pw').minLength = (m === 'signup' || m === 'reset') ? 8 : 0;
@@ -266,10 +313,10 @@ $('aform').onsubmit = async e => {
   try {
     if (mode === 'login' || mode === 'signup') {
       const d = mode === 'login' ? await fn({action: 'login', username, password})
-        : await fn({action: 'signup', username, password, question: $('a-q').value.trim(), answer: $('a-ans').value, signupCode: $('a-signup').value.trim(), claimCode: $('a-claim').value.trim()});
+        : await fn({action: 'signup', username, password, question: $('a-q').value.trim(), answer: $('a-ans').value, signupCode: $('a-signup').value.trim()});
       if (!d.session) throw new Error('Could not log in. Please try again.');
       const r = await sb.auth.setSession(d.session); if (r.error) throw r.error;
-      $('a-pw').value = $('a-ans').value = $('a-claim').value = '';
+      $('a-pw').value = $('a-ans').value = '';
     } else if (mode === 'forgot') {
       const d = await fn({action: 'question', username}); $('a-shownq').textContent = d.question; $('a-pw').value = ''; setMode('reset');
     } else if (mode === 'reset') {
@@ -279,14 +326,14 @@ $('aform').onsubmit = async e => {
   } catch (err) { $('a-err').textContent = errMsg(err); }
   $('a-go').disabled = false;
 };
-$('logout').onclick = () => sb.auth.signOut();
+$('logout').onclick = () => { setMenu(false); sb.auth.signOut(); };
 
 async function afterSignIn() {
   if (!session) return;
   const r = await track(sb.rpc('my_profile'));
   if (r.error) return toast(errMsg(r.error));
   if (!r.data || !r.data.length) { toast('This login has no profile. Please contact the site owner.'); return void sb.auth.signOut(); }
-  myId = r.data[0].id; me = r.data[0].username; if (!person) person = me;
+  myId = r.data[0].id; myFull = r.data[0].username; me = myFull.split(' ')[0]; if (!person) person = me;
   if ($('auth').open) $('auth').close();
   scrollToPerson = true; await load();
 }
@@ -295,6 +342,7 @@ function isServiceKey(k) {
   try { return JSON.parse(atob(k.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).role === 'service_role'; } catch (e) { return false; }
 }
 function init() {
+  if (typeof supabase === 'undefined') { $('sub').textContent = 'The app could not load its sign-in library. Check your connection and reload.'; return; }
   if (!CFG.SUPABASE_URL || !CFG.SUPABASE_KEY) { $('sub').textContent = 'Add your Supabase URL and publishable key to config.js to connect the site.'; return; }
   if (isServiceKey(CFG.SUPABASE_KEY)) { $('sub').textContent = 'config.js contains a secret key. Remove it and use the publishable key instead.'; return; }
   sb = supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_KEY);
@@ -316,12 +364,23 @@ async function fetchAll(table, cols, orders) {
     out.push(...r.data); if (r.data.length < 1000) return out;
   }
 }
+// People are shown by first name. If two visible people share one, a last initial tells them apart.
+function makeLabels(rows) {
+  const count = {}; rows.forEach(p => { const k = p.first_name.toLowerCase(); count[k] = (count[k] || 0) + 1; });
+  const used = {}, out = {};
+  rows.slice().sort((a, b) => a.id < b.id ? -1 : 1).forEach(p => {
+    let l = p.first_name; if (count[l.toLowerCase()] > 1 && p.last_initial) l += ' ' + p.last_initial + '.';
+    const base = l; let n = 1; while (used[l.toLowerCase()]) l = base + ' ' + (++n);
+    used[l.toLowerCase()] = 1; out[p.id] = l;
+  });
+  return out;
+}
 async function loadDirectory() {
-  const [pr, gr, gm] = await Promise.all([fetchAll('profiles', 'id,username', ['id']), fetchAll('groups', 'id,name,invite_code', ['id']), fetchAll('group_members', 'group_id,profile_id,role', ['group_id', 'profile_id'])]);
-  names = {}; byName = {};
-  pr.forEach(p => { names[p.id] = p.username; byName[p.username.toLowerCase()] = p.id; });
+  const [pr, gr, gm] = await Promise.all([fetchAll('profiles', 'id,first_name,last_initial', ['id']), fetchAll('groups', 'id,name,invite_code', ['id']), fetchAll('group_members', 'group_id,profile_id,role', ['group_id', 'profile_id'])]);
+  names = makeLabels(pr); byName = {};
+  Object.keys(names).forEach(id => { byName[names[id].toLowerCase()] = id; });
   me = names[myId] || me;
-  people = pr.map(p => p.username).sort((a, b) => (b === me) - (a === me) || a.localeCompare(b));
+  people = Object.keys(names).map(id => names[id]).sort((a, b) => (b === me) - (a === me) || a.localeCompare(b));
   groups = gr.map(g => ({id: g.id, name: g.name, code: g.invite_code,
     members: gm.filter(m => m.group_id === g.id).map(m => ({id: m.profile_id, name: names[m.profile_id] || '?', role: m.role})),
     owner: gm.some(m => m.group_id === g.id && m.profile_id === myId && m.role === 'owner')}));
@@ -358,7 +417,7 @@ function pick(n) {
 /* ---- render ---- */
 function render() {
   const mine = isMine();
-  $('acct').hidden = !me; $('who').textContent = me ? 'Signed in as ' + me : '';
+  $('menuBtn').hidden = !me; $('who').textContent = myFull ? 'Signed in as ' + myFull : '';
   const gs = $('gsel'); gs.hidden = groups.length < 2; gs.innerHTML = '';
   [['', 'All groups'], ...groups.map(g => [g.id, g.name])].forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; o.selected = v === gf; gs.append(o); });
   const gm = gf && groups.find(g => g.id === gf);
@@ -484,7 +543,7 @@ function renderGroups() {
     d.append(t, c, m, bar); box.append(d);
   });
 }
-$('groupsBtn').onclick = () => { renderGroups(); $('gdlg').showModal(); };
+$('groupsBtn').onclick = () => { setMenu(false); renderGroups(); $('gdlg').showModal(); };
 $('gclose').onclick = () => $('gdlg').close();
 $('gcreate').onsubmit = async e => {
   e.preventDefault(); const name = $('g-new').value.trim(); if (!name) return;
@@ -497,13 +556,13 @@ $('gjoin').onsubmit = async e => {
 };
 
 /* ---- account ---- */
-$('accountBtn').onclick = () => { $('e-now').textContent = 'Signed in as ' + me; $('n-new').value = me; $('adlg').showModal(); };
+$('accountBtn').onclick = () => { setMenu(false); $('e-now').textContent = 'Signed in as ' + myFull; $('n-new').value = myFull; $('adlg').showModal(); };
 $('aclose').onclick = () => $('adlg').close();
 $('nform').onsubmit = async e => {
-  e.preventDefault(); const v = $('n-new').value.trim(); if (!v || v === me) return;
+  e.preventDefault(); const v = $('n-new').value.trim(); if (!v || v === myFull) return;
   const was = isMine();
   const r = await act(() => sb.rpc('change_username', {p_username: v}));
-  if (r) { if (was) person = v; me = v; try { history.replaceState(null, '', '#' + encodeURIComponent(person)); } catch (x) {} await load(); $('e-now').textContent = 'Signed in as ' + me; toast('Username changed to ' + v); }
+  if (r) { myFull = v; if (was) person = ''; await load(); try { history.replaceState(null, '', '#' + encodeURIComponent(person)); } catch (x) {} $('e-now').textContent = 'Signed in as ' + myFull; toast('Name changed'); }
 };
 $('pform').onsubmit = async e => {
   e.preventDefault();
@@ -535,7 +594,7 @@ $('exp').onclick = () => {
   const rows = [CSV_HEAD.join(',')].concat(items.filter(i => !i.by).map(i => [i.name, i.price ? i.price.toFixed(2) : '', i.link, i.notes].map(safeCell).join(',')));
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['\ufeff' + rows.join('\r\n') + '\r\n'], {type: 'text/csv;charset=utf-8'}));
-  a.download = 'gift-list-' + me.replace(/[^A-Za-z0-9._-]+/g, '-') + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  a.download = 'gift-list-' + myFull.replace(/[^A-Za-z0-9._-]+/g, '-') + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   toast('Exported ' + (rows.length - 1) + ' gifts. In Google Sheets use File > Import > Upload.');
 };
 function parseCSV(text) {
@@ -594,6 +653,25 @@ $('i-go').onclick = async () => {
   catch (e) { toast(errMsg(e)); }
   pending = []; $('idlg').close(); await load();
 };
+
+/* ---- side menu ---- */
+const menu = $('menu'), scrim = $('scrim');
+function setMenu(open) {
+  menu.classList.toggle('open', open); menu.inert = !open; menu.setAttribute('aria-hidden', String(!open)); scrim.hidden = !open;
+  $('menuBtn').setAttribute('aria-expanded', String(open));
+  if (open) $('groupsBtn').focus(); else if (menu.contains(document.activeElement)) $('menuBtn').focus();
+}
+$('menuBtn').onclick = () => setMenu(!menu.classList.contains('open'));
+scrim.onclick = () => setMenu(false);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && menu.classList.contains('open')) setMenu(false); });
+
+/* ---- install as an app (PWA) ---- */
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+let installEv = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEv = e; $('installBtn').hidden = false; });
+window.addEventListener('appinstalled', () => { installEv = null; $('installBtn').hidden = true; });
+$('installBtn').onclick = async () => { if (!installEv) return; installEv.prompt(); try { await installEv.userChoice; } catch (e) {} installEv = null; $('installBtn').hidden = true; setMenu(false); };
+if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone) $('iosHint').hidden = false;
 
 document.addEventListener('visibilitychange', () => { if (!document.hidden && session && myId) load(); });
 setTimeout(() => THEMES.forEach(t => fetch('themes/' + t.id + '.css').catch(() => {})), 2000);   // warm the cache so switching themes is instant

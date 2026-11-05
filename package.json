@@ -3,8 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node tests/security.test.mjs",
-    "import": "node migration/import.mjs"
+    "test": "node tests/security.test.mjs"
   },
-  "devDependencies": { "@supabase/supabase-js": "^2.45.4" }
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.45.4"
+  }
 }

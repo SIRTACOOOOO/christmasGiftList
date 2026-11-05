@@ -1,0 +1,17 @@
+{
+  "name": "Christmas Gift List",
+  "short_name": "Gift List",
+  "description": "Private wish lists for family and friends, with surprise gifts the receiver never sees.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1f4a3d",
+  "theme_color": "#1f4a3d",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

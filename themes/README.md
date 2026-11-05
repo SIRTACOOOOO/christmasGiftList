@@ -33,7 +33,7 @@ The first theme in `themes.js` is the default for new visitors.
 | `--on-berry` | Text color on top of `--berry` (defaults to white) |
 | `--done` | Background of gifts that are bought |
 
-Optional extras for fancier themes (see `christmas.css` and `birthday.css`):
+Optional extras for fancier themes (see `christmas.css` and `birthday.css`, which were designed with the [Impeccable](https://github.com/pbakaus/impeccable) guidance in mind: tinted OKLCH colors instead of pure grey, black or white, a committed three-color palette, characterful fonts, and one picture that the whole page is built around):
 
 | Variable | What it controls |
 |---|---|
@@ -42,10 +42,14 @@ Optional extras for fancier themes (see `christmas.css` and `birthday.css`):
 | `--pad` | Padding inside that box (for example `20px`) |
 | `--gap` | Extra space above the page, to leave room for decorations at the top |
 | `--display` | Font for headings and gift names |
+| `--body` | Font for everything else |
+| `--title` | Color of the big heading when it sits on a scene |
+| `--subtle` | Color of small text that sits on a scene |
+| `--radius` | Corner radius of the list panel |
 
 ## Tips
 
-- Pick text colors with good contrast against their background. If `--pine` is light, make `--on-pine` dark.
+- Colors in `christmas.css` and `birthday.css` are written in `oklch()`, which all current browsers understand. Pick text colors with at least 4.5:1 contrast against their background. If `--pine` is light, make `--on-pine` dark.
 - Images are written as inline SVG, so no extra files are needed. You can also use `url(your-image.png)` if you put the image in this folder and write `url(themes/your-image.png)`.
 - A theme can load its own font by starting the file with an `@import` line. `birthday.css` shows how.
 - A theme can follow the device's dark mode with `@media (prefers-color-scheme: dark) { ... }`. `legacy.css` shows how.

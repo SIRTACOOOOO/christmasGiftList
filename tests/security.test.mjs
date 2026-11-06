@@ -123,6 +123,30 @@ try {
   const stale = await alice.c.from('gifts').update({ notes: 'stale' }).eq('id', gid).eq('updated_at', cur).select('id');
   ok(!stale.error && stale.data.length === 0, 'a stale edit is rejected instead of overwriting');
 
+  // --- Secret Santa and budget ------------------------------------------------------------------------------------------------
+  const fay = await mk('fay'); await fay.c.rpc('join_group', { p_code: code });
+  const sid2 = (await alice.c.rpc('create_santa', { p_group: g.data, p_name: 'Test Santa', p_budget: 25, p_draws: 2 })).data;
+  ok(!!sid2, 'alice creates a Secret Santa (limit 25, two names each)');
+  ok(!(await bob.c.rpc('join_santa', { p_santa: sid2 })).error && !(await fay.c.rpc('join_santa', { p_santa: sid2 })).error, 'bob and fay join it');
+  ok((await carol.c.rpc('join_santa', { p_santa: sid2 })).error, 'someone outside the group cannot join');
+  ok((await bob.c.rpc('draw_santa', { p_santa: sid2 })).error, 'only the organizer can draw the names');
+  ok(!(await alice.c.rpc('draw_santa', { p_santa: sid2 })).error, 'the draw works');
+  const got = {};
+  for (const [n, u] of [['alice', alice], ['bob', bob], ['fay', fay]]) got[n] = (await u.c.from('santa_assignments').select('receiver_id').eq('santa_id', sid2)).data || [];
+  ok(Object.values(got).every((a) => a.length === 2 && new Set(a.map((x) => x.receiver_id)).size === 2), 'everyone drew two different names');
+  ok(!got.alice.some((x) => x.receiver_id === alice.id) && !got.bob.some((x) => x.receiver_id === bob.id) && !got.fay.some((x) => x.receiver_id === fay.id), 'nobody drew themselves');
+  const tally = {}; Object.values(got).flat().forEach((x) => { tally[x.receiver_id] = (tally[x.receiver_id] || 0) + 1; });
+  ok(Object.keys(tally).length === 3 && Object.values(tally).every((n) => n === 2), 'everyone was drawn exactly twice');
+  ok(rows(await carol.c.from('santa_assignments').select('*')) === 0, 'an outsider sees no assignments');
+  ok((await alice.c.rpc('draw_santa', { p_santa: sid2 })).error, 'the names cannot be drawn twice');
+  ok((await alice.c.from('santa_assignments').insert({ santa_id: sid2, giver_id: alice.id, receiver_id: bob.id })).error, 'assignments cannot be written directly');
+  ok((await bob.c.rpc('reset_santa', { p_santa: sid2 })).error, 'only the organizer can redo the draw');
+  ok((await alice.c.from('budget_entries').insert({ label: 'Too much', kind: 'reserved', amount: 30, santa_id: sid2 })).error, 'a Secret Santa entry over the limit is refused');
+  ok(!(await alice.c.from('budget_entries').insert({ label: 'Within the limit', kind: 'reserved', amount: 20, santa_id: sid2 })).error, 'an entry within the limit is saved');
+  ok(rows(await bob.c.from('budget_entries').select('*')) === 0, 'other people cannot see your budget entries');
+  ok(!(await alice.c.rpc('set_budget_total', { p_total: 100 })).error, 'a budget total is saved');
+  ok(rows(await bob.c.from('budgets').select('*')) === 0, 'other people cannot see your budget total');
+
   // --- username change and leaving a group ----------------------------------------------------------------------------------
   ok(!(await alice.c.rpc('change_username', { p_username: `alicia${run}` })).error, 'username changes');
   ok(rows(await alice.c.from('gifts').select('*').eq('id', gid)) === 1, 'gifts stay with the renamed user');

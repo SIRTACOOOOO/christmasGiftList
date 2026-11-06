@@ -28,3 +28,17 @@ html[data-theme=christmas] {
 html[data-theme=christmas] .btn, html[data-theme=christmas] input, html[data-theme=christmas] textarea, html[data-theme=christmas] select, html[data-theme=christmas] .seg { border-radius: 6px; }
 html[data-theme=christmas] h1{font-size:clamp(2.8rem,10.5vw,5.2rem);line-height:.95;letter-spacing:-.01em;margin:10px 0 8px;text-wrap:balance;font-weight:400}
 html[data-theme=christmas] .name,html[data-theme=christmas] dialog h2,html[data-theme=christmas] .grp b{font-weight:400}
+
+/* Dark mode (used when Appearance is Dark, or Same as device and the device is dark) */
+html[data-theme=christmas][data-eff=dark] {
+  --panel: oklch(0.24 0.03 215 / 0.95);
+  --card: oklch(0.28 0.03 215);
+  --ink: oklch(0.94 0.012 95);
+  --mute: oklch(0.76 0.02 150);
+  --line: oklch(0.36 0.03 215);
+  --pine: oklch(0.78 0.1 165);
+  --berry: oklch(0.72 0.15 22);
+  --on-pine: oklch(0.2 0.03 200);
+  --on-berry: oklch(0.2 0.03 22);
+  --done: oklch(0.3 0.03 200);
+}

@@ -53,4 +53,14 @@ Optional extras for fancier themes (see `christmas.css` and `birthday.css`, whic
 - Images are written as inline SVG, so no extra files are needed. You can also use `url(your-image.png)` if you put the image in this folder and write `url(themes/your-image.png)`.
 - A theme can load its own font by starting the file with an `@import` line. `birthday.css` shows how.
 - A theme can follow the device's dark mode with `@media (prefers-color-scheme: dark) { ... }`. `legacy.css` shows how.
-Hiding something so it will retry deploying :(
+
+## Light and dark mode
+
+People choose **Appearance** in the menu: Same as device, Light or Dark. The site sets `data-eff="dark"` or `data-eff="light"` on the page, so a theme can give each mode its own colors:
+
+```css
+html[data-theme=forest]                  { /* light colors */ }
+html[data-theme=forest][data-eff=dark]   { /* dark colors  */ }
+```
+
+If a theme has no dark block it simply keeps its light colors. `midnight.css` is always dark.

@@ -12,3 +12,18 @@ html[data-theme=ocean] {
   --done: #d9e8f1;
   --bgimg: linear-gradient(180deg,#d8eaf6,#eef6fb);
 }
+
+/* Dark mode (used when Appearance is Dark, or Same as device and the device is dark) */
+html[data-theme=ocean][data-eff=dark] {
+  --bg: oklch(0.2 0.03 240);
+  --card: oklch(0.25 0.03 240);
+  --ink: oklch(0.94 0.015 230);
+  --mute: oklch(0.76 0.03 235);
+  --line: oklch(0.33 0.03 240);
+  --pine: oklch(0.76 0.11 230);
+  --berry: oklch(0.74 0.15 40);
+  --on-pine: oklch(0.2 0.03 240);
+  --on-berry: oklch(0.2 0.03 40);
+  --done: oklch(0.27 0.03 240);
+  --bgimg: linear-gradient(180deg, oklch(0.2 0.03 240), oklch(0.17 0.03 240));
+}

@@ -17,6 +17,7 @@ In **SQL Editor → New query**, paste each file below **in this order** and cli
 4. `supabase/migrations/20261104000004_username_auth.sql`
 5. `supabase/migrations/20261105000005_first_names.sql`
 6. `supabase/migrations/20261106000006_profiles_priorities_avatars.sql`
+7. `supabase/migrations/20261107000007_budget_and_secret_santa.sql`
 
 (Or with the Supabase CLI: `npx supabase link --project-ref YOUR-REF` then `npx supabase db push`.)
 
@@ -110,7 +111,7 @@ npm install
 DEV_PROJECT_CONFIRM=yes SUPABASE_URL=https://YOUR-REF.supabase.co SUPABASE_PUBLISHABLE_KEY=sb_publishable_... npm test
 ```
 
-If you set `SIGNUP_CODE`, also set it in your shell. The tests create four throwaway users through the real sign-up, check permissions and surprise-gift privacy through the real API, test sign-in, recovery and deletion, then delete the users. They sign up from one network address, so on a dev project you may need `npx supabase secrets set SIGNUP_LIMIT_PER_HOUR=50`. They refuse to run without `DEV_PROJECT_CONFIRM=yes`. **Never run them against production.**
+If you set `SIGNUP_CODE`, also set it in your shell. The tests create several throwaway users through the real sign-up, check permissions and surprise-gift privacy through the real API, test sign-in, recovery and deletion, then delete the users. They create about seven test accounts from one network address, so on a dev project set `npx supabase secrets set SIGNUP_LIMIT_PER_HOUR=50` first. They refuse to run without `DEV_PROJECT_CONFIRM=yes`. **Never run them against production.**
 
 Also check by hand with two browsers: tick a gift in one and confirm the owner's browser never shows it. Add a surprise gift and confirm the owner can't see it.
 
@@ -124,7 +125,15 @@ Also check by hand with two browsers: tick a gift in one and confirm the owner's
 
 Each person can bring their own list across in a minute: in the old sheet, open their tab and choose **File → Download → Comma Separated Values (.csv)**. Then they sign up on the new site and use **Import from CSV** under their own list. The import understands the old sheet's columns (Gift names, Approx. price, Links, notes), skips filler rows and duplicates, and shows a preview before adding anything.
 
-## 10. Change the app icon
+## 10. Secret Santa, budgets and QR invitations
+
+- **Secret Santa:** menu, then Secret Santa. Anyone in a group can start one. Choose a name, an optional spending limit, and how many names each person draws (1 to 5). People join, then the organizer (or the group owner) presses **Draw names**. You need at least one more person than the number of names each person draws. After the draw, each person sees only their own names, with buttons to open that person's list or add the gift to their budget. **Redo the draw** erases everything and reopens sign-ups.
+- **Spending limit:** shown to everyone. When a person adds a budget entry from their Secret Santa names, the database refuses amounts over the limit.
+- **Budget:** menu, then Budget. Only you can see it. Use the **Budget** link on any gift on someone else's list to track it.
+- **QR invitations:** in Groups, press **Show QR code** under a group. Scanning it opens `your-site/#join=CODE`, asks the person to log in or sign up, then asks them to confirm joining. The invite code box still works as before. **New invite code** invalidates old codes and old QR codes. QR codes are drawn by a library loaded from `cdn.jsdelivr.net`.
+- **Appearance:** menu, then Appearance: same as device, light or dark. Midnight is always dark.
+
+## 11. Change the app icon
 
 `icons/maskable-512.png` is the **master icon**. Every other icon (the 192 px app icon, the iPhone icon, the browser tab icon and `favicon.ico`) is generated from it. To use your own: replace that file with a 512 x 512 PNG that fills the whole square with a solid background and keeps the artwork inside the middle 80%, then run:
 
@@ -135,7 +144,7 @@ python3 scripts/make-icons.py
 
 Then bump `CACHE` in `sw.js` (for example `giftlist-v4`) so installed copies pick up the new icon.
 
-## 11. Install it on a phone
+## 12. Install it on a phone
 
 The site is an installable app (PWA). It must be opened over `https` (GitHub Pages is) or on `localhost`.
 

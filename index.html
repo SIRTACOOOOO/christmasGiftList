@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>try{var m=localStorage.getItem('giftMode')||'device',d=m==='dark'||(m==='device'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.eff=d?'dark':'light'}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" id="tcolor" content="#1f4a3d">
@@ -11,6 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="themes/themes.js"></script>
 <link id="themecss" rel="stylesheet">
 <title>Christmas List</title>
@@ -21,7 +23,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--dw:700;--on-berry:#fff;--display:Fraunces,Georgia,serif;--body:"Instrument Sans",system-ui,sans-serif;--panel:transparent;--pad:0px;--gap:0px;--bgimg:none;--bg:#eef1ec;--card:#fff;--ink:#1c2b27;--mute:#5d6b66;--line:#d5dcd6;--pine:#1f4a3d;--berry:#a3293f;--on-pine:#fff;--done:#e3e9e4}
-@media (prefers-color-scheme:dark){:root{--bg:#121a17;--card:#1a2420;--ink:#e8eee9;--mute:#9aa9a2;--line:#2c3a34;--pine:#7fc4a8;--berry:#e8798c;--on-pine:#10201a;--on-berry:#2a0f16;--done:#16201c}}
+/* dark colors now live in each theme file (see themes/README.md) */
+:root{color-scheme:light}
+:root[data-eff=dark]{color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--bgimg)}
@@ -133,6 +137,13 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
   .grphead{display:block!important;color:#000;border-bottom:1px solid #000}
   .tag{border:1px solid #000;color:#000;background:none}
 }
+.qr{margin:10px 0 4px}
+.qr svg{display:block;border-radius:8px;max-width:100%;height:auto}
+.qr small{display:block;word-break:break-all;color:var(--mute);margin:6px 0}
+.bsum{font-weight:600;margin:10px 0}
+.bsum.over{color:var(--berry)}
+#bd-list li{grid-template-columns:auto 1fr auto;align-items:center}
+#sdlg,#bdlg{width:min(520px,calc(100% - 24px))}
 </style>
 </head>
 <body>
@@ -169,8 +180,12 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 <nav id="menu" aria-label="Menu" aria-hidden="true" inert>
   <p class="who" id="who"></p>
   <button class="mi" id="groupsBtn">Groups</button>
+  <button class="mi" id="santaBtn">Secret Santa</button>
+  <button class="mi" id="budgetBtn">Budget</button>
   <button class="mi" id="accountBtn">Account</button>
   <label for="theme">Theme</label><select id="theme"></select>
+  <label for="mode">Appearance</label><select id="mode"><option value="device">Same as device</option><option value="light">Light</option><option value="dark">Dark</option></select>
+  <p class="note" id="modeNote" hidden style="margin:0 10px 6px">Midnight is always dark.</p>
   <label for="cd">Countdown</label><select id="cd"><option value="christmas">Christmas</option><option value="birthday">Birthday</option><option value="none">No countdown</option></select>
   <button class="mi" id="installBtn" hidden>Install app on this device</button>
   <p class="note" id="iosHint" hidden style="margin:6px 10px">On iPhone or iPad: tap the Share button, then “Add to Home Screen”.</p>
@@ -252,6 +267,31 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
   </form>
   <div class="row"><button type="button" class="btn" id="aclose">Close</button></div>
 </dialog>
+<dialog id="sdlg">
+  <h2>Secret Santa</h2>
+  <p class="note">The names are drawn by the database. Nobody, not even the organizer, can see who drew whom. You only ever see your own names.</p>
+  <div id="slist"></div>
+  <form id="screate">
+    <label for="s-group">Start a new Secret Santa in</label><select id="s-group"></select>
+    <label for="s-name">Name</label><input id="s-name" maxlength="60" placeholder="Family Secret Santa" required>
+    <label for="s-limit">Group spending limit per gift (optional)</label><input id="s-limit" inputmode="decimal" placeholder="25.00">
+    <label for="s-draws">Names each person draws</label><select id="s-draws"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+    <div class="row"><button class="btn primary">Create Secret Santa</button></div>
+  </form>
+  <div class="row"><button type="button" class="btn" id="sclose">Close</button></div>
+</dialog>
+<dialog id="bdlg">
+  <h2>My budget</h2>
+  <p class="note">Private to you. Nobody else can see your budget or what you track here. "Reserved" means money you plan to spend; "Spent" means money already spent.</p>
+  <form id="btotal" class="inline"><input id="bd-total" inputmode="decimal" placeholder="Total budget (optional)" aria-label="Total budget"><button class="btn">Save</button></form>
+  <p class="bsum" id="bd-sum"></p>
+  <ul id="bd-list"></ul>
+  <form id="bdadd">
+    <label for="bd-label">Add an entry</label><input id="bd-label" maxlength="100" placeholder="What is it for?" required>
+    <div class="inline"><input id="bd-amt" inputmode="decimal" placeholder="Amount" aria-label="Amount" required><select id="bd-kind" aria-label="Reserved or spent"><option value="reserved">Reserved</option><option value="spent">Spent</option></select><button class="btn primary">Add</button></div>
+  </form>
+  <div class="row"><button type="button" class="btn" id="bclose">Close</button></div>
+</dialog>
 <dialog id="idlg">
   <h2>Import gifts</h2>
   <p class="note" id="i-sum"></p>
@@ -272,7 +312,21 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 const $ = id => document.getElementById(id);
 const CFG = window.GIFT_CONFIG || {};
 let sb = null, session = null, myId = '', myFull = '', me = '', groups = [], gf = '', people = [], person = '', items = [], filter = 'all', editing = null;
-try { person = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
+let pendingJoin = '';
+try { person = /^join=/i.test(location.hash.slice(1)) ? '' : decodeURIComponent(location.hash.slice(1)); } catch (e) {}
+try {
+  const h = location.hash.slice(1);
+  if (/^join=/i.test(h)) { pendingJoin = decodeURIComponent(h.slice(5)).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12); history.replaceState(null, '', location.pathname + location.search); }
+  if (pendingJoin) sessionStorage.setItem('giftJoin', pendingJoin); else pendingJoin = sessionStorage.getItem('giftJoin') || '';
+} catch (e) {}
+let modeSetting = 'device'; try { modeSetting = localStorage.getItem('giftMode') || 'device'; } catch (e) {}
+const darkQuery = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+function applyMode() {      // light, dark, or follow the device; every theme file has its own colors for each
+  const dark = modeSetting === 'dark' || (modeSetting === 'device' && darkQuery && darkQuery.matches);
+  document.documentElement.dataset.eff = dark ? 'dark' : 'light';
+  $('mode').value = modeSetting; $('modeNote').hidden = theme !== 'midnight'; setThemeColor();
+}
+if (darkQuery && darkQuery.addEventListener) darkQuery.addEventListener('change', applyMode);
 const themeOf = id => THEMES.find(t => t.id === id) || THEMES[0];
 let theme = THEMES[0].id;
 try { theme = localStorage.getItem('giftTheme') || theme; } catch (e) {}
@@ -286,7 +340,7 @@ function setThemeColor() { try { const bg = getComputedStyle(document.documentEl
 function applyTheme() {
   const t = themeOf(theme);
   document.documentElement.dataset.theme = t.id; $('themecss').onload = setThemeColor; $('themecss').href = 'themes/' + t.id + '.css';
-  $('theme').value = t.id; $('title').textContent = t.title; document.title = t.title + (person ? ' - ' + person : ''); setThemeColor();
+  $('theme').value = t.id; $('title').textContent = t.title; document.title = t.title + (person ? ' - ' + person : ''); applyMode();
 }
 $('theme').onchange = () => { theme = $('theme').value; try { localStorage.setItem('giftTheme', theme); } catch (e) {} applyTheme(); };
 applyTheme();
@@ -351,7 +405,8 @@ function setMode(m, msg) {
   const G = {login: 'Log in', signup: 'Create account', forgot: 'Continue', reset: 'Change password'};
   const N = {signup: 'Enter your full name. Other people only see your first name. A recovery question is optional, but without one only the site owner can reset a forgotten password.', forgot: 'Enter your username to see your recovery question.'};
   $('atitle').textContent = T[m]; $('a-go').textContent = G[m];
-  $('a-note').textContent = N[m] || ''; $('a-note').hidden = !N[m];
+  const inv = pendingJoin && (m === 'login' || m === 'signup') ? ' You were invited to a group. You can join it right after you log in.' : '';
+  $('a-note').textContent = (N[m] || '') + inv; $('a-note').hidden = !$('a-note').textContent;
   $('b-pw').hidden = m === 'forgot'; $('a-pw').required = m !== 'forgot'; $('a-pw').minLength = (m === 'signup' || m === 'reset') ? 8 : 0;
   $('l-pw').textContent = m === 'reset' ? 'New password (8 or more characters)' : m === 'signup' ? 'Password (8 or more characters)' : 'Password';
   $('a-pw').autocomplete = m === 'login' ? 'current-password' : 'new-password';
@@ -394,6 +449,7 @@ async function afterSignIn() {
   myId = r.data[0].id; myFull = r.data[0].username; me = myFull.split(' ')[0]; if (!person) person = me;
   if ($('auth').open) $('auth').close();
   scrollToPerson = true; await load();
+  if (pendingJoin) await handleJoin();
 }
 function isServiceKey(k) {
   if (/^sb_secret_/.test(k)) return true;
@@ -553,6 +609,7 @@ function render() {
     const right = document.createElement('div'); right.style.textAlign = 'right';
     const p = document.createElement('div'); p.className = 'price'; p.textContent = i.price ? money(i.price) : ''; right.append(p);
     if (!i.pending && (mine || (i.by && i.byId === myId))) { const eb = document.createElement('button'); eb.className = 'edit'; eb.textContent = 'Edit'; eb.onclick = () => openDlg(i); right.append(eb); }
+    if (!mine && !i.pending) { const bb = document.createElement('button'); bb.className = 'edit'; bb.textContent = 'Budget'; bb.onclick = () => openBudget({label: i.name + ' for ' + person, amount: i.price || '', gift_id: i.id}); right.append(' ', bb); }
     li.append(mid, right); $('list').append(li);
   });
   $('empty').hidden = !me || (shown.length > 0 && groups.length > 0); $('empty').textContent = groups.length ? 'No gifts to show yet.' : 'Create a group or join one with an invite code (Groups, top right) to see other people\u2019s lists.';
@@ -584,6 +641,7 @@ const keep = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 $('sort').onchange = () => { sortKey = $('sort').value; keep('giftSort', sortKey); render(); };
 $('boughtLast').onchange = () => { boughtLast = $('boughtLast').checked; keep('giftBoughtLast', boughtLast ? '1' : '0'); render(); };
 $('cd').onchange = () => { cdMode = $('cd').value; keep('giftCountdown', cdMode); renderCountdown(); };
+$('mode').onchange = () => { modeSetting = $('mode').value; keep('giftMode', modeSetting); applyMode(); };
 document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
   filter = b.dataset.f; document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); render();
 });
@@ -638,13 +696,18 @@ function renderGroups() {
       if (n) m.append(', '); m.append(x.name);
       if (g.owner && x.id !== myId) m.append(' ', lnk('(remove)', () => confirm('Remove ' + x.name + '?') && act(() => sb.rpc('remove_member', {p_group: g.id, p_profile: x.id}), 'Member removed')));
     });
-    const bar = document.createElement('p');
+    const qrBox = document.createElement('div'); qrBox.className = 'qr'; qrBox.hidden = true;
+    const qrBtn = lnk('Show QR code', () => {
+      if (!qrBox.firstChild) fillQr(qrBox, g.code);
+      qrBox.hidden = !qrBox.hidden; qrBtn.textContent = qrBox.hidden ? 'Show QR code' : 'Hide QR code';
+    });
+    const bar = document.createElement('p'); bar.append(qrBtn, ' ');
     bar.append(lnk('Leave group', () => confirm('Leave "' + g.name + '"?') && act(() => sb.rpc('leave_group', {p_group: g.id}), 'You left the group')));
     if (g.owner) {
       bar.append(' ', lnk('New invite code', async () => { const r = await act(() => sb.rpc('rotate_invite_code', {p_group: g.id})); if (r && r.data) toast('New invite code: ' + r.data); }));
       bar.append(' ', lnk('Delete group', () => confirm('Delete "' + g.name + '" for everyone?') && act(() => sb.rpc('delete_group', {p_group: g.id}), 'Group deleted')));
     }
-    d.append(t, c, m, bar); box.append(d);
+    d.append(t, c, m, bar, qrBox); box.append(d);
   });
 }
 $('groupsBtn').onclick = () => { setMenu(false); renderGroups(); $('gdlg').showModal(); };
@@ -800,6 +863,142 @@ $('i-go').onclick = async () => {
   try { const r = await track(sb.from('gifts').insert(rows)); if (r.error) throw r.error; toast('Imported ' + rows.length + ' gifts'); }
   catch (e) { toast(errMsg(e)); }
   pending = []; $('idlg').close(); await load();
+};
+
+/* ---- group invitation QR codes (the invite code still works exactly as before) ---- */
+const inviteLink = code => location.origin + location.pathname + '#join=' + code;
+function qrSvg(text) {
+  if (typeof qrcode === 'undefined') return null;
+  const qr = qrcode(0, 'M'); qr.addData(text); qr.make();
+  const n = qr.getModuleCount(), q = 4; let d = '';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) d += 'M' + (c + q) + ' ' + (r + q) + 'h1v1h-1z';
+  const w = n + 2 * q;
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + w + '" width="210" height="210" role="img" aria-label="QR code that opens the group invitation" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="' + d + '" fill="#000"/></svg>';
+}
+function fillQr(box, code) {
+  const link = inviteLink(code), svg = qrSvg(link);
+  if (svg) box.innerHTML = svg;
+  else box.append(Object.assign(document.createElement('p'), {className: 'note', textContent: 'The QR code needs a connection to load. The invite code and link still work.'}));
+  const small = document.createElement('small'); small.textContent = link; box.append(small);
+  box.append(lnk('Copy link', async () => { try { await navigator.clipboard.writeText(link); toast('Link copied'); } catch (e) { toast('Copy it from the text above.'); } }));
+}
+async function handleJoin() {
+  const code = pendingJoin; pendingJoin = ''; try { sessionStorage.removeItem('giftJoin'); } catch (e) {}
+  if (!code) return;
+  if (!confirm('You opened a group invitation (code ' + code + '). Join this group?')) return;
+  const r = await act(() => sb.rpc('join_group', {p_code: code}));
+  if (r) toast(r.data ? 'You joined the group' : 'That invitation is not valid any more');
+}
+
+/* ---- Secret Santa ---- */
+let santas = [], santaParts = [], myPairs = [];
+async function loadSanta() {
+  const [a, b, c] = await track(Promise.all([fetchAll('secret_santas', 'id,group_id,name,budget_max,draws_per_person,status,created_by', ['id']),
+    fetchAll('santa_participants', 'santa_id,profile_id', ['santa_id', 'profile_id']), fetchAll('santa_assignments', 'santa_id,receiver_id', ['santa_id', 'receiver_id'])]));
+  santas = a; santaParts = b; myPairs = c;            // the database only returns YOUR assignments
+}
+const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+async function actS(fn, ok) {
+  try { const r = await track(fn()); if (r.error) throw r.error; if (ok) toast(ok); await loadSanta(); renderSanta(); return r; }
+  catch (e) { toast(errMsg(e)); }
+}
+function renderSanta() {
+  const sg = $('s-group'); sg.innerHTML = ''; groups.forEach(g => sg.append(new Option(g.name, g.id)));
+  $('screate').hidden = !groups.length;
+  const box = $('slist'); box.innerHTML = '';
+  if (!santas.length) { const p = document.createElement('p'); p.className = 'note'; p.textContent = groups.length ? 'No Secret Santas yet. Start one below.' : 'Join or create a group first. Secret Santas happen inside groups.'; box.append(p); }
+  santas.slice().sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1) || a.name.localeCompare(b.name)).forEach(s => {
+    const g = groups.find(x => x.id === s.group_id); if (!g) return;
+    const parts = santaParts.filter(p => p.santa_id === s.id).map(p => p.profile_id), mineIn = parts.includes(myId), organizer = s.created_by === myId || g.owner;
+    const d = document.createElement('div'); d.className = 'grp';
+    const t = document.createElement('b'); t.textContent = s.name + ' \u00b7 ' + g.name;
+    const info = document.createElement('p'); info.className = 'meta';
+    info.textContent = (s.budget_max ? 'Spending limit: ' + money(Number(s.budget_max)) + ' per gift' : 'No spending limit') + ' \u00b7 each person draws ' + plural(s.draws_per_person, 'name') + ' \u00b7 ' + plural(parts.length, 'person') + ' in';
+    const who = document.createElement('p'); who.className = 'meta members'; who.textContent = 'In: ' + parts.map(id => names[id] || '?').join(', ');
+    d.append(t, info, who);
+    const bar = document.createElement('p');
+    const del = lnk('Delete', () => confirm('Delete "' + s.name + '"?') && actS(() => sb.rpc('delete_santa', {p_santa: s.id}), 'Deleted'));
+    if (s.status === 'open') {
+      bar.append(mineIn ? lnk('Leave', () => actS(() => sb.rpc('leave_santa', {p_santa: s.id}), 'You left')) : lnk('Join', () => actS(() => sb.rpc('join_santa', {p_santa: s.id}), 'You joined')));
+      if (organizer) {
+        bar.append(' ', lnk('Draw names', () => {
+          if (parts.length < s.draws_per_person + 1) return toast('You need at least ' + (s.draws_per_person + 1) + ' people for everyone to draw ' + plural(s.draws_per_person, 'name') + '.');
+          if (confirm('Draw the names now? Nobody can join or leave afterwards.')) actS(() => sb.rpc('draw_santa', {p_santa: s.id}), 'Names drawn. Open Secret Santa to see yours.');
+        }), ' ', del);
+      }
+    } else {
+      const mine = myPairs.filter(p => p.santa_id === s.id);
+      if (mineIn && mine.length) {
+        const h = document.createElement('p'); h.textContent = 'You are giving to:'; d.append(h);
+        mine.forEach(p => {
+          const nm = names[p.receiver_id] || 'someone', row = document.createElement('p'), b = document.createElement('b'); b.textContent = nm; row.append(b, ' ');
+          row.append(lnk('View list', () => { $('sdlg').close(); if (names[p.receiver_id]) pick(names[p.receiver_id]); }), ' ',
+                     lnk('Add to my budget', () => { $('sdlg').close(); openBudget({label: 'Secret Santa: ' + nm, amount: s.budget_max || '', santa_id: s.id}); }));
+          d.append(row);
+        });
+      } else d.append(Object.assign(document.createElement('p'), {className: 'note', textContent: mineIn ? 'Close this window and open it again to see your names.' : 'The names have been drawn.'}));
+      if (organizer) bar.append(lnk('Redo the draw', () => confirm('This erases everyone\u2019s names and reopens sign-ups. Continue?') && actS(() => sb.rpc('reset_santa', {p_santa: s.id}), 'Draw cleared')), ' ', del);
+    }
+    d.append(bar); box.append(d);
+  });
+}
+$('santaBtn').onclick = async () => { setMenu(false); try { await loadSanta(); } catch (e) { return toast(errMsg(e)); } renderSanta(); $('sdlg').showModal(); };
+$('sclose').onclick = () => $('sdlg').close();
+$('screate').onsubmit = async e => {
+  e.preventDefault(); const lim = $('s-limit').value.trim().replace(/[$,\s]/g, ''), limN = lim === '' ? null : Number(lim);
+  if (limN !== null && !(limN > 0)) return toast('The spending limit must be more than zero.');
+  const r = await actS(() => sb.rpc('create_santa', {p_group: $('s-group').value, p_name: $('s-name').value.trim(), p_budget: limN, p_draws: Number($('s-draws').value)}), 'Secret Santa created');
+  if (r) { $('s-name').value = ''; $('s-limit').value = ''; }
+};
+
+/* ---- personal budget ---- */
+let budgetTotal = null, entries = [], bdPre = {};
+async function loadBudget() {
+  const [t, e] = await track(Promise.all([sb.from('budgets').select('total').maybeSingle(), fetchAll('budget_entries', 'id,gift_id,santa_id,label,kind,amount,created_at', ['created_at', 'id'])]));
+  if (t.error) throw t.error; budgetTotal = t.data ? t.data.total : null; entries = e;
+}
+function renderBudget() {
+  const sum = a => entries.filter(x => x.kind === a).reduce((n, x) => n + Number(x.amount), 0), spent = sum('spent'), res = sum('reserved');
+  const total = budgetTotal === null || budgetTotal === undefined ? null : Number(budgetTotal);
+  $('bd-total').value = total === null ? '' : total;
+  const line = $('bd-sum'); line.classList.remove('over'); const parts = ['Spent ' + money(spent), 'Reserved ' + money(res)];
+  if (total !== null) { const left = total - spent - res; parts.push(left >= 0 ? money(left) + ' left of ' + money(total) : money(-left) + ' over your ' + money(total) + ' budget'); if (left < 0) line.classList.add('over'); }
+  line.textContent = parts.join(' \u00b7 ');
+  const ul = $('bd-list'); ul.innerHTML = '';
+  entries.forEach(x => {
+    const li = document.createElement('li'), kb = document.createElement('button'); kb.type = 'button'; kb.className = 'btn'; kb.textContent = x.kind === 'spent' ? 'Spent' : 'Reserved'; kb.title = 'Tap to switch between reserved and spent';
+    kb.onclick = () => bdAct(() => sb.from('budget_entries').update({kind: x.kind === 'spent' ? 'reserved' : 'spent'}).eq('id', x.id));
+    const lab = document.createElement('div'); lab.textContent = x.label;
+    const right = document.createElement('div'); right.style.textAlign = 'right';
+    const am = document.createElement('div'); am.className = 'price'; am.textContent = money(Number(x.amount));
+    const rm = lnk('Delete', () => bdAct(() => sb.from('budget_entries').delete().eq('id', x.id))); rm.className = 'edit'; right.append(am, rm);
+    li.append(kb, lab, right); ul.append(li);
+  });
+}
+async function bdAct(fn) { try { const r = await track(fn()); if (r.error) throw r.error; await loadBudget(); renderBudget(); } catch (e) { toast(errMsg(e)); } }
+async function openBudget(pre) {
+  setMenu(false);
+  try { await loadBudget(); } catch (e) { return toast(errMsg(e)); }
+  bdPre = pre || {}; renderBudget();
+  $('bd-label').value = bdPre.label || ''; $('bd-amt').value = bdPre.amount || ''; $('bd-kind').value = 'reserved';
+  if (!$('bdlg').open) $('bdlg').showModal();
+  (bdPre.label ? $('bd-amt') : $('bd-label')).focus();
+}
+$('budgetBtn').onclick = () => openBudget();
+$('bclose').onclick = () => { bdPre = {}; $('bdlg').close(); };
+$('btotal').onsubmit = async e => {
+  e.preventDefault(); const v = $('bd-total').value.trim().replace(/[$,\s]/g, ''), n = v === '' ? null : Number(v);
+  if (n !== null && !(n >= 0)) return toast('Enter a number, or leave it empty.');
+  const r = await track(sb.rpc('set_budget_total', {p_total: n})); if (r.error) return toast(errMsg(r.error));
+  await loadBudget(); renderBudget(); toast('Budget saved');
+};
+$('bdadd').onsubmit = async e => {
+  e.preventDefault(); const amt = Number($('bd-amt').value.trim().replace(/[$,\s]/g, ''));
+  if (!(amt >= 0)) return toast('Enter an amount.');
+  const row = {id: crypto.randomUUID(), label: $('bd-label').value.trim(), kind: $('bd-kind').value, amount: amt};
+  if (bdPre.gift_id) row.gift_id = bdPre.gift_id; if (bdPre.santa_id) row.santa_id = bdPre.santa_id;
+  const r = await track(sb.from('budget_entries').insert(row)); if (r.error) return toast(errMsg(r.error));      // the database refuses amounts over a Secret Santa limit
+  bdPre = {}; $('bd-label').value = ''; $('bd-amt').value = ''; await loadBudget(); renderBudget(); toast('Added');
 };
 
 /* ---- side menu ---- */

@@ -13,3 +13,6 @@ html[data-theme=midnight] {
   --done: #121a2a;
   --bgimg: linear-gradient(180deg,#0b101a,#111a2b);
 }
+
+/* Midnight is always dark, whatever the Appearance setting says. */
+html[data-theme=midnight] { color-scheme: dark; }

@@ -16,17 +16,21 @@ A simple, easy-to-use wishlist platform that makes organizing Christmas gifts wi
 - Create groups with family and friends.
 - Invite others to join your group.
 - Browse everyone's wishlists in one place.
+- Create a Secret Santa.
 - Make Christmas shopping easier for everyone.
 
 ### 🛍️ Gift Management
 - Keep track of gifts across multiple people.
 - See which gifts have been purchased.
 - Organize your shopping without losing track of ideas.
+- Add a budget so you don't over-spend.
 
 ### 🎨 Customization
 - Customize the appearance of your experience.
 - Enjoy a Christmas-themed interface.
 - Access your wishlists from any device with a web browser.
+- Download the app and manage your wishlists from your phone.
+- Count down the days til Christmas.
 
 ## 🚀 Getting Started
 
@@ -48,7 +52,7 @@ Christmas Gift List brings everything together in one place, helping families an
 - HTML
 - CSS
 - JavaScript
-- [Supabase](https://supabase.com/) / Google Sheets (depending on the current deployment and migration status)
+- [Supabase](https://supabase.com/)
 
 ## 🤝 Contributing
 

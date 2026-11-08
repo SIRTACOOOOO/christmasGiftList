@@ -5,7 +5,7 @@
 <script>try{var m=localStorage.getItem('giftMode')||'device',d=m==='dark'||(m==='device'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.eff=d?'dark':'light'}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" id="tcolor" content="#1f4a3d">
+<meta name="theme-color" id="tcolor" content="#013e24">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Gift List">
@@ -144,6 +144,44 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 .bsum.over{color:var(--berry)}
 #bd-list li{grid-template-columns:auto 1fr auto;align-items:center}
 #sdlg,#bdlg{width:min(520px,calc(100% - 24px))}
+#chat{position:fixed;top:0;bottom:0;right:0;width:min(380px,94vw);background:var(--card);color:var(--ink);border-left:1px solid var(--line);z-index:30;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 12px);transform:translateX(102%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s .28s}
+#chat.open{transform:none;visibility:visible;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.chat-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+#chat select{margin:0 0 6px;width:100%}
+#chat .note{margin:0 0 6px}
+#chat-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:6px 2px;overscroll-behavior:contain}
+.cm{max-width:90%;padding:8px 10px;border-radius:12px;background:var(--done);align-self:flex-start;overflow-wrap:anywhere}
+.cm.mine{align-self:flex-end;background:var(--pine);color:var(--on-pine)}
+.cm.ping{outline:2px solid var(--berry)}
+.cm.sys{align-self:center;background:none;color:var(--mute);font-size:.85rem;text-align:center;max-width:100%;padding:2px}
+.cm .who2{display:flex;gap:10px;justify-content:space-between;font-size:.78rem;opacity:.85;margin-bottom:2px}
+.cm .edit{color:inherit;opacity:.8;font-size:.78rem}
+.mention{font-weight:700}
+.mention.me{background:var(--berry);color:var(--on-berry);border-radius:4px;padding:0 3px}
+#chat-suggest{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0}
+#chat-suggest button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 10px;cursor:pointer}
+#chat-form textarea{resize:none}
+.chat-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px}
+.badge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--pine);color:var(--on-pine);font-size:.75rem;font-weight:700}
+.badge.ping{background:var(--berry);color:var(--on-berry)}
+.name-btn{background:none;border:0;padding:0;text-align:left;cursor:pointer;color:inherit}
+.name-btn:hover,.name-btn:focus-visible{text-decoration:underline}
+.pv-img{width:100%;max-height:240px;object-fit:contain;background:var(--done);border-radius:10px;margin:8px 0}
+.pv-site{color:var(--mute);font-size:.85rem;margin:0}
+.menu-logo{border-radius:10px;margin-bottom:10px;display:block}
+.auth-logo{border-radius:12px;display:block;margin:0 0 8px}
+.bl label{display:flex;gap:8px;align-items:center;margin:4px 0;font-weight:400}
+.bl input{width:auto;accent-color:var(--pine)}
+.over{color:var(--berry)}
+@media (prefers-reduced-motion:reduce){#chat,#chat.open{transition:none}}
+@media print{#chat,#chatBtn,.badge{display:none!important}}
+dialog h3{margin:18px 0 6px;font-size:1rem}
+.rank{display:inline-block;min-width:1.6em;font-weight:700;color:var(--mute)}
+.mv{display:inline-flex;gap:2px;margin-right:6px;vertical-align:middle}
+.mv button{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:2px 8px;cursor:pointer;line-height:1.2}
+li[draggable=true]{cursor:grab}
+li.dragover{outline:2px dashed var(--pine)}
+.acct-row{display:flex;flex-direction:column;gap:2px;margin:0 0 6px}
 </style>
 </head>
 <body>
@@ -151,6 +189,7 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
   <div class="top">
     <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="menu" hidden><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg><span>Menu</span></button>
     <span class="sync" id="sync" hidden>Syncing…</span>
+    <button class="menu-btn" id="chatBtn" aria-label="Open group chat" aria-expanded="false" aria-controls="chat" hidden><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none"/></svg><span>Chat</span><span class="badge" id="chatBadge" hidden></span></button>
   </div>
   <h1 id="title">Christmas List</h1>
   <p class="sub" id="sub"></p>
@@ -170,7 +209,7 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
     </div>
     <button class="btn primary" id="add">Add gift</button>
   </div>
-  <div class="bar2"><label class="sr" for="sort">Sort by</label><select id="sort"><option value="added">Sort: order added</option><option value="priority">Sort: priority</option><option value="store">Sort: website / store</option><option value="name">Sort: name A to Z</option><option value="low">Sort: price, low to high</option><option value="high">Sort: price, high to low</option></select><label class="chkl"><input type="checkbox" id="boughtLast"> Move bought gifts to the bottom</label></div>
+  <div class="bar2"><label class="sr" for="sort">Sort by</label><select id="sort"><option value="priority">Sort: my order (top picks first)</option><option value="added">Sort: order added</option><option value="store">Sort: website / store</option><option value="name">Sort: name A to Z</option><option value="low">Sort: price, low to high</option><option value="high">Sort: price, high to low</option></select><button type="button" class="btn" id="arrange" hidden>Arrange my list</button><label class="chkl"><input type="checkbox" id="boughtLast"> Move bought gifts to the bottom</label></div>
   <p class="io" id="io" hidden><span id="ioMine"><button class="link" id="exp">Export CSV</button> &middot; <button class="link" id="expj">Backup (JSON)</button> &middot; <button class="link" id="imp">Import CSV or JSON</button> &middot; </span><button class="link" id="prn">Print / save as PDF</button><input type="file" id="impfile" accept=".csv,.json,text/csv,application/json,text/plain" hidden></p>
     <ul id="list"></ul>
   <p class="empty" id="empty" hidden></p>
@@ -178,22 +217,39 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 </main>
 <div id="scrim" hidden></div>
 <nav id="menu" aria-label="Menu" aria-hidden="true" inert>
+  <img class="menu-logo" src="icons/icon-192.png" alt="" width="44" height="44">
   <p class="who" id="who"></p>
   <button class="mi" id="groupsBtn">Groups</button>
   <button class="mi" id="santaBtn">Secret Santa</button>
   <button class="mi" id="budgetBtn">Budget</button>
+  <button class="mi" id="clearBtn">After Christmas</button>
   <button class="mi" id="accountBtn">Account</button>
   <label for="theme">Theme</label><select id="theme"></select>
   <label for="mode">Appearance</label><select id="mode"><option value="device">Same as device</option><option value="light">Light</option><option value="dark">Dark</option></select>
   <p class="note" id="modeNote" hidden style="margin:0 10px 6px">Midnight is always dark.</p>
   <label for="cd">Countdown</label><select id="cd"><option value="christmas">Christmas</option><option value="birthday">Birthday</option><option value="none">No countdown</option></select>
+  <div id="accounts"></div>
+  <button class="mi" id="addAcct">Add another account</button>
   <button class="mi" id="installBtn" hidden>Install app on this device</button>
   <p class="note" id="iosHint" hidden style="margin:6px 10px">On iPhone or iPad: tap the Share button, then “Add to Home Screen”.</p>
   <button class="mi out" id="logout">Log out</button>
+  <button class="mi out" id="logoutAll" hidden>Log out of all accounts</button>
 </nav>
+<aside id="chat" aria-label="Group chat" aria-hidden="true" inert>
+  <div class="chat-head"><b>Group chat</b><button class="link" id="chatClose" type="button">Close</button></div>
+  <select id="chat-group" aria-label="Group"></select>
+  <p class="note" id="chat-note">Messages disappear after 30 days. Use @ to mention someone. Anonymous messages hide your name from the group; the group owner can delete them but cannot see who wrote them.</p>
+  <div id="chat-list" role="log" aria-live="polite"></div>
+  <div id="chat-suggest" hidden></div>
+  <form id="chat-form">
+    <textarea id="chat-text" rows="2" maxlength="1000" placeholder="Message the group" aria-label="Message"></textarea>
+    <div class="chat-row"><label class="chkl"><input type="checkbox" id="chat-anon"> Send anonymously</label><button class="btn primary">Send</button></div>
+  </form>
+</aside>
 
 <dialog id="auth">
   <form id="aform">
+    <img class="auth-logo" src="icons/icon-192.png" alt="" width="48" height="48">
     <h2 id="atitle">Log in</h2>
     <p class="note" id="a-note" hidden></p>
     <div id="b-name"><label for="a-name" id="l-name">Full name</label><input id="a-name" maxlength="30" autocomplete="username" required></div>
@@ -203,7 +259,7 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
     <div id="b-q" hidden><label for="a-q">Recovery question (optional)</label><input id="a-q" maxlength="120" placeholder="A question only you know the answer to"></div>
     <div id="b-codes" hidden><label for="a-signup">Sign-up code</label><input id="a-signup" autocomplete="off"><p class="note">This site is invitation-only. The sign-up code is a short password chosen by the site owner to keep strangers out. Ask whoever invited you for it.</p></div>
     <p class="err" id="a-err" role="alert"></p>
-    <div class="row"><span style="margin-right:auto;display:flex;gap:12px;flex-wrap:wrap"><button type="button" class="link" id="a-switch">Create an account</button><button type="button" class="link" id="a-forgot">Forgot password?</button></span><button class="btn primary" id="a-go">Log in</button></div>
+    <div class="row"><span style="margin-right:auto;display:flex;gap:12px;flex-wrap:wrap"><button type="button" class="link" id="a-switch">Create an account</button><button type="button" class="link" id="a-forgot">Forgot password?</button><button type="button" class="link" id="a-cancel" hidden>Cancel</button></span><button class="btn primary" id="a-go">Log in</button></div>
   </form>
 </dialog>
 
@@ -213,7 +269,6 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
     <p class="note" id="dnote" hidden></p>
     <label for="f-name">Gift name</label><input id="f-name" required>
     <label for="f-price">Approx. price</label><input id="f-price" inputmode="decimal" placeholder="20.00">
-    <label for="f-prio">Priority</label><select id="f-prio"><option value="">None</option><option value="1">High</option><option value="2">Medium</option><option value="3">Low</option></select>
     <label for="f-link">Link</label><input id="f-link" placeholder="Paste a link (optional)">
     <label for="f-notes">Notes: specify size, color, model, or other preferences</label><textarea id="f-notes" rows="2" maxlength="1000" placeholder="For example: size M, navy blue, 2024 model"></textarea>
     <div class="row">
@@ -224,58 +279,69 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
   </form>
 </dialog>
 <dialog id="adlg">
-  <h2>Account</h2>
+  <h2>My account</h2>
   <p class="note" id="e-now"></p>
+
+  <h3>Profile picture</h3>
   <form id="avform">
-    <div class="avrow"><span id="avprev"></span><div style="flex:1;min-width:200px"><label for="av-url">Profile picture link</label><input id="av-url" type="url" inputmode="url" maxlength="500" placeholder="https://example.com/my-photo.jpg" autocomplete="off"></div></div>
-    <div class="row"><button type="button" class="btn" id="av-clear">Remove</button><button class="btn">Save picture</button></div>
-    <p class="note">Paste the web address of a picture that is already online. It must start with https://. Nothing is uploaded or stored here. People in your groups will see it, and the website hosting the picture can tell when it is viewed. Leave it empty to show your initial instead.</p>
+    <div class="avrow"><span id="avprev"></span><input id="av-url" type="url" inputmode="url" maxlength="500" placeholder="Picture link, starting with https://" aria-label="Picture link" autocomplete="off" style="flex:1;min-width:180px"></div>
+    <div class="row"><button type="button" class="btn" id="av-clear">Remove</button><button class="btn">Save</button></div>
   </form>
-  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+
+  <h3>Birthday</h3>
   <form id="bform">
-    <label for="b-m">My birthday (optional)</label>
-    <div class="row" style="justify-content:flex-start"><select id="b-m"></select><select id="b-d" aria-label="Day"></select></div>
-    <div class="row"><button type="button" class="btn" id="b-clear">Clear</button><button class="btn">Save birthday</button></div>
-    <p class="note">Month and day only. People in your groups can see it, so they can shop in time. Leave it blank if you would rather not share.</p>
+    <div class="row" style="justify-content:flex-start"><select id="b-m" aria-label="Month"></select><select id="b-d" aria-label="Day"></select></div>
+    <div class="row"><button type="button" class="btn" id="b-clear">Clear</button><button class="btn">Save</button></div>
   </form>
-  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+
+  <h3>My name</h3>
   <form id="nform">
-    <label for="n-new">Change my full name</label><input id="n-new" maxlength="30" autocomplete="off" required>
-    <div class="row"><button class="btn">Change name</button></div>
-    <p class="note">Other people only see your first name. Your list, groups and surprise gifts all move with you.</p>
+    <input id="n-new" maxlength="30" autocomplete="off" required aria-label="My full name">
+    <div class="row"><button class="btn">Save</button></div>
   </form>
-  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+
+  <h3>Password</h3>
   <form id="pform">
-    <label for="p-cur">Current password</label><input id="p-cur" type="password" autocomplete="current-password" required>
-    <label for="p-new">New password (8 or more characters)</label><input id="p-new" type="password" minlength="8" autocomplete="new-password" required>
-    <label for="p-new2">New password again</label><input id="p-new2" type="password" minlength="8" autocomplete="new-password" required>
+    <input id="p-cur" type="password" autocomplete="current-password" required placeholder="Current password" aria-label="Current password">
+    <input id="p-new" type="password" minlength="8" autocomplete="new-password" required placeholder="New password (8 or more characters)" aria-label="New password" style="margin-top:8px">
+    <input id="p-new2" type="password" minlength="8" autocomplete="new-password" required placeholder="New password again" aria-label="New password again" style="margin-top:8px">
     <div class="row"><button class="btn">Change password</button></div>
   </form>
-  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+
+  <h3>If I forget my password</h3>
   <form id="qform">
-    <label for="q-q">Recovery question (optional)</label><input id="q-q" maxlength="120" placeholder="A question only you know the answer to">
-    <label for="q-a">Answer</label><input id="q-a" autocomplete="off" maxlength="100">
-    <label for="q-pw">Current password</label><input id="q-pw" type="password" autocomplete="current-password" required>
-    <div class="row"><button class="btn">Save question</button></div>
-    <p class="note">Used if you forget your password. Without one, only the site owner can reset it. Saving replaces your current question; leave both boxes empty and save to remove it. The answer ignores capital letters.</p>
+    <input id="q-q" maxlength="120" placeholder="A question only you can answer (optional)" aria-label="Question">
+    <input id="q-a" autocomplete="off" maxlength="100" placeholder="The answer" aria-label="Answer" style="margin-top:8px">
+    <input id="q-pw" type="password" autocomplete="current-password" required placeholder="Current password" aria-label="Current password" style="margin-top:8px">
+    <div class="row"><button class="btn">Save</button></div>
   </form>
-  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+
+  <h3>Delete my account</h3>
   <form id="dform">
-    <label for="d-pw">Delete my account</label><input id="d-pw" type="password" autocomplete="current-password" required placeholder="Current password">
+    <input id="d-pw" type="password" autocomplete="current-password" required placeholder="Current password" aria-label="Current password">
     <div class="row"><button class="btn danger">Delete my account</button></div>
-    <p class="note">Permanently removes your login, your list and your group memberships. Surprise gifts you added for others stay hidden from them. Export your list first if you want a copy.</p>
   </form>
+
   <div class="row"><button type="button" class="btn" id="aclose">Close</button></div>
+</dialog>
+<dialog id="xdlg">
+  <h2>After Christmas</h2>
+  <p class="note">Clearing ticks never deletes a gift. If something was ticked off but never arrived, it stays on the list.</p>
+  <div class="row" style="flex-direction:column;align-items:stretch">
+    <button type="button" class="btn" id="x-mine">Clear all my ticks on other people's lists</button>
+    <button type="button" class="btn" id="x-list">Clear all ticks on my own list</button>
+  </div>
+  <div class="row"><button type="button" class="btn" id="x-close">Close</button></div>
 </dialog>
 <dialog id="sdlg">
   <h2>Secret Santa</h2>
-  <p class="note">The names are drawn by the database. Nobody, not even the organizer, can see who drew whom. You only ever see your own names.</p>
+  <p class="note">Everyone in the group is in automatically. You can opt out. Nobody, not even the organizer, can see who drew whom.</p>
   <div id="slist"></div>
   <form id="screate">
     <label for="s-group">Start a new Secret Santa in</label><select id="s-group"></select>
     <label for="s-name">Name</label><input id="s-name" maxlength="60" placeholder="Family Secret Santa" required>
-    <label for="s-limit">Group spending limit per gift (optional)</label><input id="s-limit" inputmode="decimal" placeholder="25.00">
-    <label for="s-draws">Names each person draws</label><select id="s-draws"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+    <label for="s-limit">Budget for each person you give to (optional)</label><input id="s-limit" inputmode="decimal" placeholder="25.00">
+    <label for="s-draws">Most names each person can draw</label><select id="s-draws"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
     <div class="row"><button class="btn primary">Create Secret Santa</button></div>
   </form>
   <div class="row"><button type="button" class="btn" id="sclose">Close</button></div>
@@ -291,6 +357,17 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
     <div class="inline"><input id="bd-amt" inputmode="decimal" placeholder="Amount" aria-label="Amount" required><select id="bd-kind" aria-label="Reserved or spent"><option value="reserved">Reserved</option><option value="spent">Spent</option></select><button class="btn primary">Add</button></div>
   </form>
   <div class="row"><button type="button" class="btn" id="bclose">Close</button></div>
+</dialog>
+<dialog id="pdlg">
+  <h2 id="pv-name">Gift</h2>
+  <img class="pv-img" id="pv-img" alt="" hidden>
+  <p class="pv-site" id="pv-site"></p>
+  <p><b id="pv-ptitle"></b></p>
+  <p class="note" id="pv-desc" style="color:var(--ink)"></p>
+  <p class="meta" id="pv-facts"></p>
+  <p class="meta" id="pv-notes" hidden></p>
+  <p class="note" id="pv-status"></p>
+  <div class="row"><button type="button" class="btn" id="pv-close">Close</button><a class="btn primary" id="pv-open" href="#" target="_blank" rel="noopener noreferrer" hidden style="text-decoration:none">Open the page</a></div>
 </dialog>
 <dialog id="idlg">
   <h2>Import gifts</h2>
@@ -327,6 +404,7 @@ function applyMode() {      // light, dark, or follow the device; every theme fi
   $('mode').value = modeSetting; $('modeNote').hidden = theme !== 'midnight'; setThemeColor();
 }
 if (darkQuery && darkQuery.addEventListener) darkQuery.addEventListener('change', applyMode);
+const ASSET_V = '6';      // bump when theme files change so browsers never keep old ones
 const themeOf = id => THEMES.find(t => t.id === id) || THEMES[0];
 let theme = THEMES[0].id;
 try { theme = localStorage.getItem('giftTheme') || theme; } catch (e) {}
@@ -339,7 +417,7 @@ function toHex(c) {   // turns any CSS color (including oklch) into #rrggbb, for
 function setThemeColor() { try { const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(); if (bg) $('tcolor').content = toHex(bg); } catch (e) {} }
 function applyTheme() {
   const t = themeOf(theme);
-  document.documentElement.dataset.theme = t.id; $('themecss').onload = setThemeColor; $('themecss').href = 'themes/' + t.id + '.css';
+  document.documentElement.dataset.theme = t.id; $('themecss').onload = setThemeColor; $('themecss').href = 'themes/' + t.id + '.css?v=' + ASSET_V;
   $('theme').value = t.id; $('title').textContent = t.title; document.title = t.title + (person ? ' - ' + person : ''); applyMode();
 }
 $('theme').onchange = () => { theme = $('theme').value; try { localStorage.setItem('giftTheme', theme); } catch (e) {} applyTheme(); };
@@ -352,9 +430,9 @@ const isUrl = v => /^https?:\/\//i.test(v);
 const isMine = () => person.toLowerCase() === me.toLowerCase();
 function toast(t) { const m = $('msg'); m.textContent = t; m.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => m.classList.remove('show'), 3000); }
 
-let signupNeeded = null, sortKey = 'added', boughtLast = false, cdMode = 'christmas', avUrl = {}, bday = {};
-const PRIO = {1: 'High', 2: 'Medium', 3: 'Low'}, MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-try { sortKey = localStorage.getItem('giftSort') || 'added'; boughtLast = localStorage.getItem('giftBoughtLast') === '1'; cdMode = localStorage.getItem('giftCountdown') || 'christmas'; } catch (e) {}
+let signupNeeded = null, sortKey = 'priority', boughtLast = false, cdMode = 'christmas', avUrl = {}, bday = {};
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+try { sortKey = localStorage.getItem('giftSort') || 'priority'; boughtLast = localStorage.getItem('giftBoughtLast') === '1'; cdMode = localStorage.getItem('giftCountdown') || 'christmas'; } catch (e) {}
 let busy = 0, loadSeq = 0, lists = {}, byName = {}, names = {}, mode = 'login', scrollToPerson = false;
 // Every request gives up after 25 seconds, so "Syncing..." can never hang forever.
 const track = async (p, ms = 25000) => {
@@ -365,17 +443,20 @@ const track = async (p, ms = 25000) => {
 function errMsg(e) {
   const m = String((e && e.message) || e || '');
   if (/failed to fetch|networkerror|load failed/i.test(m)) return 'Network problem. Check your connection and try again.';
-  if (e && (e.status === 401 || /jwt/i.test(m))) { setTimeout(() => sb && sb.auth.signOut(), 0); return 'Your session expired. Please log in again.'; }
+  if (e && (e.status === 401 || /jwt/i.test(m))) { setTimeout(() => sb && sb.auth.signOut({scope: 'local'}), 0); return 'Your session expired. Please log in again.'; }
   if (e && (e.code === '42501' || e.status === 403)) return 'You are not allowed to do that.';
   if (e && e.code === 'P0001') return m;                              // our own friendly messages from the database
   if (e && e.code && /^(23|22)/.test(e.code)) return 'Please check what you entered and try again.';
   return e && e.code ? 'Something went wrong. Please try again.' : (m || 'Something went wrong. Please try again.');
 }
-function clearState() { myId = myFull = me = ''; items = []; people = []; groups = []; lists = {}; byName = {}; render(); }
+function clearState() {
+  clearTimeout(chatTimer); chatMsgs = []; chatMine = new Set(); myId = myFull = me = ''; items = []; people = []; groups = []; lists = {}; byName = {}; names = {}; bday = {}; avUrl = {};
+  santas = []; santaParts = []; myPairs = []; myBlacklist = []; santaOut = []; santaWant = []; spentOn = {}; santaLoaded = false; entries = []; budgetTotal = null; arrangeOn = false; render();
+}
 
 /* ---- sign in ---- */
-async function fn(body) {      // calls the trusted "account" Edge Function
-  const r = await track(sb.functions.invoke('account', {body}));
+async function callFn(name, body) {      // calls one of our Edge Functions
+  const r = await track(sb.functions.invoke(name, {body}));
   if (r.error) {
     console.error('account function failed:', r.error);                       // open the browser console (F12) to see details
     let m = 'Could not reach the sign-in service. Check your connection and try again.';
@@ -397,8 +478,9 @@ async function ensureConfig() {
   try { signupNeeded = !!(await fn({action: 'config'})).signupCodeRequired; } catch (e) { signupNeeded = null; return; }
   if (mode === 'signup') $('b-codes').hidden = !signupNeeded;
 }
-function showAuth() { $('menuBtn').hidden = true; setMenu(false); if (!$('auth').open) $('auth').showModal(); }
-$('auth').addEventListener('cancel', e => e.preventDefault());
+const fn = b => callFn('account', b);
+function showAuth() { $('menuBtn').hidden = true; $('chatBtn').hidden = true; setMenu(false); setChat(false); addingAccount = false; $('a-cancel').hidden = true; if (!$('auth').open) $('auth').showModal(); }
+$('auth').addEventListener('cancel', e => { e.preventDefault(); if (addingAccount) cancelAdd(); });
 function setMode(m, msg) {
   mode = m; $('a-err').textContent = msg || '';
   const T = {login: 'Log in', signup: 'Create an account', forgot: 'Reset your password', reset: 'Answer your question'};
@@ -439,17 +521,19 @@ $('aform').onsubmit = async e => {
   } catch (err) { $('a-err').textContent = errMsg(err); }
   $('a-go').disabled = false;
 };
-$('logout').onclick = () => { setMenu(false); sb.auth.signOut(); };
+$('logout').onclick = async () => { setMenu(false); await sb.auth.signOut({scope: 'local'}); };
 
 async function afterSignIn() {
   if (!session) return;
   const r = await track(sb.rpc('my_profile'));
   if (r.error) return toast(errMsg(r.error));
-  if (!r.data || !r.data.length) { toast('This login has no profile. Please contact the site owner.'); return void sb.auth.signOut(); }
+  if (!r.data || !r.data.length) { toast('This login has no profile. Please contact the site owner.'); return void sb.auth.signOut({scope: 'local'}); }
   myId = r.data[0].id; myFull = r.data[0].username; me = myFull.split(' ')[0]; if (!person) person = me;
+  rememberAccount(session); addingAccount = false; $('a-cancel').hidden = true;
   if ($('auth').open) $('auth').close();
   scrollToPerson = true; await load();
   if (pendingJoin) await handleJoin();
+  chatTick();
 }
 function isServiceKey(k) {
   if (/^sb_secret_/.test(k)) return true;
@@ -462,18 +546,26 @@ function init() {
   sb = supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_KEY);
   sb.auth.onAuthStateChange((ev, s) => {
     session = s;
-    if (ev === 'SIGNED_OUT') { clearState(); setMode('login'); showAuth(); return; }
+    if (bulkOut) return;                                              // busy logging out of every account
+    if (ev === 'SIGNED_OUT') {
+      const gone = myId; clearState(); person = '';
+      if (gone) writeAccts(readAccts().filter(x => x.pid !== gone));  // this account is no longer signed in on this device
+      const next = readAccts()[0];
+      if (next) { setTimeout(() => switchTo(next.pid), 0); return; }  // another account is saved: go to it
+      setMode('login'); showAuth(); return;
+    }
     if (ev === 'INITIAL_SESSION' && !s) { setMode('login'); showAuth(); return; }
-    if (s && (ev === 'INITIAL_SESSION' || ev === 'SIGNED_IN')) setTimeout(afterSignIn, 0);   // never call the API inside this callback directly
+    if (s && myId && (ev === 'TOKEN_REFRESHED' || ev === 'USER_UPDATED')) rememberAccount(s);   // keep the saved tokens fresh
+    if (s && (ev === 'INITIAL_SESSION' || ev === 'SIGNED_IN')) setTimeout(afterSignIn, 0);       // never call the API inside this callback directly
   });
 }
 
 /* ---- data ---- */
 // Big groups: pages of 1,000 rows for the directory, and only the SELECTED person's gifts are loaded.
-async function fetchAll(table, cols, orders) {
+async function fetchAll(table, cols, orders, filter) {
   const out = [];
   for (let from = 0; ; from += 1000) {
-    let q = sb.from(table).select(cols); orders.forEach(o => { q = q.order(o); });
+    let q = sb.from(table).select(cols); if (filter) q = filter(q); orders.forEach(o => { q = q.order(o); });
     const r = await q.range(from, from + 999); if (r.error) throw r.error;
     out.push(...r.data); if (r.data.length < 1000) return out;
   }
@@ -515,11 +607,11 @@ async function loadDirectory() {
 }
 async function loadList(name) {
   const id = byName[name.toLowerCase()]; if (!id) return;
-  const r = await sb.from('gifts').select('id,owner_id,created_by,name,price,link,notes,priority,updated_at,purchases(gift_id)').eq('owner_id', id).order('created_at').limit(1000);
+  const r = await sb.from('gifts').select('id,owner_id,created_by,name,price,link,notes,position,updated_at,purchases(gift_id)').eq('owner_id', id).order('created_at').limit(1000);
   if (r.error) throw r.error;
   lists[name] = r.data.map(g => {
     const surprise = g.created_by !== g.owner_id, isBought = Array.isArray(g.purchases) ? g.purchases.length > 0 : !!g.purchases;
-    return {id: g.id, priority: g.priority || 0, name: g.name, price: Number(g.price) || 0, link: g.link || '', notes: g.notes || '', stamp: g.updated_at,
+    return {id: g.id, pos: g.position || 0, name: g.name, price: Number(g.price) || 0, link: g.link || '', notes: g.notes || '', stamp: g.updated_at,
       bought: g.owner_id !== myId && isBought, by: surprise ? (names[g.created_by] || 'someone') : '', byId: g.created_by};
   });
 }
@@ -543,16 +635,17 @@ function pick(n) {
 
 /* ---- render ---- */
 const storeOf = i => { try { return new URL(i.link).hostname.replace(/^www\./, ''); } catch (e) { return ''; } };
+const byPos = (x, y) => ((x.pos || 1e9) - (y.pos || 1e9)) || x.name.localeCompare(y.name);
 function sortItems(list) {
   const a = list.slice(), nm = (x, y) => x.name.localeCompare(y.name);
-  const by = {priority: (x, y) => ((x.priority || 9) - (y.priority || 9)) || nm(x, y),
+  const by = {priority: byPos,           // the order the list's owner chose: first pick at the top
     store: (x, y) => { const p = storeOf(x), q = storeOf(y); return ((p ? 0 : 1) - (q ? 0 : 1)) || p.localeCompare(q) || nm(x, y); },
     name: nm, low: (x, y) => (x.price || 0) - (y.price || 0), high: (x, y) => (y.price || 0) - (x.price || 0)}[sortKey];
   if (by) a.sort(by);
   if (boughtLast && !isMine()) a.sort((x, y) => (x.bought ? 1 : 0) - (y.bought ? 1 : 0));   // stable: keeps the chosen order inside each half
   return a;
 }
-const headOf = i => sortKey === 'priority' ? (i.priority ? PRIO[i.priority] + ' priority' : 'No priority') : sortKey === 'store' ? (storeOf(i) || 'No website') : '';
+const headOf = i => sortKey === 'store' ? (storeOf(i) || 'No website') : '';
 function daysUntil(m, d) {
   const t = new Date(), today = new Date(t.getFullYear(), t.getMonth(), t.getDate());
   let next = new Date(t.getFullYear(), m - 1, d); if (next < today) next = new Date(t.getFullYear() + 1, m - 1, d);
@@ -568,7 +661,7 @@ function renderCountdown() {
 }
 function render() {
   const mine = isMine();
-  $('menuBtn').hidden = !me; $('who').textContent = myFull ? 'Signed in as ' + myFull : '';
+  $('menuBtn').hidden = !me; $('chatBtn').hidden = !me; $('who').textContent = myFull ? 'Signed in as ' + myFull : '';
   const gs = $('gsel'); gs.hidden = groups.length < 2; gs.innerHTML = '';
   [['', 'All groups'], ...groups.map(g => [g.id, g.name])].forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; o.selected = v === gf; gs.append(o); });
   const gm = gf && groups.find(g => g.id === gf);
@@ -590,7 +683,8 @@ function render() {
   const q = $('q').value.toLowerCase();
   const shown = items.filter(i => (mine || filter === 'all' || (filter === 'done') === i.bought) && (i.name + i.notes).toLowerCase().includes(q));
   $('list').innerHTML = '';
-  const view = sortItems(shown); let lastHead = '';
+  const arranging = mine && arrangeOn, view = arranging ? items.filter(x => !x.by).sort(byPos) : sortItems(shown); let lastHead = '', rankN = 0;
+  $('arrange').hidden = !mine; $('arrange').textContent = arrangeOn ? 'Done arranging' : 'Arrange my list';
   view.forEach(i => {
     const hd = headOf(i); if (hd && hd !== lastHead) { const h = document.createElement('li'); h.className = 'grphead'; h.textContent = hd; $('list').append(h); lastHead = hd; }
     const li = document.createElement('li'); li.className = (mine ? 'mine ' : '') + (i.bought ? 'done' : '');
@@ -599,28 +693,50 @@ function render() {
       cb.setAttribute('aria-label', 'Bought: ' + i.name); cb.onchange = () => toggle(i, cb.checked); li.append(cb);
     }
     const mid = document.createElement('div');
-    const nm = document.createElement('div'); nm.className = 'name'; nm.textContent = i.name; mid.append(nm);
+    const nm = document.createElement('button'); nm.type = 'button'; nm.className = 'name name-btn'; nm.textContent = i.name; nm.title = 'Preview this gift'; nm.onclick = () => openPreview(i); mid.append(nm);
     const meta = document.createElement('div'); meta.className = 'meta';
     if (i.link) { if (isUrl(i.link)) { const a = document.createElement('a'); a.href = i.link; a.target = '_blank'; a.rel = 'noopener'; let h = i.link; try { h = new URL(i.link).hostname.replace(/^www\./, ''); } catch (e) {} a.textContent = h; meta.append(a); } else meta.append(i.link); }
     if (i.notes) meta.append((i.link ? ' \u00b7 ' : '') + i.notes);
     if (meta.childNodes.length) mid.append(meta);
     if (i.by) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'Surprise gift from ' + (i.by.toLowerCase() === me.toLowerCase() ? 'you' : i.by); mid.append(t); }
-    if (i.priority) { const t = document.createElement('span'); t.className = 'tag prio p' + i.priority; t.textContent = PRIO[i.priority] + ' priority'; mid.append(t); }
     const right = document.createElement('div'); right.style.textAlign = 'right';
     const p = document.createElement('div'); p.className = 'price'; p.textContent = i.price ? money(i.price) : ''; right.append(p);
     if (!i.pending && (mine || (i.by && i.byId === myId))) { const eb = document.createElement('button'); eb.className = 'edit'; eb.textContent = 'Edit'; eb.onclick = () => openDlg(i); right.append(eb); }
     if (!mine && !i.pending) { const bb = document.createElement('button'); bb.className = 'edit'; bb.textContent = 'Budget'; bb.onclick = () => openBudget({label: i.name + ' for ' + person, amount: i.price || '', gift_id: i.id}); right.append(' ', bb); }
+    if (!i.by && (arranging || sortKey === 'priority')) { rankN++; const rk = document.createElement('span'); rk.className = 'rank'; rk.textContent = rankN + '.'; mid.prepend(rk); }
+    if (arranging) {      // move gifts up and down, or drag them
+      const mv = document.createElement('span'); mv.className = 'mv';
+      [['\u25b2', -1, 'Move up'], ['\u25bc', 1, 'Move down']].forEach(([ch, dlt, label]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = ch; b.setAttribute('aria-label', label + ': ' + i.name); b.onclick = () => moveBy(i, dlt); mv.append(b); });
+      mid.prepend(mv); li.draggable = true;
+      li.ondragstart = e => { dragId = i.id; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', i.id); } catch (x) {} };
+      li.ondragover = e => { e.preventDefault(); li.classList.add('dragover'); };
+      li.ondragleave = () => li.classList.remove('dragover');
+      li.ondrop = e => { e.preventDefault(); li.classList.remove('dragover'); dropOn(i); };
+    }
     li.append(mid, right); $('list').append(li);
   });
   $('empty').hidden = !me || (shown.length > 0 && groups.length > 0); $('empty').textContent = groups.length ? 'No gifts to show yet.' : 'Create a group or join one with an invite code (Groups, top right) to see other people\u2019s lists.';
   if ($('gdlg').open) renderGroups();
 }
 
+async function santaCheck(i) {      // warns before a tick pushes you over the Secret Santa budget for that person
+  const owner = byName[person.toLowerCase()]; if (!owner || !i.price) return true;
+  if (!santaLoaded) { try { await loadSanta(); } catch (e) { return true; } }
+  for (const s of santas) {
+    if (s.status !== 'drawn' || !s.budget_max || !myPairs.some(p => p.santa_id === s.id && p.receiver_id === owner)) continue;
+    const lim = Number(s.budget_max), left = lim - (spentOn[owner] || 0);
+    if (i.price > left + 0.005) return confirm('This puts you ' + money(i.price - Math.max(left, 0)) + ' over your Secret Santa budget of ' + money(lim) + ' for ' + person + '. Tick it anyway?');
+  }
+  return true;
+}
 async function toggle(i, v) {
+  if (v && !(await santaCheck(i))) { render(); return; }
   const old = i.bought; i.bought = v; render();
   try {
     const r = v ? await track(sb.from('purchases').insert({gift_id: i.id, bought_by: myId})) : await track(sb.from('purchases').delete().eq('gift_id', i.id));
     if (r.error && r.error.code !== '23505') throw r.error;     // 23505 = already marked (a retry), which is fine
+    const owner = byName[person.toLowerCase()];
+    if (santaLoaded && owner) spentOn[owner] = Math.max(0, (spentOn[owner] || 0) + (v ? 1 : -1) * (i.price || 0));
   } catch (e) { i.bought = old; render(); toast(errMsg(e)); }
 }
 
@@ -629,7 +745,7 @@ function openDlg(i) {
   $('dtitle').textContent = i ? 'Edit gift' : mine ? 'Add gift' : 'Add surprise gift for ' + person;
   $('dnote').hidden = mine; $('dnote').textContent = person + ' will not see this. Everyone else sees it as already bought.';
   $('f-name').value = i ? i.name : ''; $('f-price').value = i && i.price ? i.price : '';
-  $('f-link').value = i ? i.link : ''; $('f-notes').value = i ? i.notes : ''; $('f-prio').value = i && i.priority ? i.priority : '';
+  $('f-link').value = i ? i.link : ''; $('f-notes').value = i ? i.notes : '';
   $('del').style.display = i ? '' : 'none';
   $('dlg').showModal(); $('f-name').focus();
 }
@@ -641,6 +757,17 @@ const keep = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 $('sort').onchange = () => { sortKey = $('sort').value; keep('giftSort', sortKey); render(); };
 $('boughtLast').onchange = () => { boughtLast = $('boughtLast').checked; keep('giftBoughtLast', boughtLast ? '1' : '0'); render(); };
 $('cd').onchange = () => { cdMode = $('cd').value; keep('giftCountdown', cdMode); renderCountdown(); };
+let arrangeOn = false, dragId = '', saveTimer = null;
+const orderedMine = () => items.filter(x => !x.by && !x.pending).sort(byPos);
+function applyOrder(list) { list.forEach((x, k) => { x.pos = k + 1; }); render(); clearTimeout(saveTimer); saveTimer = setTimeout(saveOrder, 700); }
+async function saveOrder() { const r = await track(sb.rpc('reorder_gifts', {p_ids: orderedMine().map(x => x.id)})); if (r.error) { toast(errMsg(r.error)); load(); } }
+function moveBy(i, d) { const list = orderedMine(), k = list.findIndex(x => x.id === i.id), t = k + d; if (k < 0 || t < 0 || t >= list.length) return; [list[k], list[t]] = [list[t], list[k]]; applyOrder(list); }
+function dropOn(target) {
+  if (!dragId || dragId === target.id) return;
+  const list = orderedMine(), a = list.findIndex(x => x.id === dragId), b = list.findIndex(x => x.id === target.id); dragId = '';
+  if (a < 0 || b < 0) return; const [m] = list.splice(a, 1); list.splice(b, 0, m); applyOrder(list);
+}
+$('arrange').onclick = () => { arrangeOn = !arrangeOn; render(); };
 $('mode').onchange = () => { modeSetting = $('mode').value; keep('giftMode', modeSetting); applyMode(); };
 document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
   filter = b.dataset.f; document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); render();
@@ -650,8 +777,8 @@ $('form').onsubmit = e => {
   e.preventDefault();
   const mine = isMine(), name = $('f-name').value.trim(); if (!name) return;
   const price = $('f-price').value.trim(), link = fixLink($('f-link').value), notes = $('f-notes').value.trim();
-  const d = {name, price: price === '' ? null : num(price), link: link || null, notes: notes || null, priority: $('f-prio').value ? Number($('f-prio').value) : null};
-  const shown = {name, price: d.price || 0, link, notes, priority: d.priority || 0};
+  const d = {name, price: price === '' ? null : num(price), link: link || null, notes: notes || null};
+  const shown = {name, price: d.price || 0, link, notes};
   let job;
   if (editing) {
     const stamp = editing.stamp; Object.assign(editing, shown);          // shown straight away, confirmed by the database
@@ -661,7 +788,7 @@ $('form').onsubmit = e => {
     });
   } else {
     const id = crypto.randomUUID();                                         // the same id on a retry means no duplicate gift
-    items.push({id, ...shown, pending: true, bought: !mine, by: mine ? '' : me, byId: myId});
+    items.push({id, ...shown, pending: true, bought: !mine, by: mine ? '' : me, byId: myId, pos: mine ? Math.max(0, ...items.map(x => x.pos || 0)) + 1 : 0});
     job = track(sb.from('gifts').insert({id, owner_id: byName[person.toLowerCase()], ...d})).then(r => {
       if (r.error && r.error.code !== '23505') throw r.error; toast('Gift saved');
     });
@@ -775,7 +902,7 @@ $('dform').onsubmit = async e => {
 };
 
 /* ---- export / import (CSV that opens in Google Sheets and Excel) ---- */
-const CSV_HEAD = ['Gift names', 'Approx. price', 'Links', 'notes', 'Priority'];
+const CSV_HEAD = ['Gift names', 'Approx. price', 'Links', 'notes'];
 const safeCell = v => { v = String(v == null ? '' : v); if (/^[=+@\t\r-]/.test(v)) v = "'" + v; return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };   // stops spreadsheet formula injection
 const unsafeCell = v => String(v).replace(/^'([=+@\t\r-])/, '$1').trim();
 function download(text, type, name) {
@@ -784,7 +911,7 @@ function download(text, type, name) {
 }
 const fileSlug = () => myFull.replace(/[^A-Za-z0-9._-]+/g, '-');
 $('exp').onclick = () => {
-  const rows = [CSV_HEAD.join(',')].concat(items.filter(i => !i.by).map(i => [i.name, i.price ? i.price.toFixed(2) : '', i.link, i.notes, PRIO[i.priority] || ''].map(safeCell).join(',')));
+  const rows = [CSV_HEAD.join(',')].concat(items.filter(i => !i.by).map(i => [i.name, i.price ? i.price.toFixed(2) : '', i.link, i.notes].map(safeCell).join(',')));
   download('\ufeff' + rows.join('\r\n') + '\r\n', 'text/csv;charset=utf-8', 'gift-list-' + fileSlug() + '.csv');
   toast('Exported ' + (rows.length - 1) + ' gifts. In Google Sheets use File > Import > Upload.');
 };
@@ -793,7 +920,7 @@ $('expj').onclick = () => {
   const data = {app: 'christmas-gift-list', version: 1, exportedAt: new Date().toISOString(), name: myFull,
     birthday: mineBd ? {month: mineBd.m, day: mineBd.d} : null,
     settings: {countdown: cdMode, sort: sortKey, boughtLast, theme},
-    gifts: items.filter(i => !i.by).map(i => ({name: i.name, price: i.price || null, link: i.link || null, notes: i.notes || null, priority: i.priority || null}))};
+    gifts: items.filter(i => !i.by).sort(byPos).map(i => ({name: i.name, price: i.price || null, link: i.link || null, notes: i.notes || null}))};
   download(JSON.stringify(data, null, 2), 'application/json', 'gift-list-backup-' + fileSlug() + '-' + new Date().toISOString().slice(0, 10) + '.json');
   toast('Backup saved (' + data.gifts.length + ' gifts).');
 };
@@ -813,7 +940,6 @@ function parseCSV(text) {
   if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
   return rows.filter(r => r.some(x => String(x).trim() !== ''));
 }
-const prioOf = v => ({'1': 1, high: 1, '2': 2, medium: 2, med: 2, '3': 3, low: 3})[String(v == null ? '' : v).trim().toLowerCase()] || null;
 function vet(raws) {      // checks every row the same way, whether it came from a CSV or a JSON backup
   const have = new Set(items.filter(i => !i.by).map(i => (i.name + '|' + i.link).toLowerCase())), good = [], skipped = [];
   let dupes = 0;
@@ -823,25 +949,25 @@ function vet(raws) {      // checks every row the same way, whether it came from
     if (!name || name.charAt(0) === '~') return;
     if (name.length > 200 || link.length > 1000 || notes.length > 1000 || (price !== null && !(price >= 0 && price < 1e8))) { skipped.push('Row ' + (ix + 1) + ': ' + name.slice(0, 40)); return; }
     const key = (name + '|' + link).toLowerCase(); if (have.has(key)) { dupes++; return; } have.add(key);
-    good.push({name, price, link: fixLink(link) || null, notes: notes || null, priority: prioOf(r.priority)});
+    good.push({name, price, link: fixLink(link) || null, notes: notes || null});
   });
   return {good, dupes, skipped};
 }
 function readGifts(text) {
-  const rows = parseCSV(text), H = {name: /^(gift names?|gifts?|name|item|title)$/i, price: /^(approx\.? ?price|price|cost)$/i, link: /^(links?|url|urls|website)$/i, notes: /^(notes?|description|comments?)$/i, priority: /^priority$/i};
-  let col = {name: 0, price: 1, link: 2, notes: 3, priority: 4}, start = 0;
+  const rows = parseCSV(text), H = {name: /^(gift names?|gifts?|name|item|title)$/i, price: /^(approx\.? ?price|price|cost)$/i, link: /^(links?|url|urls|website)$/i, notes: /^(notes?|description|comments?)$/i};
+  let col = {name: 0, price: 1, link: 2, notes: 3}, start = 0;
   for (let k = 0; k < Math.min(rows.length, 5); k++) {
     const m = {}; rows[k].forEach((c, ix) => { for (const key in H) if (m[key] === undefined && H[key].test(String(c).trim())) m[key] = ix; });
     if (m.name !== undefined) { col = m; start = k + 1; break; }
   }
   const cell = (r, k) => k === undefined ? '' : unsafeCell(r[k] === undefined ? '' : r[k]);
-  return vet(rows.slice(start).map(r => ({name: cell(r, col.name), price: cell(r, col.price), link: cell(r, col.link), notes: cell(r, col.notes), priority: cell(r, col.priority)})));
+  return vet(rows.slice(start).map(r => ({name: cell(r, col.name), price: cell(r, col.price), link: cell(r, col.link), notes: cell(r, col.notes)})));
 }
 function readJson(text) {
   let data; try { data = JSON.parse(text); } catch (e) { return {good: [], dupes: 0, skipped: ['That file is not valid JSON']}; }
   const list = Array.isArray(data) ? data : data && data.gifts;
   if (!Array.isArray(list)) return {good: [], dupes: 0, skipped: ['No gifts found in that file']};
-  return vet(list.map(g => ({name: g && g.name, price: g && g.price, link: g && g.link, notes: g && g.notes, priority: g && g.priority})));
+  return vet(list.map(g => ({name: g && g.name, price: g && g.price, link: g && g.link, notes: g && g.notes})));
 }
 $('imp').onclick = () => $('impfile').click();
 let pending = [];
@@ -891,17 +1017,32 @@ async function handleJoin() {
 }
 
 /* ---- Secret Santa ---- */
-let santas = [], santaParts = [], myPairs = [];
+let santas = [], santaParts = [], myPairs = [], myBlacklist = [], santaOut = [], santaWant = [], spentOn = {}, santaLoaded = false;
 async function loadSanta() {
-  const [a, b, c] = await track(Promise.all([fetchAll('secret_santas', 'id,group_id,name,budget_max,draws_per_person,status,created_by', ['id']),
-    fetchAll('santa_participants', 'santa_id,profile_id', ['santa_id', 'profile_id']), fetchAll('santa_assignments', 'santa_id,receiver_id', ['santa_id', 'receiver_id'])]));
-  santas = a; santaParts = b; myPairs = c;            // the database only returns YOUR assignments
+  const mine = q => q.eq('bought_by', myId);
+  const [a, b, c, d, e, o, w] = await track(Promise.all([
+    fetchAll('secret_santas', 'id,group_id,name,budget_max,draws_per_person,status,created_by', ['id']),
+    fetchAll('santa_participants', 'santa_id,profile_id', ['santa_id', 'profile_id']),            // filled in when the names are drawn
+    fetchAll('santa_assignments', 'santa_id,receiver_id', ['santa_id', 'receiver_id']),          // the database only returns YOUR assignments
+    fetchAll('santa_blacklist', 'santa_id,receiver_id', ['santa_id', 'receiver_id']),            // ...and only YOUR "do not give to" list
+    fetchAll('purchases', 'gift_id,gifts(owner_id,price)', ['gift_id'], mine),
+    fetchAll('santa_optouts', 'santa_id,profile_id', ['santa_id', 'profile_id']),
+    fetchAll('santa_wanted', 'santa_id,profile_id,draws', ['santa_id', 'profile_id'])]));
+  santas = a; santaParts = b; myPairs = c; myBlacklist = d; santaOut = o; santaWant = w; santaLoaded = true;
+  spentOn = {};      // what you have ticked off on each person's list: this is what comes out of your Secret Santa budget for them
+  e.forEach(x => { const g = Array.isArray(x.gifts) ? x.gifts[0] : x.gifts; if (g) spentOn[g.owner_id] = (spentOn[g.owner_id] || 0) + (Number(g.price) || 0); });
 }
 const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
 async function actS(fn, ok) {
   try { const r = await track(fn()); if (r.error) throw r.error; if (ok) toast(ok); await loadSanta(); renderSanta(); return r; }
   catch (e) { toast(errMsg(e)); }
 }
+function santaPool(s, g) {      // before the draw: the whole group minus anyone who opted out. After it: the people who were drawn
+  if (s.status === 'drawn') return santaParts.filter(p => p.santa_id === s.id).map(p => p.profile_id);
+  const out = new Set(santaOut.filter(o => o.santa_id === s.id).map(o => o.profile_id));
+  return g.members.map(m => m.id).filter(id => !out.has(id));
+}
+const wantOf = (s, id) => { const w = santaWant.find(x => x.santa_id === s.id && x.profile_id === id); return w ? w.draws : s.draws_per_person; };
 function renderSanta() {
   const sg = $('s-group'); sg.innerHTML = ''; groups.forEach(g => sg.append(new Option(g.name, g.id)));
   $('screate').hidden = !groups.length;
@@ -909,21 +1050,45 @@ function renderSanta() {
   if (!santas.length) { const p = document.createElement('p'); p.className = 'note'; p.textContent = groups.length ? 'No Secret Santas yet. Start one below.' : 'Join or create a group first. Secret Santas happen inside groups.'; box.append(p); }
   santas.slice().sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1) || a.name.localeCompare(b.name)).forEach(s => {
     const g = groups.find(x => x.id === s.group_id); if (!g) return;
-    const parts = santaParts.filter(p => p.santa_id === s.id).map(p => p.profile_id), mineIn = parts.includes(myId), organizer = s.created_by === myId || g.owner;
+    const pool = santaPool(s, g), mineIn = pool.includes(myId), organizer = s.created_by === myId || g.owner;
     const d = document.createElement('div'); d.className = 'grp';
     const t = document.createElement('b'); t.textContent = s.name + ' \u00b7 ' + g.name;
     const info = document.createElement('p'); info.className = 'meta';
-    info.textContent = (s.budget_max ? 'Spending limit: ' + money(Number(s.budget_max)) + ' per gift' : 'No spending limit') + ' \u00b7 each person draws ' + plural(s.draws_per_person, 'name') + ' \u00b7 ' + plural(parts.length, 'person') + ' in';
-    const who = document.createElement('p'); who.className = 'meta members'; who.textContent = 'In: ' + parts.map(id => names[id] || '?').join(', ');
+    info.textContent = (s.budget_max ? 'Budget: ' + money(Number(s.budget_max)) + ' for each person you give to' : 'No budget set') + ' \u00b7 up to ' + plural(s.draws_per_person, 'name') + ' each \u00b7 ' + plural(pool.length, 'person') + ' in';
+    const who = document.createElement('p'); who.className = 'meta members';
+    who.textContent = 'In: ' + pool.map(id => (names[id] || '?') + (wantOf(s, id) < s.draws_per_person ? ' (' + wantOf(s, id) + ')' : '')).join(', ');
     d.append(t, info, who);
     const bar = document.createElement('p');
     const del = lnk('Delete', () => confirm('Delete "' + s.name + '"?') && actS(() => sb.rpc('delete_santa', {p_santa: s.id}), 'Deleted'));
     if (s.status === 'open') {
-      bar.append(mineIn ? lnk('Leave', () => actS(() => sb.rpc('leave_santa', {p_santa: s.id}), 'You left')) : lnk('Join', () => actS(() => sb.rpc('join_santa', {p_santa: s.id}), 'You joined')));
+      if (mineIn) {
+        d.append(Object.assign(document.createElement('p'), {textContent: 'You are in this Secret Santa.'}));
+        const row = document.createElement('p'), lab = document.createElement('label'), sel = document.createElement('select');
+        lab.textContent = 'Names I want to draw: '; lab.style.fontWeight = '400';
+        for (let k = 1; k <= s.draws_per_person; k++) sel.append(new Option(String(k), k));
+        sel.value = wantOf(s, myId); sel.style.width = 'auto'; sel.style.margin = '0 0 0 6px';
+        sel.onchange = () => actS(() => sb.rpc('set_santa_draws', {p_santa: s.id, p_draws: Number(sel.value)}), 'Saved');
+        lab.append(sel); row.append(lab); d.append(row);
+        if (s.draws_per_person > 1) d.append(Object.assign(document.createElement('p'), {className: 'note', textContent: 'Pick fewer if you want to give and get fewer gifts.'}));
+        const det = document.createElement('details'), sum = document.createElement('summary'), mineBl = myBlacklist.filter(x => x.santa_id === s.id).map(x => x.receiver_id);
+        sum.textContent = 'People I should not give to (' + mineBl.length + ')'; det.append(sum); det.className = 'bl';
+        det.append(Object.assign(document.createElement('p'), {className: 'note', textContent: 'For example your husband or wife. Only you can see this list.'}));
+        const checks = [];
+        pool.filter(id => id !== myId).forEach(id => {
+          const l2 = document.createElement('label'), cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = mineBl.includes(id); cb.value = id; checks.push(cb);
+          l2.append(cb, names[id] || '?'); det.append(l2);
+        });
+        det.append(lnk('Save', () => actS(() => sb.rpc('set_santa_blacklist', {p_santa: s.id, p_receivers: checks.filter(c => c.checked).map(c => c.value)}), 'Saved')));
+        d.append(det);
+        bar.append(lnk('Opt out of this Secret Santa', () => confirm('Leave this Secret Santa? You will not give or get a gift.') && actS(() => sb.rpc('set_santa_optout', {p_santa: s.id, p_out: true}), 'You opted out')), ' ');
+      } else {
+        d.append(Object.assign(document.createElement('p'), {textContent: 'You opted out.'}));
+        bar.append(lnk('Opt back in', () => actS(() => sb.rpc('set_santa_optout', {p_santa: s.id, p_out: false}), 'You are back in')), ' ');
+      }
       if (organizer) {
-        bar.append(' ', lnk('Draw names', () => {
-          if (parts.length < s.draws_per_person + 1) return toast('You need at least ' + (s.draws_per_person + 1) + ' people for everyone to draw ' + plural(s.draws_per_person, 'name') + '.');
-          if (confirm('Draw the names now? Nobody can join or leave afterwards.')) actS(() => sb.rpc('draw_santa', {p_santa: s.id}), 'Names drawn. Open Secret Santa to see yours.');
+        bar.append(lnk('Draw names', () => {
+          if (pool.length < 2) return toast('You need at least 2 people in the Secret Santa.');
+          if (confirm('Draw the names now? Nobody can opt out or change anything afterwards.')) actS(() => sb.rpc('draw_santa', {p_santa: s.id}), 'Names drawn. Open Secret Santa to see yours.');
         }), ' ', del);
       }
     } else {
@@ -932,12 +1097,15 @@ function renderSanta() {
         const h = document.createElement('p'); h.textContent = 'You are giving to:'; d.append(h);
         mine.forEach(p => {
           const nm = names[p.receiver_id] || 'someone', row = document.createElement('p'), b = document.createElement('b'); b.textContent = nm; row.append(b, ' ');
-          row.append(lnk('View list', () => { $('sdlg').close(); if (names[p.receiver_id]) pick(names[p.receiver_id]); }), ' ',
-                     lnk('Add to my budget', () => { $('sdlg').close(); openBudget({label: 'Secret Santa: ' + nm, amount: s.budget_max || '', santa_id: s.id}); }));
-          d.append(row);
+          row.append(lnk('View list', () => { $('sdlg').close(); if (names[p.receiver_id]) pick(names[p.receiver_id]); }));
+          const spent = spentOn[p.receiver_id] || 0, line = document.createElement('div'); line.className = 'meta';
+          if (s.budget_max) { const left = Number(s.budget_max) - spent; line.textContent = 'Spent ' + money(spent) + ' of ' + money(Number(s.budget_max)) + ' \u00b7 ' + (left >= 0 ? money(left) + ' left' : money(-left) + ' over'); if (left < 0) line.classList.add('over'); }
+          else line.textContent = 'Spent ' + money(spent) + ' so far';
+          row.append(line); d.append(row);
         });
-      } else d.append(Object.assign(document.createElement('p'), {className: 'note', textContent: mineIn ? 'Close this window and open it again to see your names.' : 'The names have been drawn.'}));
-      if (organizer) bar.append(lnk('Redo the draw', () => confirm('This erases everyone\u2019s names and reopens sign-ups. Continue?') && actS(() => sb.rpc('reset_santa', {p_santa: s.id}), 'Draw cleared')), ' ', del);
+        d.append(Object.assign(document.createElement('p'), {className: 'note', textContent: 'Each gift you tick off on their list comes out of this budget. It is separate from your personal budget.'}));
+      } else d.append(Object.assign(document.createElement('p'), {className: 'note', textContent: mineIn ? 'Close this window and open it again to see your names.' : 'You sat this one out.'}));
+      if (organizer) bar.append(lnk('Redo the draw', () => confirm('This erases everyone\u2019s names and reopens the Secret Santa. Continue?') && actS(() => sb.rpc('reset_santa', {p_santa: s.id}), 'Draw cleared')), ' ', del);
     }
     d.append(bar); box.append(d);
   });
@@ -946,15 +1114,30 @@ $('santaBtn').onclick = async () => { setMenu(false); try { await loadSanta(); }
 $('sclose').onclick = () => $('sdlg').close();
 $('screate').onsubmit = async e => {
   e.preventDefault(); const lim = $('s-limit').value.trim().replace(/[$,\s]/g, ''), limN = lim === '' ? null : Number(lim);
-  if (limN !== null && !(limN > 0)) return toast('The spending limit must be more than zero.');
+  if (limN !== null && !(limN > 0)) return toast('The budget must be more than zero.');
   const r = await actS(() => sb.rpc('create_santa', {p_group: $('s-group').value, p_name: $('s-name').value.trim(), p_budget: limN, p_draws: Number($('s-draws').value)}), 'Secret Santa created');
   if (r) { $('s-name').value = ''; $('s-limit').value = ''; }
+};
+
+/* ---- after Christmas: clear ticks (gifts are never deleted) ---- */
+$('clearBtn').onclick = () => { setMenu(false); $('xdlg').showModal(); };
+$('x-close').onclick = () => $('xdlg').close();
+$('x-mine').onclick = async () => {
+  if (!confirm('Remove all of your ticks on other people\u2019s lists? The gifts stay on their lists. Surprise gifts you added stay marked as bought.')) return;
+  const r = await track(sb.from('purchases').delete().eq('bought_by', myId).select('gift_id'));
+  if (r.error) return toast(errMsg(r.error));
+  toast('Cleared ' + plural((r.data || []).length, 'tick')); $('xdlg').close(); santaLoaded = false; await load();
+};
+$('x-list').onclick = async () => {
+  if (!confirm('Clear everyone\u2019s ticks on your list so it is ready for next year? Your gifts stay on the list.')) return;
+  const r = await track(sb.rpc('reset_ticks_on_my_list')); if (r.error) return toast(errMsg(r.error));
+  toast('Your list is ready for next year'); $('xdlg').close();
 };
 
 /* ---- personal budget ---- */
 let budgetTotal = null, entries = [], bdPre = {};
 async function loadBudget() {
-  const [t, e] = await track(Promise.all([sb.from('budgets').select('total').maybeSingle(), fetchAll('budget_entries', 'id,gift_id,santa_id,label,kind,amount,created_at', ['created_at', 'id'])]));
+  const [t, e] = await track(Promise.all([sb.from('budgets').select('total').maybeSingle(), fetchAll('budget_entries', 'id,gift_id,label,kind,amount,created_at', ['created_at', 'id'])]));
   if (t.error) throw t.error; budgetTotal = t.data ? t.data.total : null; entries = e;
 }
 function renderBudget() {
@@ -996,21 +1179,192 @@ $('bdadd').onsubmit = async e => {
   e.preventDefault(); const amt = Number($('bd-amt').value.trim().replace(/[$,\s]/g, ''));
   if (!(amt >= 0)) return toast('Enter an amount.');
   const row = {id: crypto.randomUUID(), label: $('bd-label').value.trim(), kind: $('bd-kind').value, amount: amt};
-  if (bdPre.gift_id) row.gift_id = bdPre.gift_id; if (bdPre.santa_id) row.santa_id = bdPre.santa_id;
-  const r = await track(sb.from('budget_entries').insert(row)); if (r.error) return toast(errMsg(r.error));      // the database refuses amounts over a Secret Santa limit
+  if (bdPre.gift_id) row.gift_id = bdPre.gift_id;
+  const r = await track(sb.from('budget_entries').insert(row)); if (r.error) return toast(errMsg(r.error));      
   bdPre = {}; $('bd-label').value = ''; $('bd-amt').value = ''; await loadBudget(); renderBudget(); toast('Added');
 };
 
-/* ---- side menu ---- */
+/* ---- several accounts on one device ---- */
+// Each signed-in account's login tokens are kept in this browser (the same place the site keeps your normal login). Log out removes them.
+const ACCT_KEY = 'giftAccounts';
+let bulkOut = false, addingAccount = false;
+function readAccts() { try { const a = JSON.parse(localStorage.getItem(ACCT_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+function writeAccts(a) { try { localStorage.setItem(ACCT_KEY, JSON.stringify(a.slice(0, 6))); } catch (e) {} }
+function rememberAccount(sess) {
+  if (!myId || !sess) return;
+  const list = readAccts(), k = list.findIndex(x => x.pid === myId), rec = {pid: myId, full: myFull, access_token: sess.access_token, refresh_token: sess.refresh_token};
+  if (k > -1) list[k] = rec; else list.push(rec);
+  writeAccts(list);
+}
+function renderAccounts() {
+  const box = $('accounts'); box.innerHTML = ''; const others = readAccts().filter(x => x.pid !== myId);
+  if (others.length) {
+    const l = document.createElement('label'); l.textContent = 'Switch account'; box.append(l);
+    others.forEach(a => { const b = document.createElement('button'); b.type = 'button'; b.className = 'mi'; b.textContent = a.full; b.onclick = () => switchTo(a.pid); box.append(b); });
+  }
+  $('logoutAll').hidden = !others.length;
+}
+async function switchTo(pid) {
+  const a = readAccts().find(x => x.pid === pid); if (!a || !sb) return;
+  setMenu(false); setChat(false);
+  if (myId && session) rememberAccount(session);                      // save the account we are leaving, with its newest tokens
+  clearState(); person = '';
+  const r = await track(sb.auth.setSession({access_token: a.access_token, refresh_token: a.refresh_token}));
+  if (r.error || !r.data || !r.data.session) {                        // that login no longer works
+    writeAccts(readAccts().filter(x => x.pid !== pid)); toast('Please log in to that account again.');
+    const rest = readAccts()[0]; if (rest) return switchTo(rest.pid);
+    setMode('login'); showAuth();
+  }
+}
+$('addAcct').onclick = () => {
+  setMenu(false);
+  if (readAccts().length >= 5) return toast('That is the most accounts to keep on one device.');
+  addingAccount = true; setMode('login'); $('a-cancel').hidden = false; $('auth').showModal();
+};
+function cancelAdd() { addingAccount = false; $('a-cancel').hidden = true; if ($('auth').open) $('auth').close(); }
+$('a-cancel').onclick = cancelAdd;
+$('logoutAll').onclick = async () => {
+  if (!confirm('Log out of every account on this device?')) return;
+  setMenu(false);
+  const cur = session ? {access_token: session.access_token, refresh_token: session.refresh_token} : null, others = readAccts().filter(x => x.pid !== myId);
+  bulkOut = true;
+  try {
+    for (const a of others) { try { const r = await sb.auth.setSession({access_token: a.access_token, refresh_token: a.refresh_token}); if (!r.error) await sb.auth.signOut({scope: 'local'}); } catch (e) {} }   // ends each account's login properly
+    if (cur) { try { await sb.auth.setSession(cur); await sb.auth.signOut({scope: 'local'}); } catch (e) {} }
+  } finally { writeAccts([]); bulkOut = false; }
+  clearState(); person = ''; setMode('login'); showAuth();
+};
+
+/* ---- gift preview ---- */
+const pvCache = {}; let pvSeq = 0;
+async function openPreview(i) {
+  const tok = ++pvSeq, img = $('pv-img'), url = isUrl(i.link) ? i.link : '';
+  $('pv-name').textContent = i.name; img.hidden = true; img.removeAttribute('src');
+  ['pv-site', 'pv-ptitle', 'pv-desc'].forEach(id => { $(id).textContent = ''; });
+  $('pv-facts').textContent = [i.price ? money(i.price) : ''].filter(Boolean).join(' \u00b7 ');
+  $('pv-notes').textContent = i.notes ? 'Notes: ' + i.notes : ''; $('pv-notes').hidden = !i.notes;
+  $('pv-open').hidden = !url; if (url) $('pv-open').href = url;
+  $('pv-status').textContent = url ? 'Loading a preview\u2026' : 'No link was added to this gift.';
+  if (!$('pdlg').open) $('pdlg').showModal(); if (!url) return;
+  let d = pvCache[url];
+  if (!d) { try { d = await callFn('preview', {url}); } catch (e) { d = {ok: false}; } if (d && d.ok) pvCache[url] = d; }
+  if (tok !== pvSeq || !$('pdlg').open) return;
+  if (d && d.ok) {
+    $('pv-status').textContent = ''; $('pv-site').textContent = d.site || ''; $('pv-ptitle').textContent = d.title || ''; $('pv-desc').textContent = d.description || '';
+    if (d.image) { img.referrerPolicy = 'no-referrer'; img.onerror = () => { img.hidden = true; }; img.src = d.image; img.hidden = false; }
+  } else $('pv-status').textContent = 'No preview is available for this site (some shops block previews). You can still open the page.';
+}
+$('pv-close').onclick = () => $('pdlg').close();
+
+/* ---- group chat (right-hand panel) ---- */
+const chatEl = $('chat');
+let chatMsgs = [], chatMine = new Set(), chatGroup = '', chatSeen = {}, chatTimer = null;
+try { chatSeen = JSON.parse(localStorage.getItem('giftChatSeen') || '{}'); chatGroup = localStorage.getItem('giftChatGroup') || ''; } catch (e) {}
+const saveSeen = () => { try { localStorage.setItem('giftChatSeen', JSON.stringify(chatSeen)); } catch (e) {} };
+async function pollChat() {
+  if (!sb || !session || !myId) return;
+  const [m, a] = await Promise.all([
+    sb.from('chat_messages').select('id,group_id,sender_id,kind,anonymous,event,subject_id,body,mentions,created_at').order('created_at', {ascending: false}).limit(300),
+    sb.from('chat_authors').select('message_id').limit(1000)]);
+  if (m.error || a.error) return;                                    // quiet: it simply tries again on the next round
+  chatMsgs = m.data.slice().reverse(); chatMine = new Set(a.data.map(x => x.message_id));
+  groups.forEach(g => { if (!chatSeen[g.id]) chatSeen[g.id] = Date.now(); });   // a group you have never opened starts with no unread
+  if (isOpen(chatEl)) { chatSeen[chatGroup] = Date.now(); renderChat(); }
+  saveSeen(); updateChatBadge();
+}
+function groupUnread(gid) {
+  const fresh = chatMsgs.filter(x => x.group_id === gid && x.kind === 'user' && !chatMine.has(x.id) && Date.parse(x.created_at) > (chatSeen[gid] || 0));
+  return {n: fresh.length, ping: fresh.filter(x => (x.mentions || []).includes(myId)).length};
+}
+function updateChatBadge() {
+  let n = 0, ping = 0; groups.forEach(g => { const u = groupUnread(g.id); n += u.n; ping += u.ping; });
+  const b = $('chatBadge'); b.hidden = n === 0; b.textContent = ping ? '@' + ping : String(n); b.classList.toggle('ping', ping > 0);   // red @ when someone mentioned you
+}
+function chatTick() {
+  clearTimeout(chatTimer);
+  if (!document.hidden && session && myId) pollChat();
+  chatTimer = setTimeout(chatTick, isOpen(chatEl) ? 8000 : 45000);
+}
+const evText = m => { const nm = names[m.subject_id] || 'Someone', q = '\u201c' + (m.body || '') + '\u201d';
+  return ({joined: nm + ' joined the group', left: nm + ' left the group', removed: nm + ' was removed from the group', group_created: nm + ' created the group',
+    santa_created: nm + ' started the Secret Santa ' + q, santa_drawn: 'The names were drawn for ' + q, santa_reset: nm + ' redid the draw for ' + q})[m.event] || 'Group update'; };
+const escRx = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function fillMentions(el, text, g) {          // @Name becomes a highlighted mention; people who were mentioned stand out
+  const labels = (g ? g.members.map(x => x.name) : []).sort((a, b) => b.length - a.length);
+  if (!labels.length) { el.textContent = text; return; }
+  const rx = new RegExp('@(' + labels.map(escRx).join('|') + ')(?![\\w])', 'gi'); let last = 0, m;
+  while ((m = rx.exec(text))) {
+    el.append(text.slice(last, m.index)); const sp = document.createElement('span'); sp.className = 'mention' + (m[1].toLowerCase() === me.toLowerCase() ? ' me' : ''); sp.textContent = m[0]; el.append(sp); last = m.index + m[0].length;
+  }
+  el.append(text.slice(last));
+}
+function renderChat(forceBottom) {
+  const g = groups.find(x => x.id === chatGroup), box = $('chat-list'), atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+  box.innerHTML = '';
+  const list = chatMsgs.filter(x => x.group_id === chatGroup);
+  if (!list.length) box.append(Object.assign(document.createElement('p'), {className: 'note', textContent: g ? 'No messages yet. Say hello!' : 'Join or create a group to chat.'}));
+  list.forEach(m => {
+    const d = document.createElement('div');
+    if (m.kind === 'system') { d.className = 'cm sys'; d.textContent = evText(m); box.append(d); return; }
+    const mine = chatMine.has(m.id), ping = (m.mentions || []).includes(myId);
+    d.className = 'cm' + (mine ? ' mine' : '') + (ping ? ' ping' : '');
+    const head = document.createElement('div'); head.className = 'who2';
+    head.append(Object.assign(document.createElement('span'), {textContent: m.anonymous ? (mine ? 'Anonymous (you)' : 'Anonymous') : (m.sender_id === myId ? 'You' : (names[m.sender_id] || 'Someone'))}),
+                Object.assign(document.createElement('span'), {textContent: new Date(m.created_at).toLocaleString(undefined, {month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'})}));
+    const body = document.createElement('div'); fillMentions(body, m.body, g); d.append(head, body);
+    if (mine || (g && g.owner)) { const x = lnk('Delete', async () => { const r = await track(sb.rpc('delete_chat_message', {p_id: m.id})); if (r.error) return toast(errMsg(r.error)); pollChat(); }); x.className = 'edit'; d.append(x); }
+    box.append(d);
+  });
+  if (atBottom || forceBottom) box.scrollTop = box.scrollHeight;
+}
+function openChatBody() {
+  const sel = $('chat-group'); sel.innerHTML = '';
+  groups.forEach(g => { const n = groupUnread(g.id).n; sel.append(new Option(g.name + (n ? ' (' + n + ')' : ''), g.id)); });
+  if (!groups.some(g => g.id === chatGroup)) chatGroup = (groups.find(g => groupUnread(g.id).n) || groups[0] || {}).id || '';
+  sel.value = chatGroup; $('chat-form').hidden = !chatGroup; sel.hidden = groups.length < 2;
+  chatSeen[chatGroup] = Date.now(); saveSeen(); renderChat(true); updateChatBadge(); chatTick();
+}
+$('chat-group').onchange = () => { chatGroup = $('chat-group').value; try { localStorage.setItem('giftChatGroup', chatGroup); } catch (e) {} chatSeen[chatGroup] = Date.now(); saveSeen(); renderChat(true); updateChatBadge(); };
+$('chat-text').oninput = () => {              // typing @ suggests group members
+  const t = $('chat-text'), before = t.value.slice(0, t.selectionStart), m = before.match(/(^|\s)@([^\s@]*)$/), box = $('chat-suggest'), g = groups.find(x => x.id === chatGroup);
+  box.innerHTML = ''; if (!m || !g) { box.hidden = true; return; }
+  const opts = g.members.filter(x => x.id !== myId && x.name.toLowerCase().startsWith(m[2].toLowerCase())).slice(0, 6);
+  box.hidden = !opts.length;
+  opts.forEach(x => { const b = document.createElement('button'); b.type = 'button'; b.textContent = '@' + x.name;
+    b.onclick = () => { const start = before.length - m[2].length - 1; t.value = t.value.slice(0, start) + '@' + x.name + ' ' + t.value.slice(t.selectionStart); box.hidden = true; t.focus(); }; box.append(b); });
+};
+$('chat-text').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('chat-form').requestSubmit(); } };
+$('chat-form').onsubmit = async e => {
+  e.preventDefault(); const body = $('chat-text').value.trim(); if (!body || !chatGroup) return;
+  const g = groups.find(x => x.id === chatGroup), low = body.toLowerCase();
+  const mentions = (g ? g.members : []).filter(x => x.id !== myId && new RegExp('@' + escRx(x.name.toLowerCase()) + '(?![\\w])').test(low)).map(x => x.id);
+  const r = await track(sb.rpc('post_chat', {p_group: chatGroup, p_body: body, p_anon: $('chat-anon').checked, p_mentions: mentions}));
+  if (r.error) return toast(errMsg(r.error));
+  $('chat-text').value = ''; $('chat-suggest').hidden = true; await pollChat(); renderChat(true);
+};
+
+/* ---- side menus: menu on the left, chat on the right ---- */
 const menu = $('menu'), scrim = $('scrim');
+const isOpen = el => el.classList.contains('open');
+const syncScrim = () => { scrim.hidden = !(isOpen(menu) || isOpen(chatEl)); };
 function setMenu(open) {
-  menu.classList.toggle('open', open); menu.inert = !open; menu.setAttribute('aria-hidden', String(!open)); scrim.hidden = !open;
+  if (open) renderAccounts();
+  if (open && isOpen(chatEl)) setChat(false);
+  menu.classList.toggle('open', open); menu.inert = !open; menu.setAttribute('aria-hidden', String(!open)); syncScrim();
   $('menuBtn').setAttribute('aria-expanded', String(open));
   if (open) $('groupsBtn').focus(); else if (menu.contains(document.activeElement)) $('menuBtn').focus();
 }
-$('menuBtn').onclick = () => setMenu(!menu.classList.contains('open'));
-scrim.onclick = () => setMenu(false);
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && menu.classList.contains('open')) setMenu(false); });
+function setChat(open) {
+  if (open && isOpen(menu)) setMenu(false);
+  chatEl.classList.toggle('open', open); chatEl.inert = !open; chatEl.setAttribute('aria-hidden', String(!open)); syncScrim();
+  $('chatBtn').setAttribute('aria-expanded', String(open));
+  if (open) { openChatBody(); $('chat-text').focus(); } else if (chatEl.contains(document.activeElement)) $('chatBtn').focus();
+}
+$('menuBtn').onclick = () => setMenu(!isOpen(menu));
+$('chatBtn').onclick = () => setChat(!isOpen(chatEl));
+$('chatClose').onclick = () => setChat(false);
+scrim.onclick = () => { setMenu(false); setChat(false); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (isOpen(menu)) setMenu(false); if (isOpen(chatEl)) setChat(false); } });
 
 /* ---- install as an app (PWA) ---- */
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
@@ -1020,8 +1374,8 @@ window.addEventListener('appinstalled', () => { installEv = null; $('installBtn'
 $('installBtn').onclick = async () => { if (!installEv) return; installEv.prompt(); try { await installEv.userChoice; } catch (e) {} installEv = null; $('installBtn').hidden = true; setMenu(false); };
 if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone) $('iosHint').hidden = false;
 
-document.addEventListener('visibilitychange', () => { if (!document.hidden && session && myId) load(); });
-setTimeout(() => THEMES.forEach(t => fetch('themes/' + t.id + '.css').catch(() => {})), 2000);   // warm the cache so switching themes is instant
+document.addEventListener('visibilitychange', () => { if (!document.hidden && session && myId) { load(); chatTick(); } });
+setTimeout(() => THEMES.forEach(t => fetch('themes/' + t.id + '.css?v=' + ASSET_V).catch(() => {})), 2000);   // warm the cache so switching themes is instant
 init();
 </script>
 </body>

@@ -1,4 +1,7 @@
 # Used by the Supabase CLI. verify_jwt is off because the browser sends a publishable key (not a JWT);
-# the function checks the signed-in user itself for the actions that need one.
+# each function checks the signed-in user itself for the actions that need one.
 [functions.account]
+verify_jwt = false
+
+[functions.preview]
 verify_jwt = false

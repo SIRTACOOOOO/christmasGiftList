@@ -68,7 +68,6 @@ try {
   if (eTok) await call({ action: 'deleteAccount', password: pw }, eTok);
   ok((await alice.c.rpc('set_birthday', { p_month: 2, p_day: 30 })).error, 'an impossible birthday is refused');
   ok(!(await alice.c.rpc('set_birthday', { p_month: 12, p_day: 25 })).error, 'a valid birthday is saved');
-  ok((await alice.c.from('gifts').insert({ owner_id: alice.id, name: 'Bad priority', priority: 4 })).error, 'a priority outside 1 to 3 is refused');
   ok((await alice.c.rpc('set_avatar_url', { p_url: 'http://example.com/me.jpg' })).error, 'a picture link must be https');
   ok((await alice.c.rpc('set_avatar_url', { p_url: 'javascript:alert(1)' })).error, 'a script link is refused as a picture');
   ok(!(await alice.c.rpc('set_avatar_url', { p_url: 'https://example.com/me.jpg' })).error, 'an https picture link is saved');
@@ -90,6 +89,11 @@ try {
   const gid = randomUUID();
   ok(!(await alice.c.from('gifts').insert({ id: gid, owner_id: alice.id, name: 'Board game', price: 40 })).error, 'alice adds a gift');
   ok((await alice.c.from('gifts').insert({ id: gid, owner_id: alice.id, name: 'Board game' })).error?.code === '23505', 'a retried insert does not duplicate');
+  const gid2 = randomUUID(); await alice.c.from('gifts').insert({ id: gid2, owner_id: alice.id, name: 'Second gift' });
+  ok(!(await alice.c.rpc('reorder_gifts', { p_ids: [gid2, gid] })).error, 'a list can be put in a new order');
+  const ord = (await alice.c.from('gifts').select('id,position').in('id', [gid, gid2])).data || [];
+  ok(ord.find((x) => x.id === gid2)?.position === 1 && ord.find((x) => x.id === gid)?.position === 2, 'the first gift in the new order is number 1');
+  ok((await bob.c.rpc('reorder_gifts', { p_ids: [gid, gid2] })).error, 'nobody can reorder someone else\'s gifts');
   ok(rows(await bob.c.from('gifts').select('*').eq('id', gid)) === 1, 'bob (same group) sees alice\'s gift');
   ok(rows(await carol.c.from('gifts').select('*').eq('id', gid)) === 0, 'carol (no shared group) does not');
   ok((await bob.c.from('gifts').update({ name: 'x' }).eq('id', gid).select()).data?.length !== 1, 'bob cannot edit alice\'s gift');
@@ -127,8 +131,8 @@ try {
   const fay = await mk('fay'); await fay.c.rpc('join_group', { p_code: code });
   const sid2 = (await alice.c.rpc('create_santa', { p_group: g.data, p_name: 'Test Santa', p_budget: 25, p_draws: 2 })).data;
   ok(!!sid2, 'alice creates a Secret Santa (limit 25, two names each)');
-  ok(!(await bob.c.rpc('join_santa', { p_santa: sid2 })).error && !(await fay.c.rpc('join_santa', { p_santa: sid2 })).error, 'bob and fay join it');
-  ok((await carol.c.rpc('join_santa', { p_santa: sid2 })).error, 'someone outside the group cannot join');
+  ok(rows(await bob.c.from('secret_santas').select('*').eq('id', sid2)) === 1, 'everyone in the group can see the Secret Santa without joining');
+  ok((await carol.c.rpc('set_santa_optout', { p_santa: sid2, p_out: true })).error, 'someone outside the group cannot opt in or out');
   ok((await bob.c.rpc('draw_santa', { p_santa: sid2 })).error, 'only the organizer can draw the names');
   ok(!(await alice.c.rpc('draw_santa', { p_santa: sid2 })).error, 'the draw works');
   const got = {};
@@ -141,11 +145,60 @@ try {
   ok((await alice.c.rpc('draw_santa', { p_santa: sid2 })).error, 'the names cannot be drawn twice');
   ok((await alice.c.from('santa_assignments').insert({ santa_id: sid2, giver_id: alice.id, receiver_id: bob.id })).error, 'assignments cannot be written directly');
   ok((await bob.c.rpc('reset_santa', { p_santa: sid2 })).error, 'only the organizer can redo the draw');
-  ok((await alice.c.from('budget_entries').insert({ label: 'Too much', kind: 'reserved', amount: 30, santa_id: sid2 })).error, 'a Secret Santa entry over the limit is refused');
-  ok(!(await alice.c.from('budget_entries').insert({ label: 'Within the limit', kind: 'reserved', amount: 20, santa_id: sid2 })).error, 'an entry within the limit is saved');
   ok(rows(await bob.c.from('budget_entries').select('*')) === 0, 'other people cannot see your budget entries');
   ok(!(await alice.c.rpc('set_budget_total', { p_total: 100 })).error, 'a budget total is saved');
   ok(rows(await bob.c.from('budgets').select('*')) === 0, 'other people cannot see your budget total');
+
+  // --- blacklist ------------------------------------------------------------------------------------------------------------------
+  const sid3 = (await alice.c.rpc('create_santa', { p_group: g.data, p_name: 'Blacklist test', p_budget: null, p_draws: 1 })).data;
+  ok(!(await alice.c.rpc('set_santa_blacklist', { p_santa: sid3, p_receivers: [bob.id] })).error, 'alice blacklists bob');
+  ok(rows(await bob.c.from('santa_blacklist').select('*')) === 0 && rows(await alice.c.from('santa_blacklist').select('*')) === 1, 'a blacklist can only be read by its owner');
+  ok(!(await alice.c.rpc('draw_santa', { p_santa: sid3 })).error, 'the draw works with a blacklist');
+  const aliceGives = (await alice.c.from('santa_assignments').select('receiver_id').eq('santa_id', sid3)).data || [];
+  ok(aliceGives.length === 1 && aliceGives[0].receiver_id === fay.id, 'alice was not matched with bob');
+  ok((await alice.c.rpc('set_santa_blacklist', { p_santa: sid3, p_receivers: [] })).error, 'a blacklist cannot be changed after the draw');
+
+  // --- opting out, drawing fewer names ----------------------------------------------------------------------------------------
+  const sid4 = (await alice.c.rpc('create_santa', { p_group: g.data, p_name: 'Opt-out test', p_budget: 20, p_draws: 1 })).data;
+  ok(!(await bob.c.rpc('set_santa_optout', { p_santa: sid4, p_out: true })).error, 'bob opts out of a Secret Santa');
+  ok((await bob.c.rpc('set_santa_blacklist', { p_santa: sid4, p_receivers: [alice.id] })).error, 'someone who opted out has nothing to edit');
+  ok(!(await alice.c.rpc('draw_santa', { p_santa: sid4 })).error, 'the draw works without bob');
+  ok(rows(await bob.c.from('santa_assignments').select('*').eq('santa_id', sid4)) === 0, 'bob has no names because he opted out');
+  const a4 = (await alice.c.from('santa_assignments').select('receiver_id').eq('santa_id', sid4)).data || [];
+  ok(a4.length === 1 && a4[0].receiver_id === fay.id, 'alice gives to fay, the only other person in');
+  const sid5 = (await alice.c.rpc('create_santa', { p_group: g.data, p_name: 'Fewer names test', p_budget: null, p_draws: 2 })).data;
+  ok(!(await bob.c.rpc('set_santa_draws', { p_santa: sid5, p_draws: 1 })).error, 'bob asks to draw fewer names');
+  ok((await bob.c.rpc('set_santa_draws', { p_santa: sid5, p_draws: 3 })).error, 'nobody can ask for more than the maximum');
+  ok(rows(await alice.c.from('santa_wanted').select('*').eq('santa_id', sid5)) === 1, 'the group can see who asked for fewer');
+  ok((await alice.c.rpc('draw_santa', { p_santa: sid5 })).error, 'a draw that cannot be fair with only three people is refused');
+  ok(rows(await alice.c.from('santa_assignments').select('*').eq('santa_id', sid5)) === 0, 'nothing is drawn when it is refused');
+
+  // --- clearing ticks after Christmas ---------------------------------------------------------------------------------------
+  const cleared = await bob.c.from('purchases').delete().eq('bought_by', bob.id).select('gift_id');
+  ok((cleared.data || []).some((x) => x.gift_id === gid) && !(cleared.data || []).some((x) => x.gift_id === sid), 'clearing my ticks removes ordinary ticks but not surprise gifts');
+  await bob.c.from('purchases').insert({ gift_id: gid, bought_by: bob.id });
+  ok(!(await alice.c.rpc('reset_ticks_on_my_list')).error, 'the owner can reset ticks on their own list');
+  ok(rows(await bob.c.from('purchases').select('*').eq('gift_id', gid)) === 0, 'resetting a list clears everyone\'s ticks');
+  ok(rows(await bob.c.from('gifts').select('*').eq('id', gid)) === 1, 'the gift itself is still there');
+  ok(rows(await bob.c.from('purchases').select('*').eq('gift_id', sid)) === 1, 'surprise gifts stay marked as bought');
+
+  // --- group chat -------------------------------------------------------------------------------------------------------------------
+  const sys = (await alice.c.from('chat_messages').select('event').eq('group_id', g.data).eq('kind', 'system')).data || [];
+  ok(sys.some((x) => x.event === 'joined') && sys.some((x) => x.event === 'group_created'), 'creating and joining a group post notices in the chat');
+  const m1 = (await alice.c.rpc('post_chat', { p_group: g.data, p_body: 'Hello @bob', p_anon: false, p_mentions: [bob.id, carol.id] })).data;
+  ok(!!m1, 'alice posts a chat message');
+  const seen = (await bob.c.from('chat_messages').select('sender_id,mentions').eq('id', m1).single()).data;
+  ok(seen && seen.sender_id === alice.id && seen.mentions.length === 1 && seen.mentions[0] === bob.id, 'bob sees it, and only real group members count as mentioned');
+  ok(rows(await carol.c.from('chat_messages').select('*').eq('group_id', g.data)) === 0, 'someone outside the group sees no chat');
+  const m2 = (await bob.c.rpc('post_chat', { p_group: g.data, p_body: 'psst', p_anon: true, p_mentions: [] })).data;
+  const anon = (await alice.c.from('chat_messages').select('sender_id,anonymous').eq('id', m2).single()).data;
+  ok(anon && anon.anonymous === true && anon.sender_id === null, 'an anonymous message hides the sender');
+  ok(rows(await alice.c.from('chat_authors').select('*').eq('message_id', m2)) === 0, 'nobody else can look up who wrote it');
+  ok(rows(await bob.c.from('chat_authors').select('*').eq('message_id', m2)) === 1, 'the author can');
+  ok((await fay.c.rpc('delete_chat_message', { p_id: m1 })).error, 'a member cannot delete someone else\'s message');
+  ok(!(await alice.c.rpc('delete_chat_message', { p_id: m2 })).error, 'the group owner can delete any message');
+  ok((await bob.c.from('chat_messages').insert({ group_id: g.data, kind: 'user', body: 'forged' })).error, 'chat messages cannot be written directly');
+  ok((await alice.c.from('link_previews').select('*')).error, 'the link preview cache cannot be read from a browser');
 
   // --- username change and leaving a group ----------------------------------------------------------------------------------
   ok(!(await alice.c.rpc('change_username', { p_username: `alicia${run}` })).error, 'username changes');

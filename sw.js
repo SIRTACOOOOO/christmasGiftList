@@ -2,7 +2,7 @@
 // It only ever touches files from this site. Requests to Supabase, fonts and the sign-in library pass straight through,
 // so no account data is ever stored by the service worker.
 // Bump CACHE when you change this file's list of files.
-const CACHE = 'giftlist-v4';
+const CACHE = 'giftlist-v6';
 const SHELL = ['./', 'index.html', 'config.js', 'manifest.webmanifest', 'themes/themes.js', 'themes/legacy.css',
                'icons/icon-192.png', 'icons/maskable-512.png', 'icons/favicon.ico'];
 
@@ -17,7 +17,7 @@ self.addEventListener('fetch', e => {
   const r = e.request;
   if (r.method !== 'GET' || new URL(r.url).origin !== self.location.origin) return;
   e.respondWith(
-    fetch(r).then(res => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(r, copy)); } return res; })
+    fetch(r, { cache: 'no-cache' }).then(res => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(r, copy)); } return res; })
       .catch(() => caches.match(r).then(hit => hit || (r.mode === 'navigate' ? caches.match('index.html') : Response.error())))
   );
 });

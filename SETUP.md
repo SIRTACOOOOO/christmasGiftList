@@ -18,6 +18,8 @@ In **SQL Editor → New query**, paste each file below **in this order** and cli
 5. `supabase/migrations/20261105000005_first_names.sql`
 6. `supabase/migrations/20261106000006_profiles_priorities_avatars.sql`
 7. `supabase/migrations/20261107000007_budget_and_secret_santa.sql`
+8. `supabase/migrations/20261108000008_chat_blacklist_previews.sql`
+9. `supabase/migrations/20261109000009_santa_auto_order_ticks.sql` (run this one after 8; it replaces the High / Medium / Low priority with a movable order)
 
 (Or with the Supabase CLI: `npx supabase link --project-ref YOUR-REF` then `npx supabase db push`.)
 
@@ -33,6 +35,7 @@ Run these from the project folder (the one that contains the `supabase` folder).
 npx supabase login
 npx supabase link --project-ref YOUR-REF
 npx supabase functions deploy account --no-verify-jwt
+npx supabase functions deploy preview --no-verify-jwt
 npx supabase secrets set ALLOWED_ORIGINS=https://yourname.github.io,http://localhost:8000
 ```
 
@@ -127,9 +130,20 @@ Each person can bring their own list across in a minute: in the old sheet, open 
 
 ## 10. Secret Santa, budgets and QR invitations
 
-- **Secret Santa:** menu, then Secret Santa. Anyone in a group can start one. Choose a name, an optional spending limit, and how many names each person draws (1 to 5). People join, then the organizer (or the group owner) presses **Draw names**. You need at least one more person than the number of names each person draws. After the draw, each person sees only their own names, with buttons to open that person's list or add the gift to their budget. **Redo the draw** erases everything and reopens sign-ups.
-- **Spending limit:** shown to everyone. When a person adds a budget entry from their Secret Santa names, the database refuses amounts over the limit.
-- **Budget:** menu, then Budget. Only you can see it. Use the **Budget** link on any gift on someone else's list to track it.
+- **Secret Santa:** menu, then Secret Santa. Anyone in a group can start one: choose a name, an optional **budget for each person you give to**, and the **most names** anyone can draw (1 to 5).
+  - **Everyone in the group is in automatically.** Nobody has to join.
+  - **Opt out:** anyone can leave a Secret Santa before the draw with **Opt out**, and come back with **Opt back in**.
+  - **People I should not give to:** each person can tick the people they must not be given, for example their husband or wife. Only that person can see their own list, not even the organizer.
+  - **Fewer names:** if the maximum is more than 1, anyone can choose to draw fewer. Their name then goes into the draw fewer times, so they give and get fewer gifts.
+  - **Draw names:** the organizer (or the group owner) presses it. Everyone then sees only their own names, with the budget left for each person. Every gift you tick off on that person's list comes out of that budget, with a warning before you go over. It is separate from your personal budget.
+  - **If the draw is refused:** a very small group with many "should not give to" choices or different name counts can make a fair draw impossible. The site says so and nothing is drawn. Change a choice and try again.
+  - **Redo the draw** erases everything and reopens the Secret Santa.
+- **Movable gift order:** on your own list, press **Arrange my list**, then drag gifts or use the up and down arrows. First is your top pick. Everyone else sees your list in that order by default, with numbers.
+- **After Christmas:** menu, then After Christmas. **Clear all my ticks** removes the ticks you made on other people's lists. **Clear all ticks on my own list** gets your list ready for next year. Neither deletes a gift, so something that was ticked but never arrived is still on the list. Surprise gifts stay marked as bought.
+- **Several accounts:** menu, then **Add another account**, then log in. Your accounts then appear under **Switch account**. **Log out** only removes the account you are using; **Log out of all accounts** removes every one on this device. Do not use this on a shared computer.
+- **Personal budget:** menu, then Budget. Only you can see it. Use the **Budget** link on any gift on someone else's list to track it. It does not include your Secret Santa budget.
+- **Group chat:** the **Chat** button at the top right opens a panel on the right (the menu is on the left). Each group has its own chat. Messages older than 30 days disappear: they are hidden immediately, removed whenever someone posts in that group, and (optional) removed every night if you switch on the `pg_cron` extension under Database, then Extensions, *before* running migration 8. People can send **anonymously** and **@mention** each other. Joining, leaving and Secret Santa events appear in the chat as notices.
+- **Gift previews:** tap a gift's name. The `preview` function reads the page's public title, picture and description (it refuses private or internal addresses and caches results for 7 days). Shops that block automated visits show "no preview", and the Open the page button still works.
 - **QR invitations:** in Groups, press **Show QR code** under a group. Scanning it opens `your-site/#join=CODE`, asks the person to log in or sign up, then asks them to confirm joining. The invite code box still works as before. **New invite code** invalidates old codes and old QR codes. QR codes are drawn by a library loaded from `cdn.jsdelivr.net`.
 - **Appearance:** menu, then Appearance: same as device, light or dark. Midnight is always dark.
 

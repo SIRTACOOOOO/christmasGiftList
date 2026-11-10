@@ -182,6 +182,11 @@ dialog h3{margin:18px 0 6px;font-size:1rem}
 li[draggable=true]{cursor:grab}
 li.dragover{outline:2px dashed var(--pine)}
 .acct-row{display:flex;flex-direction:column;gap:2px;margin:0 0 6px}
+.cmrow{display:flex;gap:8px;align-items:flex-end;max-width:100%}
+.cmrow.mine{flex-direction:row-reverse;align-self:flex-end}
+.cmrow:not(.mine){align-self:flex-start}
+.cmrow .cm{align-self:auto;min-width:0;max-width:calc(100% - 40px)}
+.av.anon{background:var(--done);color:var(--mute)}
 </style>
 </head>
 <body>
@@ -446,7 +451,9 @@ function errMsg(e) {
   if (e && (e.status === 401 || /jwt/i.test(m))) { setTimeout(() => sb && sb.auth.signOut({scope: 'local'}), 0); return 'Your session expired. Please log in again.'; }
   if (e && (e.code === '42501' || e.status === 403)) return 'You are not allowed to do that.';
   if (e && e.code === 'P0001') return m;                              // our own friendly messages from the database
+  if (e && e.code && /^(42703|42P01|42883|PGRST20[0-5])$/.test(e.code)) { console.error('The database is missing an update:', e.message); return 'The site needs a database update. Ask the site owner to run the newest SQL files in the migrations folder.'; }
   if (e && e.code && /^(23|22)/.test(e.code)) return 'Please check what you entered and try again.';
+  if (e && e.code) console.error('Request failed:', e.code, e.message);
   return e && e.code ? 'Something went wrong. Please try again.' : (m || 'Something went wrong. Please try again.');
 }
 function clearState() {
@@ -1298,6 +1305,7 @@ function fillMentions(el, text, g) {          // @Name becomes a highlighted men
   }
   el.append(text.slice(last));
 }
+const anonAvatar = () => { const d = document.createElement('span'); d.className = 'av anon'; d.style.setProperty('--s', '30px'); d.textContent = '?'; d.title = 'Anonymous'; return d; };
 function renderChat(forceBottom) {
   const g = groups.find(x => x.id === chatGroup), box = $('chat-list'), atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
   box.innerHTML = '';
@@ -1313,7 +1321,9 @@ function renderChat(forceBottom) {
                 Object.assign(document.createElement('span'), {textContent: new Date(m.created_at).toLocaleString(undefined, {month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'})}));
     const body = document.createElement('div'); fillMentions(body, m.body, g); d.append(head, body);
     if (mine || (g && g.owner)) { const x = lnk('Delete', async () => { const r = await track(sb.rpc('delete_chat_message', {p_id: m.id})); if (r.error) return toast(errMsg(r.error)); pollChat(); }); x.className = 'edit'; d.append(x); }
-    box.append(d);
+    const row = document.createElement('div'); row.className = 'cmrow' + (mine ? ' mine' : '');
+    row.append(m.anonymous ? anonAvatar() : avatarEl(m.sender_id, names[m.sender_id] || '?', 30), d);      // anonymous messages get a plain ? so they reveal nothing
+    box.append(row);
   });
   if (atBottom || forceBottom) box.scrollTop = box.scrollHeight;
 }

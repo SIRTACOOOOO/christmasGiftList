@@ -2,7 +2,7 @@
 // It only ever touches files from this site. Requests to Supabase, fonts and the sign-in library pass straight through,
 // so no account data is ever stored by the service worker.
 // Bump CACHE when you change this file's list of files.
-const CACHE = 'giftlist-v6';
+const CACHE = 'giftlist-v8';
 const SHELL = ['./', 'index.html', 'config.js', 'manifest.webmanifest', 'themes/themes.js', 'themes/legacy.css',
                'icons/icon-192.png', 'icons/maskable-512.png', 'icons/favicon.ico'];
 

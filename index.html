@@ -144,7 +144,7 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 .bsum.over{color:var(--berry)}
 #bd-list li{grid-template-columns:auto 1fr auto;align-items:center}
 #sdlg,#bdlg{width:min(520px,calc(100% - 24px))}
-#chat{position:fixed;top:0;bottom:0;right:0;width:min(380px,94vw);background:var(--card);color:var(--ink);border-left:1px solid var(--line);z-index:30;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 12px);transform:translateX(102%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s .28s}
+#chat{position:fixed;top:var(--vvt,0px);height:var(--vvh,100%);right:0;width:min(var(--chatw,380px),94vw);background:var(--card);color:var(--ink);border-left:1px solid var(--line);z-index:30;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 12px);transform:translateX(102%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s .28s}
 #chat.open{transform:none;visibility:visible;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s}
 .chat-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 #chat select{margin:0 0 6px;width:100%}
@@ -187,6 +187,67 @@ li.dragover{outline:2px dashed var(--pine)}
 .cmrow:not(.mine){align-self:flex-start}
 .cmrow .cm{align-self:auto;min-width:0;max-width:calc(100% - 40px)}
 .av.anon{background:var(--done);color:var(--mute)}
+/* ---- dropdown sections ---- */
+details.dd{border:1px solid var(--line);border-radius:10px;margin:10px 0;background:var(--card)}
+details.dd>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 14px;font-weight:600;min-height:46px}
+details.dd>summary::-webkit-details-marker{display:none}
+details.dd>summary::after{content:"";margin-left:auto;flex:none;width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .2s}
+details.dd[open]>summary::after{transform:rotate(-135deg)}
+details.dd>summary b{font:500 1.05rem var(--display)}
+details.dd>summary .meta{font-weight:400}
+details.dd>summary:focus-visible{outline:3px solid var(--pine);outline-offset:-3px;border-radius:10px}
+details.dd>.ddbody{padding:0 14px 14px}
+details.dd>.ddbody>p:first-child{margin-top:0}
+.ddbody .row.col{flex-direction:column;align-items:stretch}
+.ddbody h3:first-child{margin-top:4px}
+#setdlg,#gdlg{width:min(520px,calc(100% - 24px))}
+.warn{border:1px solid var(--berry);border-radius:8px;padding:8px 10px;color:var(--ink);font-size:.92rem;margin:0 0 10px}
+@media (prefers-reduced-motion:reduce){details.dd>summary::after{transition:none}}
+/* ---- icon buttons in the menu ---- */
+.iconrow{display:flex;gap:10px;margin:12px 10px 4px}
+.ibtn{width:48px;height:48px;flex:none;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;display:grid;place-items:center;font-size:1.45rem;line-height:1;padding:0}
+.ibtn:hover{background:var(--done)}
+.ibtn svg{width:24px;height:24px;display:block}
+.ibtn[aria-pressed=true]{background:var(--pine);color:var(--on-pine);border-color:var(--pine)}
+.iconnote{margin:0 10px 10px!important}
+/* ---- people lists inside a group ---- */
+ul.plist{border-top:0}
+li.prow{grid-template-columns:auto 1fr auto;align-items:center;padding:8px 0}
+li.prow .pn{font-weight:600;overflow-wrap:anywhere}
+li.prow small{display:block;color:var(--mute)}
+li.prow .pact{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.chip{display:inline-block;font-size:.72rem;font-weight:600;border:1px solid var(--line);border-radius:999px;padding:0 7px;margin-left:6px;color:var(--mute);vertical-align:middle}
+/* ---- add gift: ask to fill in from a link ---- */
+.ask{border:1px dashed var(--pine);border-radius:8px;padding:8px 10px;margin:8px 0 0;font-size:.92rem}
+.ask .inline{margin-top:6px}
+/* ---- group chat: resize, keyboard, replies, unread ---- */
+#chat-grip{position:absolute;left:-6px;top:0;bottom:0;width:12px;cursor:ew-resize;touch-action:none;display:none}
+@media (hover:hover) and (pointer:fine) and (min-width:700px){#chat-grip{display:block}}
+#chat-grip::after{content:"";position:absolute;left:4px;top:50%;height:52px;width:4px;margin-top:-26px;border-radius:4px;background:var(--line)}
+#chat-grip:hover::after,#chat-grip:focus-visible::after{background:var(--pine)}
+#chat.dragging{transition:none;user-select:none}
+#chat.kb{padding-bottom:10px}
+#chat.kb #chat-note,#chat.kb #chat-suggest:empty{display:none}
+#chat.kb .chat-head{margin-bottom:2px}
+#chat-list{min-height:72px}
+.cm.unread{box-shadow:inset 3px 0 0 var(--berry)}
+.newline{display:flex;align-items:center;gap:8px;color:var(--berry);font-size:.78rem;font-weight:700;margin:4px 0;align-self:stretch}
+.newline::before,.newline::after{content:"";flex:1;height:1px;background:var(--berry);opacity:.5}
+.quote{display:block;width:100%;text-align:left;border:0;border-left:3px solid var(--berry);background:rgba(127,127,127,.18);color:inherit;border-radius:6px;padding:3px 8px;margin:2px 0 4px;font-size:.82rem;cursor:pointer}
+.quote b{display:block;font-size:.74rem}
+.quote span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.quote.gone{cursor:default;font-style:italic;opacity:.8}
+.cm .acts{display:flex;gap:12px;margin-top:2px}
+#reply-bar{display:flex;align-items:center;gap:8px;border-left:3px solid var(--berry);background:var(--done);border-radius:6px;padding:4px 8px;margin:0 0 6px;font-size:.85rem}
+#reply-bar div{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cm.flash{animation:flash 1.4s}
+@keyframes flash{0%,60%{outline:2px solid var(--pine)}100%{outline:2px solid transparent}}
+@media (prefers-reduced-motion:reduce){.cm.flash{animation:none;outline:2px solid var(--pine)}}
+/* ---- phones: no rectangle around the list, so the list gets the whole screen ---- */
+@media (max-width:640px){
+  body{padding-left:12px;padding-right:12px}
+  html[data-scene][data-eff]{--bgimg:none;--panel:transparent;--pad:0px;--gap:0px;--radius:0px;--title:var(--pine);--subtle:var(--mute);--bg:var(--card)}
+}
 </style>
 </head>
 <body>
@@ -215,7 +276,6 @@ li.dragover{outline:2px dashed var(--pine)}
     <button class="btn primary" id="add">Add gift</button>
   </div>
   <div class="bar2"><label class="sr" for="sort">Sort by</label><select id="sort"><option value="priority">Sort: my order (top picks first)</option><option value="added">Sort: order added</option><option value="store">Sort: website / store</option><option value="name">Sort: name A to Z</option><option value="low">Sort: price, low to high</option><option value="high">Sort: price, high to low</option></select><button type="button" class="btn" id="arrange" hidden>Arrange my list</button><label class="chkl"><input type="checkbox" id="boughtLast"> Move bought gifts to the bottom</label></div>
-  <p class="io" id="io" hidden><span id="ioMine"><button class="link" id="exp">Export CSV</button> &middot; <button class="link" id="expj">Backup (JSON)</button> &middot; <button class="link" id="imp">Import CSV or JSON</button> &middot; </span><button class="link" id="prn">Print / save as PDF</button><input type="file" id="impfile" accept=".csv,.json,text/csv,application/json,text/plain" hidden></p>
     <ul id="list"></ul>
   <p class="empty" id="empty" hidden></p>
   </div>
@@ -227,26 +287,30 @@ li.dragover{outline:2px dashed var(--pine)}
   <button class="mi" id="groupsBtn">Groups</button>
   <button class="mi" id="santaBtn">Secret Santa</button>
   <button class="mi" id="budgetBtn">Budget</button>
-  <button class="mi" id="clearBtn">After Christmas</button>
-  <button class="mi" id="accountBtn">Account</button>
-  <label for="theme">Theme</label><select id="theme"></select>
-  <label for="mode">Appearance</label><select id="mode"><option value="device">Same as device</option><option value="light">Light</option><option value="dark">Dark</option></select>
-  <p class="note" id="modeNote" hidden style="margin:0 10px 6px">Midnight is always dark.</p>
+  <button class="mi" id="settingsBtn">Settings</button>
+  <div class="iconrow">
+    <button type="button" class="ibtn" id="themeBtn"></button>
+    <button type="button" class="ibtn" id="modeBtn"></button>
+    <button type="button" class="ibtn" id="pushBtn" aria-pressed="false" hidden></button>
+  </div>
+  <p class="note iconnote" id="iconNote"></p>
   <label for="cd">Countdown</label><select id="cd"><option value="christmas">Christmas</option><option value="birthday">Birthday</option><option value="none">No countdown</option></select>
   <div id="accounts"></div>
   <button class="mi" id="addAcct">Add another account</button>
   <button class="mi" id="installBtn" hidden>Install app on this device</button>
-  <p class="note" id="iosHint" hidden style="margin:6px 10px">On iPhone or iPad: tap the Share button, then “Add to Home Screen”.</p>
+  <p class="note" id="iosHint" hidden style="margin:6px 10px">On iPhone or iPad: tap the Share button, then “Add to Home Screen”. Notifications only work from the Home Screen app.</p>
   <button class="mi out" id="logout">Log out</button>
   <button class="mi out" id="logoutAll" hidden>Log out of all accounts</button>
 </nav>
 <aside id="chat" aria-label="Group chat" aria-hidden="true" inert>
+  <div id="chat-grip" role="separator" aria-orientation="vertical" aria-label="Resize chat. Use the left and right arrow keys." tabindex="0" title="Drag to resize (double-click to reset)"></div>
   <div class="chat-head"><b>Group chat</b><button class="link" id="chatClose" type="button">Close</button></div>
   <select id="chat-group" aria-label="Group"></select>
   <p class="note" id="chat-note">Messages disappear after 30 days. Use @ to mention someone. Anonymous messages hide your name from the group; the group owner can delete them but cannot see who wrote them.</p>
   <div id="chat-list" role="log" aria-live="polite"></div>
   <div id="chat-suggest" hidden></div>
   <form id="chat-form">
+    <div id="reply-bar" hidden><div id="reply-text"></div><button type="button" class="link" id="reply-x" aria-label="Cancel reply">✕</button></div>
     <textarea id="chat-text" rows="2" maxlength="1000" placeholder="Message the group" aria-label="Message"></textarea>
     <div class="chat-row"><label class="chkl"><input type="checkbox" id="chat-anon"> Send anonymously</label><button class="btn primary">Send</button></div>
   </form>
@@ -272,9 +336,10 @@ li.dragover{outline:2px dashed var(--pine)}
   <form id="form">
     <h2 id="dtitle">Add gift</h2>
     <p class="note" id="dnote" hidden></p>
+    <label for="f-link">Link</label><input id="f-link" inputmode="url" autocapitalize="off" placeholder="Paste a link (optional)">
+    <div class="ask" id="fill-ask" hidden><span id="fill-msg">Fill in the name and price from this link?</span><div class="inline"><button type="button" class="btn primary" id="fill-yes">Fill it in</button><button type="button" class="btn" id="fill-no">No thanks</button></div></div>
     <label for="f-name">Gift name</label><input id="f-name" required>
     <label for="f-price">Approx. price</label><input id="f-price" inputmode="decimal" placeholder="20.00">
-    <label for="f-link">Link</label><input id="f-link" placeholder="Paste a link (optional)">
     <label for="f-notes">Notes: specify size, color, model, or other preferences</label><textarea id="f-notes" rows="2" maxlength="1000" placeholder="For example: size M, navy blue, 2024 model"></textarea>
     <div class="row">
       <button type="button" class="btn danger del" id="del">Delete</button>
@@ -283,10 +348,20 @@ li.dragover{outline:2px dashed var(--pine)}
     </div>
   </form>
 </dialog>
-<dialog id="adlg">
-  <h2>My account</h2>
+<dialog id="setdlg">
+  <h2>Settings</h2>
+  <details class="dd" id="dd-io"><summary>Import, export and print</summary><div class="ddbody">
+    <p class="note">Export, backup and import work on your own list. Print uses the list you are looking at.</p>
+    <div class="row col">
+      <button type="button" class="btn" id="exp">Export CSV (opens in Google Sheets)</button>
+      <button type="button" class="btn" id="expj">Backup (JSON)</button>
+      <button type="button" class="btn" id="imp">Import CSV or JSON</button>
+      <button type="button" class="btn" id="prn">Print / save as PDF</button>
+    </div>
+    <input type="file" id="impfile" accept=".csv,.json,text/csv,application/json,text/plain" hidden>
+  </div></details>
+  <details class="dd" id="dd-account"><summary>Account</summary><div class="ddbody">
   <p class="note" id="e-now"></p>
-
   <h3>Profile picture</h3>
   <form id="avform">
     <div class="avrow"><span id="avprev"></span><input id="av-url" type="url" inputmode="url" maxlength="500" placeholder="Picture link, starting with https://" aria-label="Picture link" autocomplete="off" style="flex:1;min-width:180px"></div>
@@ -327,28 +402,30 @@ li.dragover{outline:2px dashed var(--pine)}
     <div class="row"><button class="btn danger">Delete my account</button></div>
   </form>
 
-  <div class="row"><button type="button" class="btn" id="aclose">Close</button></div>
-</dialog>
-<dialog id="xdlg">
-  <h2>After Christmas</h2>
-  <p class="note">Clearing ticks never deletes a gift. If something was ticked off but never arrived, it stays on the list.</p>
-  <div class="row" style="flex-direction:column;align-items:stretch">
-    <button type="button" class="btn" id="x-mine">Clear all my ticks on other people's lists</button>
-    <button type="button" class="btn" id="x-list">Clear all ticks on my own list</button>
-  </div>
-  <div class="row"><button type="button" class="btn" id="x-close">Close</button></div>
+  </div></details>
+  <details class="dd" id="dd-after"><summary>After Christmas</summary><div class="ddbody">
+    <p class="warn"><b>Only use this after Christmas.</b> Clearing ticks can’t be undone: everyone loses track of what was already bought.</p>
+    <p class="note">Clearing ticks never deletes a gift. If something was ticked off but never arrived, it stays on the list.</p>
+    <div class="row col">
+      <button type="button" class="btn" id="x-mine">Clear all my ticks on other people's lists</button>
+      <button type="button" class="btn" id="x-list">Clear all ticks on my own list</button>
+    </div>
+  </div></details>
+  <div class="row"><button type="button" class="btn" id="setclose">Close</button></div>
 </dialog>
 <dialog id="sdlg">
   <h2>Secret Santa</h2>
   <p class="note">Everyone in the group is in automatically. You can opt out. Nobody, not even the organizer, can see who drew whom.</p>
   <div id="slist"></div>
+  <details class="dd" id="dd-newsanta"><summary>Start a new Secret Santa</summary><div class="ddbody">
   <form id="screate">
-    <label for="s-group">Start a new Secret Santa in</label><select id="s-group"></select>
+    <label for="s-group">Group</label><select id="s-group"></select>
     <label for="s-name">Name</label><input id="s-name" maxlength="60" placeholder="Family Secret Santa" required>
     <label for="s-limit">Budget for each person you give to (optional)</label><input id="s-limit" inputmode="decimal" placeholder="25.00">
     <label for="s-draws">Most names each person can draw</label><select id="s-draws"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
     <div class="row"><button class="btn primary">Create Secret Santa</button></div>
   </form>
+  </div></details>
   <div class="row"><button type="button" class="btn" id="sclose">Close</button></div>
 </dialog>
 <dialog id="bdlg">
@@ -394,11 +471,20 @@ li.dragover{outline:2px dashed var(--pine)}
 const $ = id => document.getElementById(id);
 const CFG = window.GIFT_CONFIG || {};
 let sb = null, session = null, myId = '', myFull = '', me = '', groups = [], gf = '', people = [], person = '', items = [], filter = 'all', editing = null;
-let pendingJoin = '';
-try { person = /^join=/i.test(location.hash.slice(1)) ? '' : decodeURIComponent(location.hash.slice(1)); } catch (e) {}
+let pendingJoin = '', pendingChat = '', pendingShare = null;
+try { const h0 = location.hash.slice(1); person = /^(join|chat)=/i.test(h0) ? '' : decodeURIComponent(h0); } catch (e) {}
+try {      // a product page shared from the phone's browser arrives as ?url=...&text=...&title=... (the app's "share target")
+  const q = new URLSearchParams(location.search);
+  if (q.has('url') || q.has('text') || q.has('title')) {
+    const found = ((q.get('url') || '') + ' ' + (q.get('text') || '')).match(/https?:\/\/[^\s<>"']+/i);
+    if (found) { pendingShare = {url: found[0].slice(0, 1000), title: (q.get('title') || '').slice(0, 200)}; sessionStorage.setItem('giftShare', JSON.stringify(pendingShare)); }
+    history.replaceState(null, '', location.pathname + location.hash);
+  } else { const raw = sessionStorage.getItem('giftShare'); if (raw) pendingShare = JSON.parse(raw); }
+} catch (e) {}
 try {
   const h = location.hash.slice(1);
   if (/^join=/i.test(h)) { pendingJoin = decodeURIComponent(h.slice(5)).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12); history.replaceState(null, '', location.pathname + location.search); }
+  else if (/^chat=/i.test(h)) { pendingChat = decodeURIComponent(h.slice(5)) || 'open'; history.replaceState(null, '', location.pathname + location.search); }
   if (pendingJoin) sessionStorage.setItem('giftJoin', pendingJoin); else pendingJoin = sessionStorage.getItem('giftJoin') || '';
 } catch (e) {}
 let modeSetting = 'device'; try { modeSetting = localStorage.getItem('giftMode') || 'device'; } catch (e) {}
@@ -406,15 +492,15 @@ const darkQuery = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)')
 function applyMode() {      // light, dark, or follow the device; every theme file has its own colors for each
   const dark = modeSetting === 'dark' || (modeSetting === 'device' && darkQuery && darkQuery.matches);
   document.documentElement.dataset.eff = dark ? 'dark' : 'light';
-  $('mode').value = modeSetting; $('modeNote').hidden = theme !== 'midnight'; setThemeColor();
+  renderIcons(); setThemeColor();
 }
 if (darkQuery && darkQuery.addEventListener) darkQuery.addEventListener('change', applyMode);
-const ASSET_V = '6';      // bump when theme files change so browsers never keep old ones
+let pushOn = false, unreadTotal = 0;
+const ASSET_V = '7';      // bump when theme files change so browsers never keep old ones
 const themeOf = id => THEMES.find(t => t.id === id) || THEMES[0];
 let theme = THEMES[0].id;
 try { theme = localStorage.getItem('giftTheme') || theme; } catch (e) {}
 theme = themeOf(theme).id;
-THEMES.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.name; $('theme').append(o); });
 function toHex(c) {   // turns any CSS color (including oklch) into #rrggbb, for the phone's address-bar color
   const cv = document.createElement('canvas'); cv.width = cv.height = 1; const x = cv.getContext('2d'); x.fillStyle = c; x.fillRect(0, 0, 1, 1);
   const d = x.getImageData(0, 0, 1, 1).data; return '#' + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, '0')).join('');
@@ -423,9 +509,38 @@ function setThemeColor() { try { const bg = getComputedStyle(document.documentEl
 function applyTheme() {
   const t = themeOf(theme);
   document.documentElement.dataset.theme = t.id; $('themecss').onload = setThemeColor; $('themecss').href = 'themes/' + t.id + '.css?v=' + ASSET_V;
-  $('theme').value = t.id; $('title').textContent = t.title; document.title = t.title + (person ? ' - ' + person : ''); applyMode();
+  document.documentElement.toggleAttribute('data-scene', !!t.scene);       // themes with a picture + list box lose both on phones
+  $('title').textContent = t.title; setTitle(); applyMode();
 }
-$('theme').onchange = () => { theme = $('theme').value; try { localStorage.setItem('giftTheme', theme); } catch (e) {} applyTheme(); };
+function setTitle() { document.title = (unreadTotal ? '(' + unreadTotal + ') ' : '') + themeOf(theme).title + (person ? ' - ' + person : ''); }
+const SVG = d => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+const ICON = {
+  sun: SVG('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
+  moon: SVG('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'),
+  bell: SVG('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>'),
+  bellOff: SVG('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/><path d="M3 3l18 18"/>')
+};
+function renderIcons() {      // the three icon buttons in the menu: theme (cycles), light/dark (toggles), notifications (on/off)
+  const t = themeOf(theme), dark = document.documentElement.dataset.eff === 'dark', mid = t.id === 'midnight';
+  $('themeBtn').textContent = t.icon || '\u{1F3A8}';
+  $('themeBtn').setAttribute('aria-label', 'Theme: ' + t.name + '. Press for the next theme.'); $('themeBtn').title = 'Theme: ' + t.name;
+  $('modeBtn').innerHTML = dark ? ICON.moon : ICON.sun;
+  const ml = mid ? 'Midnight is always dark.' : dark ? 'Dark mode. Press for light mode.' : 'Light mode. Press for dark mode.';
+  $('modeBtn').setAttribute('aria-label', ml); $('modeBtn').title = ml;
+  $('pushBtn').innerHTML = pushOn ? ICON.bell : ICON.bellOff; $('pushBtn').setAttribute('aria-pressed', String(pushOn));
+  const pl = pushOn ? 'Notifications are on for this device. Press to turn off.' : 'Notifications are off. Press to turn on.';
+  $('pushBtn').setAttribute('aria-label', pl); $('pushBtn').title = pl;
+  $('iconNote').textContent = t.name + ' \u00b7 ' + (dark ? 'Dark' : 'Light') + (mid ? ' (always)' : '') + ($('pushBtn').hidden ? '' : ' \u00b7 Notifications ' + (pushOn ? 'on' : 'off'));
+}
+$('themeBtn').onclick = () => {
+  const k = THEMES.findIndex(t => t.id === theme); theme = THEMES[(k + 1) % THEMES.length].id;
+  try { localStorage.setItem('giftTheme', theme); } catch (e) {} applyTheme(); toast('Theme: ' + themeOf(theme).name);
+};
+$('modeBtn').onclick = () => {
+  if (theme === 'midnight') return toast('Midnight is always dark. Press the theme icon to change theme.');
+  modeSetting = document.documentElement.dataset.eff === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('giftMode', modeSetting); } catch (e) {} applyMode();
+};
 applyTheme();
 
 const money = n => '$' + (n || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -528,7 +643,7 @@ $('aform').onsubmit = async e => {
   } catch (err) { $('a-err').textContent = errMsg(err); }
   $('a-go').disabled = false;
 };
-$('logout').onclick = async () => { setMenu(false); await sb.auth.signOut({scope: 'local'}); };
+$('logout').onclick = async () => { setMenu(false); await pushDetach(); await sb.auth.signOut({scope: 'local'}); };
 
 async function afterSignIn() {
   if (!session) return;
@@ -540,7 +655,9 @@ async function afterSignIn() {
   if ($('auth').open) $('auth').close();
   scrollToPerson = true; await load();
   if (pendingJoin) await handleJoin();
-  chatTick();
+  chatTick(); pushRefresh();
+  if (pendingShare) handleShare();
+  if (pendingChat) { const c = pendingChat; pendingChat = ''; openChatFor(c); }
 }
 function isServiceKey(k) {
   if (/^sb_secret_/.test(k)) return true;
@@ -679,11 +796,10 @@ function render() {
     b.setAttribute('aria-pressed', n === person); b.onclick = () => pick(n); box.append(b);
     if (n === person && scrollToPerson) { scrollToPerson = false; requestAnimationFrame(() => b.scrollIntoView({inline: 'center', block: 'nearest'})); }
   });
-  $('io').hidden = !me; $('ioMine').hidden = !mine;
   const pid = byName[person.toLowerCase()], ph = $('phead'); ph.innerHTML = '';
   if (person) { ph.append(avatarEl(pid, person, 56)); const w = document.createElement('div'), b = document.createElement('b'); b.textContent = mine ? person + ' (you)' : person; w.append(b); const bd = bday[pid]; if (bd) { const sm = document.createElement('small'); sm.textContent = 'Birthday: ' + MONTHS[bd.m - 1] + ' ' + bd.d; w.append(sm); } ph.append(w); }
   renderCountdown();
-  document.title = themeOf(theme).title + (person ? ' - ' + person : '');
+  setTitle();
   $('sub').textContent = !person ? '' : mine ? 'Your list. For the surprise, you can\u2019t see what has been bought.' : 'Tick what you\u2019ve bought for ' + person + '. Use Add surprise gift for anything not on their list; ' + person + ' won\u2019t see it.';
   $('add').textContent = mine ? 'Add gift' : 'Add surprise gift';
   $('seg').hidden = mine; $('boughtLast').parentElement.hidden = mine;
@@ -754,7 +870,46 @@ function openDlg(i) {
   $('f-name').value = i ? i.name : ''; $('f-price').value = i && i.price ? i.price : '';
   $('f-link').value = i ? i.link : ''; $('f-notes').value = i ? i.notes : '';
   $('del').style.display = i ? '' : 'none';
-  $('dlg').showModal(); $('f-name').focus();
+  fillTok++; fillBusy = false; fillNo = ''; $('fill-ask').hidden = true;
+  $('dlg').showModal(); (i ? $('f-name') : $('f-link')).focus();
+}
+let fillTok = 0, fillBusy = false, fillNo = '';
+const linkNow = () => fixLink($('f-link').value);
+function niceTitle(t, site) {      // drops a trailing "| Shop name" from a page title
+  t = String(t || '').trim(); const sn = String(site || '').toLowerCase().replace(/\.[a-z.]+$/, '');
+  const parts = t.split(/\s[|\u2013\u2014-]\s/);
+  if (parts.length > 1 && sn && parts[parts.length - 1].toLowerCase().includes(sn)) parts.pop();
+  return parts.join(' - ').replace(/^amazon\.[a-z.]+\s*:\s*/i, '').slice(0, 200);
+}
+function checkFillAsk() {      // the link was entered before the name: offer to fill in the rest
+  if (fillBusy) return; const u = linkNow();
+  $('fill-msg').textContent = 'Fill in the name and price from this link?'; $('fill-yes').hidden = $('fill-no').hidden = false; $('fill-no').textContent = 'No thanks';
+  $('fill-ask').hidden = !(!editing && isUrl(u) && !$('f-name').value.trim() && fillNo !== u);
+}
+async function fillFromLink() {
+  const url = linkNow(); if (!isUrl(url) || fillBusy) return; fillBusy = true; const tok = ++fillTok;
+  $('fill-ask').hidden = false; $('fill-msg').textContent = 'Reading the page\u2026'; $('fill-yes').hidden = $('fill-no').hidden = true;
+  let d = pvCache[url]; if (!d) { try { d = await callFn('preview', {url}); } catch (e) { d = {ok: false}; } }
+  if (tok !== fillTok) return; fillBusy = false; if (!$('dlg').open) return;
+  if (d && d.ok && (d.title || d.price)) {
+    pvCache[url] = d;
+    if (!$('f-name').value.trim() && d.title) $('f-name').value = niceTitle(d.title, d.site);
+    if (!$('f-price').value.trim() && d.price) $('f-price').value = Number(d.price).toFixed(2);
+    $('fill-ask').hidden = true; toast('Filled in from the link. Check it, then tap Save.');
+  } else { $('fill-msg').textContent = 'Could not read that page, so type the details in yourself.'; $('fill-no').hidden = false; $('fill-no').textContent = 'OK'; fillNo = url; }
+}
+$('fill-yes').onclick = fillFromLink;
+$('fill-no').onclick = () => { fillNo = linkNow(); $('fill-ask').hidden = true; };
+$('f-link').addEventListener('change', checkFillAsk);
+$('f-link').addEventListener('paste', () => setTimeout(checkFillAsk, 0));
+$('f-name').addEventListener('input', () => { if (!fillBusy && $('f-name').value.trim()) $('fill-ask').hidden = true; });
+async function handleShare() {      // a product page was shared into the app: open Add gift with it, one tap from Save
+  const sh = pendingShare; pendingShare = null; try { sessionStorage.removeItem('giftShare'); } catch (e) {}
+  if (!sh || !sh.url) return;
+  if (!isMine()) pick(me);                                  // shared gifts always go on your own list
+  openDlg(null); $('f-link').value = sh.url;
+  if (sh.title && !/https?:/i.test(sh.title)) $('f-name').value = niceTitle(sh.title, '');
+  fillFromLink();
 }
 $('add').onclick = () => openDlg(null);
 $('cancel').onclick = () => $('dlg').close();
@@ -775,7 +930,6 @@ function dropOn(target) {
   if (a < 0 || b < 0) return; const [m] = list.splice(a, 1); list.splice(b, 0, m); applyOrder(list);
 }
 $('arrange').onclick = () => { arrangeOn = !arrangeOn; render(); };
-$('mode').onchange = () => { modeSetting = $('mode').value; keep('giftMode', modeSetting); applyMode(); };
 document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
   filter = b.dataset.f; document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); render();
 });
@@ -818,33 +972,53 @@ async function act(fn, ok) {
   try { const r = await track(fn()); if (r.error) throw r.error; if (ok) toast(ok); await load(); return r; }
   catch (e) { toast(errMsg(e)); }
 }
-function renderGroups() {
+const openGroups = {}, fullNames = {}, gLoading = {}, gTried = {};
+async function fetchGroupNames(g) {      // full names of one group's members (the database only gives these to people in that group)
+  if (gLoading[g.id]) return; gLoading[g.id] = gTried[g.id] = true;
+  try { const r = await sb.rpc('group_people', {p_group: g.id}); if (!r.error) (r.data || []).forEach(x => { fullNames[x.profile_id] = x.full_name; }); } catch (e) {}
+  delete gLoading[g.id]; if ($('gdlg').open) renderGroups();
+}
+const chipEl = t => Object.assign(document.createElement('span'), {className: 'chip', textContent: t});
+function renderGroups(force) {
   const box = $('glist'); box.innerHTML = '';
   if (!groups.length) { const p = document.createElement('p'); p.className = 'note'; p.textContent = 'You are not in a group yet. Create one or join with an invite code.'; box.append(p); }
   groups.forEach(g => {
-    const d = document.createElement('div'); d.className = 'grp';
-    const t = document.createElement('b'); t.textContent = g.name;
+    const d = document.createElement('details'); d.className = 'dd';
+    d.open = openGroups[g.id] !== undefined ? openGroups[g.id] : groups.length === 1;
+    const sum = document.createElement('summary'), t = document.createElement('b'); t.textContent = g.name;
+    const cnt = document.createElement('span'); cnt.className = 'meta'; cnt.textContent = plural(g.members.length, 'person'); sum.append(t, cnt);
+    const un = groupUnread(g.id).n; if (un) { const bd = document.createElement('span'); bd.className = 'badge'; bd.textContent = un; bd.title = plural(un, 'unread message'); sum.append(bd); }
+    const body = document.createElement('div'); body.className = 'ddbody';
     const c = document.createElement('p'); c.append('Invite code: '); const k = document.createElement('code'); k.textContent = g.code; c.append(k);
-    const m = document.createElement('p'); m.className = 'meta members'; m.append('Members: ');
-    g.members.forEach((x, n) => {
-      if (n) m.append(', '); m.append(x.name);
-      if (g.owner && x.id !== myId) m.append(' ', lnk('(remove)', () => confirm('Remove ' + x.name + '?') && act(() => sb.rpc('remove_member', {p_group: g.id, p_profile: x.id}), 'Member removed')));
+    const ul = document.createElement('ul'); ul.className = 'plist';
+    const label = x => fullNames[x.id] || x.name;
+    g.members.slice().sort((x, y) => (y.id === myId) - (x.id === myId) || (x.role === 'owner' ? 0 : 1) - (y.role === 'owner' ? 0 : 1) || label(x).localeCompare(label(y))).forEach(x => {
+      const li = document.createElement('li'); li.className = 'prow';
+      const info = document.createElement('div'), nm = document.createElement('div'); nm.className = 'pn'; nm.append(label(x));
+      if (x.id === myId) nm.append(chipEl('You')); if (x.role === 'owner') nm.append(chipEl('Owner')); info.append(nm);
+      const b2 = bday[x.id]; if (b2) info.append(Object.assign(document.createElement('small'), {textContent: 'Birthday: ' + MONTHS[b2.m - 1] + ' ' + b2.d}));
+      const acts = document.createElement('div'); acts.className = 'pact';
+      acts.append(lnk(x.id === myId ? 'My list' : 'View list', () => { $('gdlg').close(); pick(x.id === myId ? me : (names[x.id] || x.name)); }));
+      if (g.owner && x.id !== myId) acts.append(lnk('Remove', () => confirm('Remove ' + label(x) + '?') && act(() => sb.rpc('remove_member', {p_group: g.id, p_profile: x.id}), 'Member removed')));
+      li.append(avatarEl(x.id, x.name, 38), info, acts); ul.append(li);
     });
     const qrBox = document.createElement('div'); qrBox.className = 'qr'; qrBox.hidden = true;
     const qrBtn = lnk('Show QR code', () => {
       if (!qrBox.firstChild) fillQr(qrBox, g.code);
       qrBox.hidden = !qrBox.hidden; qrBtn.textContent = qrBox.hidden ? 'Show QR code' : 'Hide QR code';
     });
-    const bar = document.createElement('p'); bar.append(qrBtn, ' ');
+    const bar = document.createElement('p'); bar.append(lnk('Open chat', () => { $('gdlg').close(); openChatFor(g.id); }), ' ', qrBtn, ' ');
     bar.append(lnk('Leave group', () => confirm('Leave "' + g.name + '"?') && act(() => sb.rpc('leave_group', {p_group: g.id}), 'You left the group')));
     if (g.owner) {
       bar.append(' ', lnk('New invite code', async () => { const r = await act(() => sb.rpc('rotate_invite_code', {p_group: g.id})); if (r && r.data) toast('New invite code: ' + r.data); }));
       bar.append(' ', lnk('Delete group', () => confirm('Delete "' + g.name + '" for everyone?') && act(() => sb.rpc('delete_group', {p_group: g.id}), 'Group deleted')));
     }
-    d.append(t, c, m, bar, qrBox); box.append(d);
+    body.append(c, ul, bar, qrBox); d.append(sum, body); box.append(d);
+    d.addEventListener('toggle', () => { if (openGroups[g.id] === d.open) return; openGroups[g.id] = d.open; if (d.open) fetchGroupNames(g); });
+    if (d.open && (force || (!gTried[g.id] && g.members.some(x => !fullNames[x.id])))) fetchGroupNames(g);
   });
 }
-$('groupsBtn').onclick = () => { setMenu(false); renderGroups(); $('gdlg').showModal(); };
+$('groupsBtn').onclick = () => { setMenu(false); renderGroups(true); $('gdlg').showModal(); };
 $('gclose').onclick = () => $('gdlg').close();
 $('gcreate').onsubmit = async e => {
   e.preventDefault(); const name = $('g-new').value.trim(); if (!name) return;
@@ -864,7 +1038,9 @@ function fillAccount() {
 }
 $('b-m').append(new Option('Month', '')); MONTHS.forEach((n, k) => $('b-m').append(new Option(n, k + 1)));
 $('b-d').append(new Option('Day', '')); for (let k = 1; k <= 31; k++) $('b-d').append(new Option(k, k));
-$('accountBtn').onclick = () => { setMenu(false); fillAccount(); $('adlg').showModal(); };
+$('settingsBtn').onclick = () => { setMenu(false); $('setdlg').showModal(); };
+$('setclose').onclick = () => $('setdlg').close();
+$('dd-account').addEventListener('toggle', () => { if ($('dd-account').open) fillAccount(); });
 async function saveBirthday(m, d) {
   const r = await act(() => sb.rpc('set_birthday', {p_month: m, p_day: d}), m ? 'Birthday saved' : 'Birthday removed'); if (r) fillAccount();
 }
@@ -879,12 +1055,11 @@ $('avform').onsubmit = e => {
   setAvatar(v || null);
 };
 $('av-clear').onclick = () => setAvatar(null);
-$('aclose').onclick = () => $('adlg').close();
 $('nform').onsubmit = async e => {
   e.preventDefault(); const v = $('n-new').value.trim(); if (!v || v === myFull) return;
   const was = isMine();
   const r = await act(() => sb.rpc('change_username', {p_username: v}));
-  if (r) { myFull = v; if (was) person = ''; await load(); try { history.replaceState(null, '', '#' + encodeURIComponent(person)); } catch (x) {} $('e-now').textContent = 'Signed in as ' + myFull; toast('Name changed'); }
+  if (r) { myFull = v; fullNames[myId] = v; if (was) person = ''; await load(); try { history.replaceState(null, '', '#' + encodeURIComponent(person)); } catch (x) {} $('e-now').textContent = 'Signed in as ' + myFull; toast('Name changed'); }
 };
 $('pform').onsubmit = async e => {
   e.preventDefault();
@@ -904,7 +1079,7 @@ $('qform').onsubmit = async e => {
 $('dform').onsubmit = async e => {
   e.preventDefault();
   if (!confirm('Delete your account, list and group memberships for good? This cannot be undone.')) return;
-  try { await fn({action: 'deleteAccount', password: $('d-pw').value}); $('d-pw').value = ''; $('adlg').close(); await sb.auth.signOut({scope: 'local'}); toast('Your account was deleted'); }
+  try { await fn({action: 'deleteAccount', password: $('d-pw').value}); $('d-pw').value = ''; $('setdlg').close(); await sb.auth.signOut({scope: 'local'}); toast('Your account was deleted'); }
   catch (err) { toast(errMsg(err)); }
 };
 
@@ -917,21 +1092,27 @@ function download(text, type, name) {
   document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 const fileSlug = () => myFull.replace(/[^A-Za-z0-9._-]+/g, '-');
-$('exp').onclick = () => {
-  const rows = [CSV_HEAD.join(',')].concat(items.filter(i => !i.by).map(i => [i.name, i.price ? i.price.toFixed(2) : '', i.link, i.notes].map(safeCell).join(',')));
+async function myGifts() {      // your own list, fetched fresh, whichever list is on screen
+  try { await track(loadList(me)); } catch (e) { toast(errMsg(e)); return null; }
+  return (lists[me] || []).filter(i => !i.by);
+}
+$('exp').onclick = async () => {
+  const mineGifts = await myGifts(); if (!mineGifts) return;
+  const rows = [CSV_HEAD.join(',')].concat(mineGifts.map(i => [i.name, i.price ? i.price.toFixed(2) : '', i.link, i.notes].map(safeCell).join(',')));
   download('\ufeff' + rows.join('\r\n') + '\r\n', 'text/csv;charset=utf-8', 'gift-list-' + fileSlug() + '.csv');
   toast('Exported ' + (rows.length - 1) + ' gifts. In Google Sheets use File > Import > Upload.');
 };
-$('expj').onclick = () => {
+$('expj').onclick = async () => {
+  const mineGifts = await myGifts(); if (!mineGifts) return;
   const mineBd = bday[myId];
   const data = {app: 'christmas-gift-list', version: 1, exportedAt: new Date().toISOString(), name: myFull,
     birthday: mineBd ? {month: mineBd.m, day: mineBd.d} : null,
     settings: {countdown: cdMode, sort: sortKey, boughtLast, theme},
-    gifts: items.filter(i => !i.by).sort(byPos).map(i => ({name: i.name, price: i.price || null, link: i.link || null, notes: i.notes || null}))};
+    gifts: mineGifts.slice().sort(byPos).map(i => ({name: i.name, price: i.price || null, link: i.link || null, notes: i.notes || null}))};
   download(JSON.stringify(data, null, 2), 'application/json', 'gift-list-backup-' + fileSlug() + '-' + new Date().toISOString().slice(0, 10) + '.json');
   toast('Backup saved (' + data.gifts.length + ' gifts).');
 };
-$('prn').onclick = () => { $('ph-name').textContent = person + '\u2019s gift list'; $('ph-date').textContent = new Date().toLocaleDateString(undefined, {dateStyle: 'long'}); window.print(); };
+$('prn').onclick = () => { $('setdlg').close(); $('ph-name').textContent = person + '\u2019s gift list'; $('ph-date').textContent = new Date().toLocaleDateString(undefined, {dateStyle: 'long'}); window.print(); };
 function parseCSV(text) {
   text = text.replace(/^\ufeff/, '');
   const first = text.split(/\r?\n/)[0] || '', d = (first.match(/;/g) || []).length > (first.match(/,/g) || []).length ? ';' : ',';
@@ -948,7 +1129,7 @@ function parseCSV(text) {
   return rows.filter(r => r.some(x => String(x).trim() !== ''));
 }
 function vet(raws) {      // checks every row the same way, whether it came from a CSV or a JSON backup
-  const have = new Set(items.filter(i => !i.by).map(i => (i.name + '|' + i.link).toLowerCase())), good = [], skipped = [];
+  const have = new Set((lists[me] || []).filter(i => !i.by).map(i => (i.name + '|' + i.link).toLowerCase())), good = [], skipped = [];
   let dupes = 0;
   raws.forEach((r, ix) => {
     const name = String(r.name == null ? '' : r.name).trim(), link = String(r.link == null ? '' : r.link).trim(), notes = String(r.notes == null ? '' : r.notes).trim();
@@ -981,8 +1162,9 @@ let pending = [];
 $('impfile').onchange = async () => {
   const f = $('impfile').files[0]; $('impfile').value = ''; if (!f) return;
   if (f.size > 1e6) return toast('That file is too big (1 MB maximum).');
+  const mineN = ((await myGifts()) || []).length;
   const txt = await f.text(), {good, dupes, skipped} = (/\.json$/i.test(f.name) || /^\s*[\[{]/.test(txt)) ? readJson(txt) : readGifts(txt);
-  if (items.length + good.length > 1000) return toast('That would go over the 1,000 gift limit.');
+  if (mineN + good.length > 1000) return toast('That would go over the 1,000 gift limit.');
   if (good.length > 500) return toast('Please import 500 gifts or fewer at a time.');
   pending = good;
   $('i-sum').textContent = good.length + ' gift(s) ready to import. ' + dupes + ' duplicate(s) and ' + skipped.length + ' problem row(s) will be skipped.';
@@ -1024,6 +1206,7 @@ async function handleJoin() {
 }
 
 /* ---- Secret Santa ---- */
+const santaOpen = {};
 let santas = [], santaParts = [], myPairs = [], myBlacklist = [], santaOut = [], santaWant = [], spentOn = {}, santaLoaded = false;
 async function loadSanta() {
   const mine = q => q.eq('bought_by', myId);
@@ -1052,31 +1235,32 @@ function santaPool(s, g) {      // before the draw: the whole group minus anyone
 const wantOf = (s, id) => { const w = santaWant.find(x => x.santa_id === s.id && x.profile_id === id); return w ? w.draws : s.draws_per_person; };
 function renderSanta() {
   const sg = $('s-group'); sg.innerHTML = ''; groups.forEach(g => sg.append(new Option(g.name, g.id)));
-  $('screate').hidden = !groups.length;
+  $('dd-newsanta').hidden = !groups.length;
   const box = $('slist'); box.innerHTML = '';
   if (!santas.length) { const p = document.createElement('p'); p.className = 'note'; p.textContent = groups.length ? 'No Secret Santas yet. Start one below.' : 'Join or create a group first. Secret Santas happen inside groups.'; box.append(p); }
   santas.slice().sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1) || a.name.localeCompare(b.name)).forEach(s => {
     const g = groups.find(x => x.id === s.group_id); if (!g) return;
     const pool = santaPool(s, g), mineIn = pool.includes(myId), organizer = s.created_by === myId || g.owner;
-    const d = document.createElement('div'); d.className = 'grp';
+    const d = document.createElement('details'); d.className = 'dd'; const sum = document.createElement('summary'), body = document.createElement('div'); body.className = 'ddbody';
+    d.open = santaOpen[s.id] !== undefined ? santaOpen[s.id] : santas.length === 1; d.addEventListener('toggle', () => { santaOpen[s.id] = d.open; });
     const t = document.createElement('b'); t.textContent = s.name + ' \u00b7 ' + g.name;
     const info = document.createElement('p'); info.className = 'meta';
     info.textContent = (s.budget_max ? 'Budget: ' + money(Number(s.budget_max)) + ' for each person you give to' : 'No budget set') + ' \u00b7 up to ' + plural(s.draws_per_person, 'name') + ' each \u00b7 ' + plural(pool.length, 'person') + ' in';
     const who = document.createElement('p'); who.className = 'meta members';
     who.textContent = 'In: ' + pool.map(id => (names[id] || '?') + (wantOf(s, id) < s.draws_per_person ? ' (' + wantOf(s, id) + ')' : '')).join(', ');
-    d.append(t, info, who);
+    sum.append(t, Object.assign(document.createElement('span'), {className: 'chip', textContent: s.status === 'drawn' ? 'Drawn' : 'Open'})); body.append(info, who);
     const bar = document.createElement('p');
     const del = lnk('Delete', () => confirm('Delete "' + s.name + '"?') && actS(() => sb.rpc('delete_santa', {p_santa: s.id}), 'Deleted'));
     if (s.status === 'open') {
       if (mineIn) {
-        d.append(Object.assign(document.createElement('p'), {textContent: 'You are in this Secret Santa.'}));
+        body.append(Object.assign(document.createElement('p'), {textContent: 'You are in this Secret Santa.'}));
         const row = document.createElement('p'), lab = document.createElement('label'), sel = document.createElement('select');
         lab.textContent = 'Names I want to draw: '; lab.style.fontWeight = '400';
         for (let k = 1; k <= s.draws_per_person; k++) sel.append(new Option(String(k), k));
         sel.value = wantOf(s, myId); sel.style.width = 'auto'; sel.style.margin = '0 0 0 6px';
         sel.onchange = () => actS(() => sb.rpc('set_santa_draws', {p_santa: s.id, p_draws: Number(sel.value)}), 'Saved');
-        lab.append(sel); row.append(lab); d.append(row);
-        if (s.draws_per_person > 1) d.append(Object.assign(document.createElement('p'), {className: 'note', textContent: 'Pick fewer if you want to give and get fewer gifts.'}));
+        lab.append(sel); row.append(lab); body.append(row);
+        if (s.draws_per_person > 1) body.append(Object.assign(document.createElement('p'), {className: 'note', textContent: 'Pick fewer if you want to give and get fewer gifts.'}));
         const det = document.createElement('details'), sum = document.createElement('summary'), mineBl = myBlacklist.filter(x => x.santa_id === s.id).map(x => x.receiver_id);
         sum.textContent = 'People I should not give to (' + mineBl.length + ')'; det.append(sum); det.className = 'bl';
         det.append(Object.assign(document.createElement('p'), {className: 'note', textContent: 'For example your husband or wife. Only you can see this list.'}));
@@ -1086,10 +1270,10 @@ function renderSanta() {
           l2.append(cb, names[id] || '?'); det.append(l2);
         });
         det.append(lnk('Save', () => actS(() => sb.rpc('set_santa_blacklist', {p_santa: s.id, p_receivers: checks.filter(c => c.checked).map(c => c.value)}), 'Saved')));
-        d.append(det);
+        body.append(det);
         bar.append(lnk('Opt out of this Secret Santa', () => confirm('Leave this Secret Santa? You will not give or get a gift.') && actS(() => sb.rpc('set_santa_optout', {p_santa: s.id, p_out: true}), 'You opted out')), ' ');
       } else {
-        d.append(Object.assign(document.createElement('p'), {textContent: 'You opted out.'}));
+        body.append(Object.assign(document.createElement('p'), {textContent: 'You opted out.'}));
         bar.append(lnk('Opt back in', () => actS(() => sb.rpc('set_santa_optout', {p_santa: s.id, p_out: false}), 'You are back in')), ' ');
       }
       if (organizer) {
@@ -1101,20 +1285,20 @@ function renderSanta() {
     } else {
       const mine = myPairs.filter(p => p.santa_id === s.id);
       if (mineIn && mine.length) {
-        const h = document.createElement('p'); h.textContent = 'You are giving to:'; d.append(h);
+        const h = document.createElement('p'); h.textContent = 'You are giving to:'; body.append(h);
         mine.forEach(p => {
           const nm = names[p.receiver_id] || 'someone', row = document.createElement('p'), b = document.createElement('b'); b.textContent = nm; row.append(b, ' ');
           row.append(lnk('View list', () => { $('sdlg').close(); if (names[p.receiver_id]) pick(names[p.receiver_id]); }));
           const spent = spentOn[p.receiver_id] || 0, line = document.createElement('div'); line.className = 'meta';
           if (s.budget_max) { const left = Number(s.budget_max) - spent; line.textContent = 'Spent ' + money(spent) + ' of ' + money(Number(s.budget_max)) + ' \u00b7 ' + (left >= 0 ? money(left) + ' left' : money(-left) + ' over'); if (left < 0) line.classList.add('over'); }
           else line.textContent = 'Spent ' + money(spent) + ' so far';
-          row.append(line); d.append(row);
+          row.append(line); body.append(row);
         });
-        d.append(Object.assign(document.createElement('p'), {className: 'note', textContent: 'Each gift you tick off on their list comes out of this budget. It is separate from your personal budget.'}));
-      } else d.append(Object.assign(document.createElement('p'), {className: 'note', textContent: mineIn ? 'Close this window and open it again to see your names.' : 'You sat this one out.'}));
+        body.append(Object.assign(document.createElement('p'), {className: 'note', textContent: 'Each gift you tick off on their list comes out of this budget. It is separate from your personal budget.'}));
+      } else body.append(Object.assign(document.createElement('p'), {className: 'note', textContent: mineIn ? 'Close this window and open it again to see your names.' : 'You sat this one out.'}));
       if (organizer) bar.append(lnk('Redo the draw', () => confirm('This erases everyone\u2019s names and reopens the Secret Santa. Continue?') && actS(() => sb.rpc('reset_santa', {p_santa: s.id}), 'Draw cleared')), ' ', del);
     }
-    d.append(bar); box.append(d);
+    body.append(bar); d.append(sum, body); box.append(d);
   });
 }
 $('santaBtn').onclick = async () => { setMenu(false); try { await loadSanta(); } catch (e) { return toast(errMsg(e)); } renderSanta(); $('sdlg').showModal(); };
@@ -1123,22 +1307,25 @@ $('screate').onsubmit = async e => {
   e.preventDefault(); const lim = $('s-limit').value.trim().replace(/[$,\s]/g, ''), limN = lim === '' ? null : Number(lim);
   if (limN !== null && !(limN > 0)) return toast('The budget must be more than zero.');
   const r = await actS(() => sb.rpc('create_santa', {p_group: $('s-group').value, p_name: $('s-name').value.trim(), p_budget: limN, p_draws: Number($('s-draws').value)}), 'Secret Santa created');
-  if (r) { $('s-name').value = ''; $('s-limit').value = ''; }
+  if (r) { $('s-name').value = ''; $('s-limit').value = ''; $('dd-newsanta').open = false; }
 };
 
 /* ---- after Christmas: clear ticks (gifts are never deleted) ---- */
-$('clearBtn').onclick = () => { setMenu(false); $('xdlg').showModal(); };
-$('x-close').onclick = () => $('xdlg').close();
+$('dd-after').firstElementChild.addEventListener('click', e => {      // warn before the section opens
+  if ($('dd-after').open) return;
+  const t = new Date(), mo = t.getMonth(), early = (mo >= 2 && mo <= 10) || (mo === 11 && t.getDate() < 25);
+  if (!confirm('This section is for AFTER Christmas.' + (early ? ' Christmas has not happened yet.' : '') + '\n\nIt clears the "bought" ticks so lists are ready for next year. Ticks can\u2019t be brought back. Gifts are never deleted.\n\nOpen it anyway?')) e.preventDefault();
+});
 $('x-mine').onclick = async () => {
   if (!confirm('Remove all of your ticks on other people\u2019s lists? The gifts stay on their lists. Surprise gifts you added stay marked as bought.')) return;
   const r = await track(sb.from('purchases').delete().eq('bought_by', myId).select('gift_id'));
   if (r.error) return toast(errMsg(r.error));
-  toast('Cleared ' + plural((r.data || []).length, 'tick')); $('xdlg').close(); santaLoaded = false; await load();
+  toast('Cleared ' + plural((r.data || []).length, 'tick')); $('setdlg').close(); santaLoaded = false; await load();
 };
 $('x-list').onclick = async () => {
   if (!confirm('Clear everyone\u2019s ticks on your list so it is ready for next year? Your gifts stay on the list.')) return;
   const r = await track(sb.rpc('reset_ticks_on_my_list')); if (r.error) return toast(errMsg(r.error));
-  toast('Your list is ready for next year'); $('xdlg').close();
+  toast('Your list is ready for next year'); $('setdlg').close();
 };
 
 /* ---- personal budget ---- */
@@ -1214,7 +1401,7 @@ function renderAccounts() {
 async function switchTo(pid) {
   const a = readAccts().find(x => x.pid === pid); if (!a || !sb) return;
   setMenu(false); setChat(false);
-  if (myId && session) rememberAccount(session);                      // save the account we are leaving, with its newest tokens
+  if (myId && session) { rememberAccount(session); await pushDetach(); }                      // save the account we are leaving, with its newest tokens
   clearState(); person = '';
   const r = await track(sb.auth.setSession({access_token: a.access_token, refresh_token: a.refresh_token}));
   if (r.error || !r.data || !r.data.session) {                        // that login no longer works
@@ -1235,6 +1422,7 @@ $('logoutAll').onclick = async () => {
   setMenu(false);
   const cur = session ? {access_token: session.access_token, refresh_token: session.refresh_token} : null, others = readAccts().filter(x => x.pid !== myId);
   bulkOut = true;
+  await pushDetach();
   try {
     for (const a of others) { try { const r = await sb.auth.setSession({access_token: a.access_token, refresh_token: a.refresh_token}); if (!r.error) await sb.auth.signOut({scope: 'local'}); } catch (e) {} }   // ends each account's login properly
     if (cur) { try { await sb.auth.setSession(cur); await sb.auth.signOut({scope: 'local'}); } catch (e) {} }
@@ -1268,11 +1456,15 @@ const chatEl = $('chat');
 let chatMsgs = [], chatMine = new Set(), chatGroup = '', chatSeen = {}, chatTimer = null;
 try { chatSeen = JSON.parse(localStorage.getItem('giftChatSeen') || '{}'); chatGroup = localStorage.getItem('giftChatGroup') || ''; } catch (e) {}
 const saveSeen = () => { try { localStorage.setItem('giftChatSeen', JSON.stringify(chatSeen)); } catch (e) {} };
+const CHAT_COLS = 'id,group_id,sender_id,kind,anonymous,event,subject_id,body,mentions,created_at';
+let replyOk = true, chatFrom = 0, replyTo = null;
 async function pollChat() {
   if (!sb || !session || !myId) return;
-  const [m, a] = await Promise.all([
-    sb.from('chat_messages').select('id,group_id,sender_id,kind,anonymous,event,subject_id,body,mentions,created_at').order('created_at', {ascending: false}).limit(300),
+  const ask = cols => Promise.all([
+    sb.from('chat_messages').select(cols).order('created_at', {ascending: false}).limit(300),
     sb.from('chat_authors').select('message_id').limit(1000)]);
+  let [m, a] = await ask(CHAT_COLS + (replyOk ? ',reply_to' : ''));
+  if (m.error && replyOk && /reply_to/.test(m.error.message || '')) { replyOk = false; [m, a] = await ask(CHAT_COLS); }   // database not updated with replies yet
   if (m.error || a.error) return;                                    // quiet: it simply tries again on the next round
   chatMsgs = m.data.slice().reverse(); chatMine = new Set(a.data.map(x => x.message_id));
   groups.forEach(g => { if (!chatSeen[g.id]) chatSeen[g.id] = Date.now(); });   // a group you have never opened starts with no unread
@@ -1286,6 +1478,9 @@ function groupUnread(gid) {
 function updateChatBadge() {
   let n = 0, ping = 0; groups.forEach(g => { const u = groupUnread(g.id); n += u.n; ping += u.ping; });
   const b = $('chatBadge'); b.hidden = n === 0; b.textContent = ping ? '@' + ping : String(n); b.classList.toggle('ping', ping > 0);   // red @ when someone mentioned you
+  unreadTotal = n; setTitle();                                                                  // "(3) Christmas List" in the tab
+  try { if (navigator.setAppBadge) { if (n) navigator.setAppBadge(n); else navigator.clearAppBadge(); } } catch (e) {}   // number on the installed app's icon
+  if ($('gdlg').open) renderGroups();
 }
 function chatTick() {
   clearTimeout(chatTimer);
@@ -1306,35 +1501,56 @@ function fillMentions(el, text, g) {          // @Name becomes a highlighted men
   el.append(text.slice(last));
 }
 const anonAvatar = () => { const d = document.createElement('span'); d.className = 'av anon'; d.style.setProperty('--s', '30px'); d.textContent = '?'; d.title = 'Anonymous'; return d; };
-function renderChat(forceBottom) {
+const replyLabel = m => m.anonymous ? (chatMine.has(m.id) ? 'Anonymous (you)' : 'Anonymous') : (m.sender_id === myId ? 'You' : (names[m.sender_id] || 'Someone'));
+function jumpTo(id) {
+  const el = $('chat-list').querySelector('[data-mid="' + id + '"]'); if (!el) return;
+  el.scrollIntoView({block: 'center', behavior: 'smooth'}); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1500);
+}
+function setReply(m) { replyTo = m; $('reply-text').textContent = 'Replying to ' + replyLabel(m) + ': ' + m.body; $('reply-bar').hidden = false; $('chat-text').focus(); }
+function clearReply() { replyTo = null; $('reply-bar').hidden = true; }
+$('reply-x').onclick = clearReply;
+function renderChat(mode) {
   const g = groups.find(x => x.id === chatGroup), box = $('chat-list'), atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
-  box.innerHTML = '';
-  const list = chatMsgs.filter(x => x.group_id === chatGroup);
+  box.innerHTML = ''; let firstNew = null;
+  const list = chatMsgs.filter(x => x.group_id === chatGroup), byId = {}; chatMsgs.forEach(x => { byId[x.id] = x; });
   if (!list.length) box.append(Object.assign(document.createElement('p'), {className: 'note', textContent: g ? 'No messages yet. Say hello!' : 'Join or create a group to chat.'}));
   list.forEach(m => {
-    const d = document.createElement('div');
+    const d = document.createElement('div'); d.dataset.mid = m.id;
     if (m.kind === 'system') { d.className = 'cm sys'; d.textContent = evText(m); box.append(d); return; }
     const mine = chatMine.has(m.id), ping = (m.mentions || []).includes(myId);
-    d.className = 'cm' + (mine ? ' mine' : '') + (ping ? ' ping' : '');
+    const fresh = !mine && chatFrom > 0 && Date.parse(m.created_at) > chatFrom;      // arrived since you last had this chat open
+    if (fresh && !firstNew) { const nl = document.createElement('div'); nl.className = 'newline'; nl.textContent = 'New messages'; box.append(nl); firstNew = nl; }
+    d.className = 'cm' + (mine ? ' mine' : '') + (ping ? ' ping' : '') + (fresh ? ' unread' : '');
     const head = document.createElement('div'); head.className = 'who2';
-    head.append(Object.assign(document.createElement('span'), {textContent: m.anonymous ? (mine ? 'Anonymous (you)' : 'Anonymous') : (m.sender_id === myId ? 'You' : (names[m.sender_id] || 'Someone'))}),
+    head.append(Object.assign(document.createElement('span'), {textContent: replyLabel(m)}),
                 Object.assign(document.createElement('span'), {textContent: new Date(m.created_at).toLocaleString(undefined, {month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'})}));
-    const body = document.createElement('div'); fillMentions(body, m.body, g); d.append(head, body);
-    if (mine || (g && g.owner)) { const x = lnk('Delete', async () => { const r = await track(sb.rpc('delete_chat_message', {p_id: m.id})); if (r.error) return toast(errMsg(r.error)); pollChat(); }); x.className = 'edit'; d.append(x); }
+    d.append(head);
+    if (m.reply_to) {      // the message this one answers
+      const o = byId[m.reply_to], q = document.createElement(o ? 'button' : 'div'); q.className = 'quote' + (o ? '' : ' gone');
+      if (o) { q.type = 'button'; q.append(Object.assign(document.createElement('b'), {textContent: replyLabel(o)}), Object.assign(document.createElement('span'), {textContent: o.body})); q.onclick = () => jumpTo(o.id); }
+      else q.textContent = 'The original message is no longer available';
+      d.append(q);
+    }
+    const body = document.createElement('div'); fillMentions(body, m.body, g); d.append(body);
+    const acts = document.createElement('div'); acts.className = 'acts';
+    if (replyOk) { const r = lnk('Reply', () => setReply(m)); r.className = 'edit'; acts.append(r); }
+    if (mine || (g && g.owner)) { const x = lnk('Delete', async () => { const r = await track(sb.rpc('delete_chat_message', {p_id: m.id})); if (r.error) return toast(errMsg(r.error)); if (replyTo && replyTo.id === m.id) clearReply(); pollChat(); }); x.className = 'edit'; acts.append(x); }
+    if (acts.childNodes.length) d.append(acts);
     const row = document.createElement('div'); row.className = 'cmrow' + (mine ? ' mine' : '');
     row.append(m.anonymous ? anonAvatar() : avatarEl(m.sender_id, names[m.sender_id] || '?', 30), d);      // anonymous messages get a plain ? so they reveal nothing
     box.append(row);
   });
-  if (atBottom || forceBottom) box.scrollTop = box.scrollHeight;
+  if (mode === 'open' && firstNew) firstNew.scrollIntoView({block: 'start'});      // opening with unread messages: start at the first new one
+  else if (atBottom || mode) box.scrollTop = box.scrollHeight;
 }
 function openChatBody() {
   const sel = $('chat-group'); sel.innerHTML = '';
   groups.forEach(g => { const n = groupUnread(g.id).n; sel.append(new Option(g.name + (n ? ' (' + n + ')' : ''), g.id)); });
   if (!groups.some(g => g.id === chatGroup)) chatGroup = (groups.find(g => groupUnread(g.id).n) || groups[0] || {}).id || '';
   sel.value = chatGroup; $('chat-form').hidden = !chatGroup; sel.hidden = groups.length < 2;
-  chatSeen[chatGroup] = Date.now(); saveSeen(); renderChat(true); updateChatBadge(); chatTick();
+  chatFrom = chatSeen[chatGroup] || 0; chatSeen[chatGroup] = Date.now(); saveSeen(); renderChat('open'); updateChatBadge(); chatTick();
 }
-$('chat-group').onchange = () => { chatGroup = $('chat-group').value; try { localStorage.setItem('giftChatGroup', chatGroup); } catch (e) {} chatSeen[chatGroup] = Date.now(); saveSeen(); renderChat(true); updateChatBadge(); };
+$('chat-group').onchange = () => { chatGroup = $('chat-group').value; try { localStorage.setItem('giftChatGroup', chatGroup); } catch (e) {} clearReply(); chatFrom = chatSeen[chatGroup] || 0; chatSeen[chatGroup] = Date.now(); saveSeen(); renderChat('open'); updateChatBadge(); };
 $('chat-text').oninput = () => {              // typing @ suggests group members
   const t = $('chat-text'), before = t.value.slice(0, t.selectionStart), m = before.match(/(^|\s)@([^\s@]*)$/), box = $('chat-suggest'), g = groups.find(x => x.id === chatGroup);
   box.innerHTML = ''; if (!m || !g) { box.hidden = true; return; }
@@ -1348,10 +1564,38 @@ $('chat-form').onsubmit = async e => {
   e.preventDefault(); const body = $('chat-text').value.trim(); if (!body || !chatGroup) return;
   const g = groups.find(x => x.id === chatGroup), low = body.toLowerCase();
   const mentions = (g ? g.members : []).filter(x => x.id !== myId && new RegExp('@' + escRx(x.name.toLowerCase()) + '(?![\\w])').test(low)).map(x => x.id);
-  const r = await track(sb.rpc('post_chat', {p_group: chatGroup, p_body: body, p_anon: $('chat-anon').checked, p_mentions: mentions}));
+  const args = {p_group: chatGroup, p_body: body, p_anon: $('chat-anon').checked, p_mentions: mentions};
+  if (replyTo && replyOk) args.p_reply_to = replyTo.id;
+  const r = await track(sb.rpc('post_chat', args));
   if (r.error) return toast(errMsg(r.error));
-  $('chat-text').value = ''; $('chat-suggest').hidden = true; await pollChat(); renderChat(true);
+  clearReply(); $('chat-text').value = ''; $('chat-suggest').hidden = true; await pollChat(); renderChat(true);
 };
+
+/* ---- chat: stretch sideways on a computer ---- */
+const grip = $('chat-grip'); let chatW = 380;
+try { chatW = Number(localStorage.getItem('giftChatW')) || 380; } catch (e) {}
+function setChatW(w, save) { chatW = Math.max(300, Math.min(Math.round(w), Math.round(window.innerWidth * .9), 1000)); chatEl.style.setProperty('--chatw', chatW + 'px'); if (save) keep('giftChatW', String(chatW)); }
+setChatW(chatW);
+grip.onpointerdown = e => { e.preventDefault(); grip.setPointerCapture(e.pointerId); chatEl.classList.add('dragging'); };
+grip.onpointermove = e => { if (grip.hasPointerCapture(e.pointerId)) setChatW(window.innerWidth - e.clientX, false); };
+grip.onpointerup = e => { try { grip.releasePointerCapture(e.pointerId); } catch (x) {} chatEl.classList.remove('dragging'); keep('giftChatW', String(chatW)); };
+grip.onkeydown = e => { if (e.key === 'ArrowLeft') { setChatW(chatW + 24, true); e.preventDefault(); } else if (e.key === 'ArrowRight') { setChatW(chatW - 24, true); e.preventDefault(); } };
+grip.ondblclick = () => setChatW(380, true);
+window.addEventListener('resize', () => setChatW(chatW));
+
+/* ---- chat: shrink above the on-screen keyboard instead of disappearing behind it ---- */
+const vv = window.visualViewport; let baseH = 0;
+function fitChat() {
+  if (!vv) return;
+  baseH = Math.max(baseH, window.innerHeight, vv.height);
+  const zoomed = vv.scale > 1.05, kb = !zoomed && vv.height < baseH - 120;
+  if (zoomed) { chatEl.style.removeProperty('--vvh'); chatEl.style.removeProperty('--vvt'); }
+  else { chatEl.style.setProperty('--vvh', Math.round(vv.height) + 'px'); chatEl.style.setProperty('--vvt', Math.round(vv.offsetTop) + 'px'); }
+  chatEl.classList.toggle('kb', kb);
+  if (kb && isOpen(chatEl)) { const b = $('chat-list'); b.scrollTop = b.scrollHeight; }      // keep the newest message in view
+}
+if (vv) { vv.addEventListener('resize', fitChat); vv.addEventListener('scroll', fitChat); window.addEventListener('orientationchange', () => { baseH = 0; setTimeout(fitChat, 300); }); }
+$('chat-text').addEventListener('focus', () => setTimeout(() => { fitChat(); $('chat-list').scrollTop = $('chat-list').scrollHeight; }, 300));
 
 /* ---- side menus: menu on the left, chat on the right ---- */
 const menu = $('menu'), scrim = $('scrim');
@@ -1375,6 +1619,25 @@ $('chatBtn').onclick = () => setChat(!isOpen(chatEl));
 $('chatClose').onclick = () => setChat(false);
 scrim.onclick = () => { setMenu(false); setChat(false); };
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (isOpen(menu)) setMenu(false); if (isOpen(chatEl)) setChat(false); } });
+function openChatFor(gid) {
+  if (!me) return; if (gid && groups.some(g => g.id === gid)) { chatGroup = gid; keep('giftChatGroup', gid); }
+  document.querySelectorAll('dialog[open]').forEach(d => d.close()); setChat(true);
+}
+/* swipe right: open the menu (or close the chat). swipe left: open the chat (or close the menu). */
+let swipe = null;
+const hScrollable = el => { for (; el && el !== document.body; el = el.parentElement) { const o = getComputedStyle(el).overflowX; if ((o === 'auto' || o === 'scroll') && el.scrollWidth > el.clientWidth + 2) return true; } return false; };
+document.addEventListener('touchstart', e => {
+  const t = e.target instanceof Element ? e.target : document.body, f = e.touches[0];
+  swipe = (e.touches.length !== 1 || !me || document.querySelector('dialog[open]') || String(getSelection()) || (t.closest && t.closest('input,textarea,select,#people,#chat-grip')) || hScrollable(t))
+    ? null : {x: f.clientX, y: f.clientY, t: Date.now()};
+}, {passive: true});
+document.addEventListener('touchcancel', () => { swipe = null; }, {passive: true});
+document.addEventListener('touchend', e => {
+  if (!swipe) return; const f = e.changedTouches[0], dx = f.clientX - swipe.x, dy = f.clientY - swipe.y, dt = Date.now() - swipe.t; swipe = null;
+  if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.6 || dt > 700) return;      // must be a quick, mostly sideways flick
+  if (dx > 0) { if (isOpen(chatEl)) setChat(false); else if (!isOpen(menu)) setMenu(true); }
+  else { if (isOpen(menu)) setMenu(false); else if (!isOpen(chatEl)) setChat(true); }
+}, {passive: true});
 
 /* ---- install as an app (PWA) ---- */
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
@@ -1383,6 +1646,43 @@ window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); instal
 window.addEventListener('appinstalled', () => { installEv = null; $('installBtn').hidden = true; });
 $('installBtn').onclick = async () => { if (!installEv) return; installEv.prompt(); try { await installEv.userChoice; } catch (e) {} installEv = null; $('installBtn').hidden = true; setMenu(false); };
 if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone) $('iosHint').hidden = false;
+
+/* ---- phone notifications (web push) ---- */
+const pushSupported = () => !!(CFG.VAPID_PUBLIC_KEY && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && /^https?:$/.test(location.protocol));
+const swReady = () => Promise.race([navigator.serviceWorker.ready, new Promise((_, rej) => setTimeout(() => rej(new Error('The app is still starting. Try again in a moment.')), 8000))]);
+const b64ToU8 = k => { const raw = atob((k + '='.repeat((4 - k.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(raw, c => c.charCodeAt(0)); };
+async function pushRefresh() {      // is THIS device subscribed for THIS account?
+  if (!pushSupported()) { $('pushBtn').hidden = true; renderIcons(); return; }
+  $('pushBtn').hidden = false; pushOn = false;
+  try {
+    const sub = await (await swReady()).pushManager.getSubscription();
+    if (sub && Notification.permission === 'granted' && sb && myId) { const r = await sb.from('push_subscriptions').select('endpoint').eq('endpoint', sub.endpoint).maybeSingle(); pushOn = !!r.data; }
+  } catch (e) {}
+  renderIcons();
+}
+async function pushEnable() {
+  const standalone = navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !standalone) return toast('On iPhone: tap Share, then Add to Home Screen, open the app from there, and turn notifications on.');
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') return toast(perm === 'denied' ? 'Notifications are blocked. Allow them in your browser or phone settings.' : 'Notifications were not turned on.');
+  const reg = await swReady(); let sub = await reg.pushManager.getSubscription();
+  if (!sub) sub = await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: b64ToU8(CFG.VAPID_PUBLIC_KEY)});
+  const j = sub.toJSON(), r = await track(sb.rpc('save_push_subscription', {p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth}));
+  if (r.error) throw r.error;
+  pushOn = true; renderIcons(); toast('Notifications are on for this device.');
+}
+async function pushDetach() {      // stops this device's notifications for the account being left (so the next person never sees them)
+  if (!pushSupported()) return;
+  try { const sub = await (await swReady()).pushManager.getSubscription(); if (sub) { try { await sb.rpc('remove_push_subscription', {p_endpoint: sub.endpoint}); } catch (e) {} await sub.unsubscribe(); } } catch (e) {}
+  pushOn = false; renderIcons();
+}
+$('pushBtn').onclick = async () => {
+  try { if (pushOn) { await pushDetach(); toast('Notifications are off for this device.'); } else await pushEnable(); }
+  catch (e) { toast(errMsg(e)); }
+};
+if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => {
+  const d = e.data || {}; if (d.type === 'open-chat') openChatFor(d.group); else if (d.type === 'push-arrived') pollChat();
+});
 
 document.addEventListener('visibilitychange', () => { if (!document.hidden && session && myId) { load(); chatTick(); } });
 setTimeout(() => THEMES.forEach(t => fetch('themes/' + t.id + '.css?v=' + ASSET_V).catch(() => {})), 2000);   // warm the cache so switching themes is instant

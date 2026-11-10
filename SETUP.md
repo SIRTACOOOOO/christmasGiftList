@@ -20,6 +20,7 @@ In **SQL Editor → New query**, paste each file below **in this order** and cli
 7. `supabase/migrations/20261107000007_budget_and_secret_santa.sql`
 8. `supabase/migrations/20261108000008_chat_blacklist_previews.sql`
 9. `supabase/migrations/20261109000009_santa_auto_order_ticks.sql` (run this one after 8; it replaces the High / Medium / Low priority with a movable order)
+10. `supabase/migrations/20261110000010_push_reply_people.sql` (phone notifications, replying to a chat message, full names inside a group, and prices in link previews)
 
 (Or with the Supabase CLI: `npx supabase link --project-ref YOUR-REF` then `npx supabase db push`.)
 
@@ -36,6 +37,7 @@ npx supabase login
 npx supabase link --project-ref YOUR-REF
 npx supabase functions deploy account --no-verify-jwt
 npx supabase functions deploy preview --no-verify-jwt
+npx supabase functions deploy push --no-verify-jwt
 npx supabase secrets set ALLOWED_ORIGINS=https://yourname.github.io,http://localhost:8000
 ```
 
@@ -199,3 +201,39 @@ Tell them the temporary password privately and ask them to change it in Account.
 3. **Does `ALLOWED_ORIGINS` match your site?** Run `npx supabase secrets list`. It should contain your site's address, such as `https://sirtacooooo.github.io`. Then redeploy the function once. If you are testing locally, include `http://localhost:8000`. Leaving the secret unset allows any website.
 4. **Look at the browser console** (F12, then Console and Network). A red message about CORS means step 3. A 401 "Invalid JWT" means the function was deployed without `--no-verify-jwt`.
 5. **Try a private window** with extensions off, since some ad blockers block requests to `*.supabase.co`.
+
+## 13. Phone notifications (optional)
+
+Notifications tell people about new group chat messages, @mentions, replies, and when a Secret Santa is drawn. They never mention gifts, so surprise gifts stay secret. Skip this section and the bell icon simply stays hidden.
+
+1. **Make a key pair** (once): `npx web-push generate-vapid-keys`. It prints a public key and a private key.
+2. **Public key into `config.js`:** set `VAPID_PUBLIC_KEY: 'the public key'`, then upload `config.js` to GitHub.
+3. **Private key into Supabase** (pick any long random text for `PUSH_SECRET`):
+   ```
+   npx supabase secrets set VAPID_PUBLIC_KEY=... VAPID_PRIVATE_KEY=... VAPID_SUBJECT=mailto:you@example.com PUSH_SECRET=some-long-random-text
+   npx supabase functions deploy push --no-verify-jwt
+   ```
+4. **Switch on `pg_net`:** dashboard → **Database → Extensions** → search `pg_net` → enable.
+5. **Tell the database where to send messages** (SQL Editor, once; use the same `PUSH_SECRET`):
+   ```sql
+   update private.push_settings
+      set url = 'https://YOUR-REF.supabase.co/functions/v1/push', secret = 'some-long-random-text'
+    where id;
+   ```
+6. **Turn it on, per device:** open the site, open the menu and press the **bell icon**. The phone asks for permission.
+
+Notes:
+
+- **Android / computers:** works in the browser, and in the installed app.
+- **iPhone / iPad:** iOS 16.4 or newer, and only from the Home Screen app (Share → Add to Home Screen, open it from there, press the bell).
+- Logging out or switching account turns notifications off for that device, so the next person never sees someone else's messages. Press the bell again after logging in.
+- The installed app's icon also shows a number for unread chat messages where the phone allows it.
+- Nothing arrives? Check **Edge Functions → push → Logs**, and that `select url from private.push_settings` is not empty.
+
+## 14. Share a product page straight into the app (optional)
+
+Once the site is installed as an app, **Gift List** appears in the phone's Share menu.
+
+- **Android (Chrome):** in any shop page, tap Share → **Gift List**. The app opens with Add gift ready: the link is in, and it fills in the name and price when the shop allows it. Tap **Save gift**. If Gift List is not in the Share menu, remove the installed app and install it again once, so the phone picks up the new setting.
+- **iPhone / iPad:** Safari does not support this. Use a Shortcut instead: open **Shortcuts** → **+** → in the settings (ⓘ) turn on **Show in Share Sheet** and accept **URLs** only → add **URL Encode** (input: Shortcut Input) → add **Open URLs** with `https://YOUR-SITE/?url=` followed by the encoded text. Name it "Add to Gift List".
+- Shared gifts always go on **your own** list.

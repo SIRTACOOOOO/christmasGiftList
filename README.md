@@ -15,7 +15,8 @@ Create wishlists, share them with groups, chat about gift ideas, organize Secret
 🎁 Personal Wishlists
 
 - Create and manage your own Christmas wishlist.
-- Add gifts with names, prices, website links, and notes.
+- Add gifts with names, prices, website links, and notes. Enter the link first and the site offers to fill in the name and price.
+- Share a product page from your phone's browser straight into the app (installed app, see SETUP.md).
 - Set the priority of your gifts by arranging them in your preferred order.
 - Sort gifts by priority, date added, website, name, or price.
 - Mark gifts as bought.
@@ -28,6 +29,7 @@ Create wishlists, share them with groups, chat about gift ideas, organize Secret
 - Invite people using group invitation codes or QR codes.
 - Join multiple groups.
 - Browse everyone's wishlists in your groups.
+- Each group is its own dropdown, with its people listed by full name and profile.
 - Manage group membership.
 - Keep everyone organized in one place.
 
@@ -36,7 +38,9 @@ Create wishlists, share them with groups, chat about gift ideas, organize Secret
 - Chat with members of your groups directly.
 - Send anonymous messages.
 - Mention other members using "@mentions".
-- Receive notifications for new messages.
+- Reply to a specific message, and see unread indicators (a New messages line, counts on each group, and a badge on the app icon).
+- Phone push notifications for new messages, @mentions, replies and Secret Santa draws (optional, see SETUP.md).
+- Stretch the chat sideways on a computer; on a phone it shrinks above the keyboard.
 - Messages automatically disappear after 30 days.
 
 🎅 Secret Santa
@@ -68,13 +72,15 @@ Create wishlists, share them with groups, chat about gift ideas, organize Secret
 
 🎨 Themes & Customization
 
-- Choose from multiple Christmas-themed appearances.
-- Switch between light and dark mode.
+- Press the theme icon to cycle through the themes (Green is the default).
+- Press the sun / moon icon to switch between light and dark mode.
+- Swipe right for the menu, swipe left for the chat.
+- On phones the themes that draw a box around the list drop it, so the list gets the whole screen.
 - Customize your countdown.
 - Choose between Christmas, birthday, or no countdown.
 - Install the website as an app on supported devices.
 
-📦 Import, Export & Printing
+📦 Import, Export & Printing (in Settings)
 
 - Export your wishlist to CSV.
 - Import gifts from CSV files.

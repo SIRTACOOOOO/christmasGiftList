@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.preview]
 verify_jwt = false
+
+[functions.push]
+verify_jwt = false

@@ -1,4 +1,4 @@
-/* Christmas Legacy: the original plain look. Light, or dark when Appearance says so.
+/* Green (the original plain look, still the default). Light, or dark when Appearance says so.
    Edit the colors below. See themes/README.md for what each variable does. */
 html[data-theme=legacy] {
   --bg: #eef1ec;        /* page background */

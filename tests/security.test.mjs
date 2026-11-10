@@ -200,6 +200,24 @@ try {
   ok((await bob.c.from('chat_messages').insert({ group_id: g.data, kind: 'user', body: 'forged' })).error, 'chat messages cannot be written directly');
   ok((await alice.c.from('link_previews').select('*')).error, 'the link preview cache cannot be read from a browser');
 
+  // --- replies, full names inside a group, push subscriptions (migration 0010) ----------------------------------------------------
+  const rp = await bob.c.rpc('post_chat', { p_group: g.data, p_body: 'answering you', p_anon: false, p_mentions: [], p_reply_to: m1 });
+  ok(!rp.error && !!rp.data, 'a member can reply to a message');
+  ok((await bob.c.from('chat_messages').select('reply_to').eq('id', rp.data).single()).data?.reply_to === m1, 'the reply remembers which message it answers');
+  ok((await bob.c.rpc('post_chat', { p_group: g.data, p_body: 'bad', p_anon: false, p_mentions: [], p_reply_to: randomUUID() })).error, 'replying to a message that does not exist is refused');
+  const gp = await bob.c.rpc('group_people', { p_group: g.data });
+  ok(!gp.error && (gp.data || []).some((x) => x.profile_id === alice.id && x.full_name === alice.name), 'group members can see each other\'s full names through group_people');
+  ok((await carol.c.rpc('group_people', { p_group: g.data })).error, 'someone outside the group cannot ask for a group\'s full names');
+  ok((await carol.c.from('profiles').select('username')).error, 'full names are still not readable from the profiles table');
+  const ep = 'https://push.example.invalid/' + randomUUID() + randomUUID();
+  ok(!(await bob.c.rpc('save_push_subscription', { p_endpoint: ep, p_p256dh: 'p'.repeat(60), p_auth: 'a'.repeat(20) })).error, 'a device can subscribe to notifications');
+  ok(rows(await bob.c.from('push_subscriptions').select('endpoint').eq('endpoint', ep)) === 1, 'the owner can see their own subscription');
+  ok(rows(await alice.c.from('push_subscriptions').select('endpoint').eq('endpoint', ep)) === 0, 'other people cannot see it');
+  ok((await bob.c.from('push_subscriptions').select('p256dh,auth')).error, 'the push keys cannot be read from a browser');
+  ok((await bob.c.rpc('save_push_subscription', { p_endpoint: 'http://insecure.example/x', p_p256dh: 'p'.repeat(60), p_auth: 'a'.repeat(20) })).error, 'only https push addresses are accepted');
+  await bob.c.rpc('remove_push_subscription', { p_endpoint: ep });
+  ok(rows(await bob.c.from('push_subscriptions').select('endpoint').eq('endpoint', ep)) === 0, 'a device can unsubscribe');
+
   // --- username change and leaving a group ----------------------------------------------------------------------------------
   ok(!(await alice.c.rpc('change_username', { p_username: `alicia${run}` })).error, 'username changes');
   ok(rows(await alice.c.from('gifts').select('*').eq('id', gid)) === 1, 'gifts stay with the renamed user');

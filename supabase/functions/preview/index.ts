@@ -83,6 +83,18 @@ const decode = (s: string) => s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').rep
   .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Math.min(Number(n), 0x10ffff)));
 const clean = (s: string | undefined, max: number) => (s ? decode(s).replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max) : '') || null;
 
+const toPrice = (s?: string) => {
+  if (!s) return null; const m = decode(s).replace(/,/g, '').match(/(\d{1,6}(?:\.\d{1,2})?)/); if (!m) return null;
+  const n = Number(m[1]); return n > 0 && n < 1e6 ? n : null;
+};
+function findPrice(meta: Record<string, string>, head: string): number | null {      // best effort: many shops do not publish a price
+  for (const k of ['product:price:amount', 'og:price:amount', 'product:sale_price:amount']) { const n = toPrice(meta[k]); if (n !== null) return n; }
+  const a = head.match(/"@type"\s*:\s*"(?:Aggregate)?Offer"[^{}]{0,400}?"(?:low)?[pP]rice"\s*:\s*"?([0-9][0-9.,]*)/);
+  if (a) { const n = toPrice(a[1]); if (n !== null) return n; }
+  const b = head.match(/"price"\s*:\s*"?([0-9][0-9.,]*)"?\s*,\s*"priceCurrency"/);
+  return b ? toPrice(b[1]) : null;
+}
+
 function parse(html: string, base: URL) {
   const head = html.slice(0, 300_000), meta: Record<string, string> = {};
   for (const tag of head.match(/<meta\s[^>]*>/gi) ?? []) {
@@ -98,7 +110,7 @@ function parse(html: string, base: URL) {
   return {
     title: clean(meta['og:title'] ?? meta['twitter:title'] ?? titleTag, 200),
     description: clean(meta['og:description'] ?? meta['twitter:description'] ?? meta['description'], 400),
-    image, site: clean(meta['og:site_name'], 80) ?? base.hostname.replace(/^www\./, ''),
+    image, site: clean(meta['og:site_name'], 80) ?? base.hostname.replace(/^www\./, ''), price: findPrice(meta, head),
   };
 }
 
@@ -115,9 +127,9 @@ Deno.serve(async (req) => {
     u.hash = ''; const key = u.href;
     if (key.length > 1000) return reply(req, { ok: false });
 
-    const cached = await admin.from('link_previews').select('title,description,image,site,fetched_at').eq('url', key).maybeSingle();
+    const cached = await admin.from('link_previews').select('title,description,image,site,price,fetched_at').eq('url', key).maybeSingle();
     if (cached.data && Date.now() - new Date(cached.data.fetched_at).getTime() < CACHE_DAYS * 86400000) {
-      const { title, description, image, site } = cached.data; return reply(req, { ok: true, title, description, image, site });
+      const { title, description, image, site, price } = cached.data; return reply(req, { ok: true, title, description, image, site, price: price === null ? null : Number(price) });
     }
     const rk = 'preview:' + au.user.id;
     const hits = Number((await admin.rpc('service_rate_hits', { p_key: rk, p_seconds: 3600 })).data ?? 0);
@@ -126,7 +138,7 @@ Deno.serve(async (req) => {
 
     let page; try { page = await fetchHtml(u); } catch { return reply(req, { ok: false }); }
     const p = parse(page.html, page.url);
-    if (!p.title && !p.description && !p.image) return reply(req, { ok: false });
+    if (!p.title && !p.description && !p.image && p.price === null) return reply(req, { ok: false });
     await admin.from('link_previews').upsert({ url: key, ...p, fetched_at: new Date().toISOString() });
     return reply(req, { ok: true, ...p });
   } catch (e) {

@@ -16,7 +16,9 @@ Open its file (for example `ocean.css`) and change the colors. Save, upload, and
    ```
    The `id` must match the file name. `name` is what shows in the dropdown. `title` is the big heading on the page (for example "Birthday List").
 
-The first theme in `themes.js` is the default for new visitors.
+The first theme in `themes.js` (**Green**, `legacy.css`) is the default for new visitors.
+
+Two optional fields: `icon` is the symbol on the theme button in the menu (the button cycles through the themes in order), and `scene: true` marks a theme that paints a picture behind a box that holds the list. On phones those themes lose the box and the picture so the list gets the whole screen.
 
 ## What each variable does
 
@@ -56,7 +58,7 @@ Optional extras for fancier themes (see `christmas.css` and `birthday.css`, whic
 
 ## Light and dark mode
 
-People choose **Appearance** in the menu: Same as device, Light or Dark. The site sets `data-eff="dark"` or `data-eff="light"` on the page, so a theme can give each mode its own colors:
+People press the **sun / moon icon** in the menu to switch between Light and Dark (new visitors start on whatever their device uses). The site sets `data-eff="dark"` or `data-eff="light"` on the page, so a theme can give each mode its own colors:
 
 ```css
 html[data-theme=forest]                  { /* light colors */ }

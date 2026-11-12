@@ -5,5 +5,5 @@ window.GIFT_CONFIG = {
   SUPABASE_URL: 'https://hbzywhzgcugmksfclety.supabase.co',   // for example https://abcdefghijklmnop.supabase.co
   SUPABASE_KEY: 'sb_publishable_W6eSUcQPopYHdsC_ESPoxg_PTljb3gJ',   // the publishable key (sb_publishable_...) or the legacy "anon" key
   // Phone notifications (optional). The PUBLIC half of your VAPID key pair; see "Phone notifications" in SETUP.md. Leave '' to hide the bell.
-  VAPID_PUBLIC_KEY: ''
+  VAPID_PUBLIC_KEY: 'BFA4nvQc4zeP-ZbzdSwSCzW5GEcApjfK6u1tg0CpIQmbwpVQV4MKAlUxj_D0KgtQyUM9PEiMIAiQ1vO_3VsE8dI'
 };

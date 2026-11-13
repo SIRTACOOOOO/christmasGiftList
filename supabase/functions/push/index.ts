@@ -43,7 +43,8 @@ Deno.serve(async (req) => {
       let sent = 0, failed = 0;
       await Promise.all(items.map(async (it) => {
         try {
-          const r = await sendPush(it, { title: it.title, body: it.body, group: b.group, tag: b.tag }, VAPID);
+          const icon = typeof b.icon === 'string' && /^https:\/\//.test(b.icon) && b.icon.length <= 500 ? b.icon : undefined;      // the sender's profile picture
+          const r = await sendPush(it, { title: it.title, body: it.body, group: b.group, tag: b.tag, icon }, VAPID);
           if (r.status < 300) sent++;
           else if (r.status === 404 || r.status === 410) await forget(it.endpoint);
           else { failed++; console.error('push rejected', r.status, new URL(it.endpoint).host, r.text); }

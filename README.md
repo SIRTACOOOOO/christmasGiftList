@@ -39,6 +39,7 @@ Create wishlists, share them with groups, chat about gift ideas, organize Secret
 - Chat with members of your groups directly.
 - Send anonymous messages.
 - Mention other members using "@mentions".
+- On a phone, swipe a message right to reply or left to delete it (it asks first).
 - Reply to a specific message, and see unread indicators (a New messages line, counts on each group, and a badge on the app icon).
 - Phone push notifications for new messages, @mentions, replies and Secret Santa draws (optional, see SETUP.md).
 - Stretch the chat sideways on a computer; on a phone it shrinks above the keyboard.

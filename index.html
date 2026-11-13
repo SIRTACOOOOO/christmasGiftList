@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--dw:700;--on-berry:#fff;--display:Fraunces,Georgia,serif;--body:"Instrument Sans",system-ui,sans-serif;--panel:transparent;--pad:0px;--gap:0px;--bgimg:none;--bg:#eef1ec;--card:#fff;--ink:#1c2b27;--mute:#5d6b66;--line:#d5dcd6;--pine:#1f4a3d;--berry:#a3293f;--on-pine:#fff;--done:#e3e9e4}
+:root{--dot:#2f6fe4;--alert:#d92d27;--dw:700;--on-berry:#fff;--display:Fraunces,Georgia,serif;--body:"Instrument Sans",system-ui,sans-serif;--panel:transparent;--pad:0px;--gap:0px;--bgimg:none;--bg:#eef1ec;--card:#fff;--ink:#1c2b27;--mute:#5d6b66;--line:#d5dcd6;--pine:#1f4a3d;--berry:#a3293f;--on-pine:#fff;--done:#e3e9e4}
 /* dark colors now live in each theme file (see themes/README.md) */
 :root{color-scheme:light}
 :root[data-eff=dark]{color-scheme:dark}
@@ -152,12 +152,13 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 .chat-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 #chat select{margin:0 0 6px;width:100%}
 #chat .note{margin:0 0 6px}
-#chat-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:6px 2px;overscroll-behavior:contain}
+#chat-list{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:8px;padding:6px 2px;overscroll-behavior:contain}
 .cm{max-width:90%;padding:8px 10px;border-radius:12px;background:var(--done);align-self:flex-start;overflow-wrap:anywhere}
 .cm.mine{align-self:flex-end;background:var(--pine);color:var(--on-pine)}
 .cm.ping{outline:2px solid var(--berry)}
 .cm.sys{align-self:center;background:none;color:var(--mute);font-size:.85rem;text-align:center;max-width:100%;padding:2px}
-.cm .who2{display:flex;gap:10px;justify-content:space-between;font-size:.78rem;opacity:.85;margin-bottom:2px}
+.cm .who2{display:flex;flex-wrap:wrap;gap:0 10px;justify-content:space-between;font-size:.78rem;opacity:.85;margin-bottom:2px}
+.cm .who2 span{white-space:nowrap;overflow-wrap:normal}      /* a name is never split over two lines */
 .cm .edit{color:inherit;opacity:.8;font-size:.78rem}
 .mention{font-weight:700}
 .mention.me{background:var(--berry);color:var(--on-berry);border-radius:4px;padding:0 3px}
@@ -165,8 +166,8 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 #chat-suggest button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 10px;cursor:pointer}
 #chat-form textarea{resize:none}
 .chat-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px}
-.badge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--pine);color:var(--on-pine);font-size:.75rem;font-weight:700}
-.badge.ping{background:var(--berry);color:var(--on-berry)}
+.badge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--dot);color:#fff;font-size:.75rem;font-weight:700}
+.badge.ping{background:var(--alert);color:#fff}
 .name-btn{background:none;border:0;padding:0;text-align:left;cursor:pointer;color:inherit}
 .name-btn:hover,.name-btn:focus-visible{text-decoration:underline}
 .pv-img{width:100%;max-height:240px;object-fit:contain;background:var(--done);border-radius:10px;margin:8px 0}
@@ -185,7 +186,13 @@ dialog h3{margin:18px 0 6px;font-size:1rem}
 li[draggable=true]{cursor:grab}
 li.dragover{outline:2px dashed var(--pine)}
 .acct-row{display:flex;flex-direction:column;gap:2px;margin:0 0 6px}
-.cmrow{display:flex;gap:8px;align-items:flex-end;max-width:100%}
+.cmrow{display:flex;gap:8px;align-items:flex-end;max-width:100%;position:relative;touch-action:pan-y}
+.cmrow.back{transition:transform .2s}
+.cmrow[data-swipe]::before{position:absolute;top:50%;margin-top:-16px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--done);color:var(--ink);font-size:1rem;opacity:var(--swo,0)}
+.cmrow[data-swipe=reply]::before{content:"\21A9";left:-44px}
+.cmrow[data-swipe=del]::before{content:"\1F5D1";right:-44px}
+.cmrow[data-swipe].go::before{background:var(--pine);color:var(--on-pine)}
+.cmrow[data-swipe=del].go::before{background:var(--alert);color:#fff}
 .cmrow.mine{flex-direction:row-reverse;align-self:flex-end}
 .cmrow:not(.mine){align-self:flex-start}
 .cmrow .cm{align-self:auto;min-width:0;max-width:calc(100% - 40px)}
@@ -234,9 +241,9 @@ li.prow .pact{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 #chat.kb #chat-note,#chat.kb #chat-suggest:empty{display:none}
 #chat.kb .chat-head{margin-bottom:2px}
 #chat-list{min-height:72px}
-.cm.unread{box-shadow:inset 3px 0 0 var(--berry)}
-.newline{display:flex;align-items:center;gap:8px;color:var(--berry);font-size:.78rem;font-weight:700;margin:4px 0;align-self:stretch}
-.newline::before,.newline::after{content:"";flex:1;height:1px;background:var(--berry);opacity:.5}
+.cm.unread{box-shadow:inset 3px 0 0 var(--dot)}
+.newline{display:flex;align-items:center;gap:8px;color:var(--dot);font-size:.78rem;font-weight:700;margin:4px 0;align-self:stretch}
+.newline::before,.newline::after{content:"";flex:1;height:1px;background:var(--dot);opacity:.5}
 .quote{display:block;width:100%;text-align:left;border:0;border-left:3px solid var(--berry);background:rgba(127,127,127,.18);color:inherit;border-radius:6px;padding:3px 8px;margin:2px 0 4px;font-size:.82rem;cursor:pointer}
 .quote b{display:block;font-size:.74rem}
 .quote span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -310,7 +317,7 @@ li.prow .pact{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
   <div id="chat-grip" role="separator" aria-orientation="vertical" aria-label="Resize chat. Use the left and right arrow keys." tabindex="0" title="Drag to resize (double-click to reset)"></div>
   <div class="chat-head"><b>Group chat</b><button class="link" id="chatClose" type="button">Close</button></div>
   <select id="chat-group" aria-label="Group"></select>
-  <p class="note" id="chat-note">Messages disappear after 30 days. Use @ to mention someone. Anonymous messages hide your name from the group; the group owner can delete them but cannot see who wrote them.</p>
+  <p class="note" id="chat-note">Messages disappear after 30 days. Use @ to mention someone. Anonymous messages hide your name from the group; the group owner can delete them but cannot see who wrote them. On a phone, swipe a message right to reply or left to delete it.</p>
   <div id="chat-list" role="log" aria-live="polite"></div>
   <div id="chat-suggest" hidden></div>
   <form id="chat-form">
@@ -1547,6 +1554,33 @@ function jumpTo(id) {
   const el = $('chat-list').querySelector('[data-mid="' + id + '"]'); if (!el) return;
   el.scrollIntoView({block: 'center', behavior: 'smooth'}); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1500);
 }
+async function deleteMsg(m) {
+  const r = await track(sb.rpc('delete_chat_message', {p_id: m.id})); if (r.error) return toast(errMsg(r.error));
+  if (replyTo && replyTo.id === m.id) clearReply(); pollChat();
+}
+/* swipe a message: right = reply, left = delete (touch only; on a computer use the Reply and Delete links) */
+(() => {
+  const list = $('chat-list'); let sw = null;
+  const reset = row => { row.classList.add('back'); row.style.transform = ''; row.style.removeProperty('--swo'); setTimeout(() => { row.classList.remove('back'); delete row.dataset.swipe; row.classList.remove('go'); }, 220); };
+  list.addEventListener('pointerdown', e => {
+    const row = e.pointerType === 'mouse' ? null : e.target.closest && e.target.closest('.cmrow');
+    sw = row && row._m && !e.target.closest('button,a,input,textarea') ? {row, x: e.clientX, y: e.clientY, on: false, dx: 0, id: e.pointerId} : null;
+  });
+  list.addEventListener('pointermove', e => {
+    if (!sw || e.pointerId !== sw.id) return; const dx = e.clientX - sw.x, dy = e.clientY - sw.y;
+    if (!sw.on) { if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { sw = null; return; } if (Math.abs(dx) < 12 || Math.abs(dx) < Math.abs(dy) * 1.4) return; sw.on = true; try { list.setPointerCapture(e.pointerId); } catch (x) {} }
+    sw.dx = dx; const dir = dx > 0 ? 'reply' : 'del', can = dir === 'reply' ? replyOk : sw.row._canDel, shown = can ? Math.max(-100, Math.min(100, dx)) : dx / 6;
+    sw.row.dataset.swipe = dir; sw.row.style.transform = 'translateX(' + shown + 'px)'; sw.row.style.setProperty('--swo', can ? Math.min(1, Math.abs(dx) / 70) : 0);
+    const go = can && Math.abs(dx) >= 70; if (go && !sw.row.classList.contains('go') && navigator.vibrate) try { navigator.vibrate(12); } catch (x) {} sw.row.classList.toggle('go', go);
+  });
+  const end = e => {
+    if (!sw || e.pointerId !== sw.id) return; const s = sw; sw = null; if (!s.on) return; try { list.releasePointerCapture(e.pointerId); } catch (x) {}
+    reset(s.row); if (e.type === 'pointercancel') return;
+    if (s.dx >= 70 && replyOk) setReply(s.row._m);
+    else if (s.dx <= -70 && s.row._canDel && confirm('Delete this message?')) deleteMsg(s.row._m);
+  };
+  list.addEventListener('pointerup', end); list.addEventListener('pointercancel', end);
+})();
 function setReply(m) { replyTo = m; $('reply-text').textContent = 'Replying to ' + replyLabel(m) + ': ' + m.body; $('reply-bar').hidden = false; $('chat-text').focus(); }
 function clearReply() { replyTo = null; $('reply-bar').hidden = true; }
 $('reply-x').onclick = clearReply;
@@ -1575,9 +1609,10 @@ function renderChat(mode) {
     const body = document.createElement('div'); fillMentions(body, m.body, g); d.append(body);
     const acts = document.createElement('div'); acts.className = 'acts';
     if (replyOk) { const r = lnk('Reply', () => setReply(m)); r.className = 'edit'; acts.append(r); }
-    if (mine || (g && g.owner)) { const x = lnk('Delete', async () => { const r = await track(sb.rpc('delete_chat_message', {p_id: m.id})); if (r.error) return toast(errMsg(r.error)); if (replyTo && replyTo.id === m.id) clearReply(); pollChat(); }); x.className = 'edit'; acts.append(x); }
+    const canDel = mine || !!(g && g.owner);
+    if (canDel) { const x = lnk('Delete', () => deleteMsg(m)); x.className = 'edit'; acts.append(x); }
     if (acts.childNodes.length) d.append(acts);
-    const row = document.createElement('div'); row.className = 'cmrow' + (mine ? ' mine' : '');
+    const row = document.createElement('div'); row.className = 'cmrow' + (mine ? ' mine' : ''); row._m = m; row._canDel = canDel;
     row.append(m.anonymous ? anonAvatar() : avatarEl(m.sender_id, names[m.sender_id] || '?', 30), d);      // anonymous messages get a plain ? so they reveal nothing
     box.append(row);
   });
@@ -1669,7 +1704,7 @@ let swipe = null;
 const hScrollable = el => { for (; el && el !== document.body; el = el.parentElement) { const o = getComputedStyle(el).overflowX; if ((o === 'auto' || o === 'scroll') && el.scrollWidth > el.clientWidth + 2) return true; } return false; };
 document.addEventListener('touchstart', e => {
   const t = e.target instanceof Element ? e.target : document.body, f = e.touches[0];
-  swipe = (e.touches.length !== 1 || !me || document.querySelector('dialog[open]') || String(getSelection()) || (t.closest && t.closest('input,textarea,select,#people,#chat-grip')) || hScrollable(t))
+  swipe = (e.touches.length !== 1 || !me || document.querySelector('dialog[open]') || String(getSelection()) || (t.closest && t.closest('input,textarea,select,#people,#chat-grip,.cmrow')) || hScrollable(t))
     ? null : {x: f.clientX, y: f.clientY, t: Date.now()};
 }, {passive: true});
 document.addEventListener('touchcancel', () => { swipe = null; }, {passive: true});

@@ -22,6 +22,7 @@ In **SQL Editor → New query**, paste each file below **in this order** and cli
 9. `supabase/migrations/20261109000009_santa_auto_order_ticks.sql` (run this one after 8; it replaces the High / Medium / Low priority with a movable order)
 10. `supabase/migrations/20261110000010_push_reply_people.sql` (phone notifications, replying to a chat message, full names inside a group, and prices in link previews)
 11. `supabase/migrations/20261111000011_push_faster.sql` (run after 10; makes notifications faster and adds the Settings > Notifications check)
+12. `supabase/migrations/20261112000012_push_profile_picture.sql` (run after 11; the sender's profile picture shows in notifications)
 
 (Or with the Supabase CLI: `npx supabase link --project-ref YOUR-REF` then `npx supabase db push`.)
 
@@ -229,6 +230,7 @@ Notes:
 - **Android / computers:** works in the browser, and in the installed app.
 - **iPhone / iPad:** iOS 16.4 or newer, and only from the Home Screen app (Share → Add to Home Screen, open it from there, press the bell).
 - Logging out or switching account turns notifications off for that device, so the next person never sees someone else's messages. Press the bell again after logging in.
+- Notifications show the sender's profile picture (the picture link from their Account page). Anonymous messages, people without a picture, and pictures that are slow to load get the gift icon instead.
 - The small icon in the phone's status bar is a white gift (`icons/notification-badge.png`); Android only uses its shape, which is why a coloured icon there turns into a white square.
 - The installed app's icon also shows a number for unread chat messages where the phone allows it.
 - Slow? Notifications are sent with high urgency, so a sleeping Android phone wakes up for them. Phones also delay messages when **battery saver** is on or the app is "optimised" or put to sleep: set the browser or app to **Unrestricted** battery use in the phone settings. If one test notification arrives quickly but chat messages do not, the database step is the slow one: re-run 0011 and check Edge Functions → push → Logs.

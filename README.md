@@ -75,7 +75,7 @@ Create wishlists, share them with groups, chat about gift ideas, organize Secret
 
 - Press the theme icon to cycle through the themes (Green is the default).
 - Press the sun / moon icon to switch between light and dark mode.
-- Each theme has its own coloured app icon (browser tab, Home Screen and the logo in the menu follow the theme). An app that is already installed keeps the icon it was installed with; install it again while the theme you want is selected.
+- Each theme has its own gift app icon in a light and a dark version, and it follows the light/dark switch (browser tab, Home Screen and the logo in the menu). An app that is already installed keeps the icon it was installed with; install it again while the theme and mode you want are selected.
 - Swipe right for the menu, swipe left for the chat.
 - On phones the themes that draw a box around the list drop it, so the list gets the whole screen.
 - Customize your countdown.

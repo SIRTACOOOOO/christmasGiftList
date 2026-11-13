@@ -229,6 +229,7 @@ Notes:
 - **Android / computers:** works in the browser, and in the installed app.
 - **iPhone / iPad:** iOS 16.4 or newer, and only from the Home Screen app (Share → Add to Home Screen, open it from there, press the bell).
 - Logging out or switching account turns notifications off for that device, so the next person never sees someone else's messages. Press the bell again after logging in.
+- The small icon in the phone's status bar is a white gift (`icons/notification-badge.png`); Android only uses its shape, which is why a coloured icon there turns into a white square.
 - The installed app's icon also shows a number for unread chat messages where the phone allows it.
 - Slow? Notifications are sent with high urgency, so a sleeping Android phone wakes up for them. Phones also delay messages when **battery saver** is on or the app is "optimised" or put to sleep: set the browser or app to **Unrestricted** battery use in the phone settings. If one test notification arrives quickly but chat messages do not, the database step is the slow one: re-run 0011 and check Edge Functions → push → Logs.
 - Nothing arrives? Run the check above first, then look at **Edge Functions → push → Logs**.

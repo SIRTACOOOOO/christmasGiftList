@@ -2,7 +2,7 @@
 // It only ever touches files from this site. Requests to Supabase, fonts and the sign-in library pass straight through,
 // so no account data is ever stored by the service worker.
 // Bump CACHE when you change this file's list of files.
-const CACHE = 'giftlist-v10';
+const CACHE = 'giftlist-v11';
 const SHELL = ['./', 'index.html', 'config.js', 'manifest.webmanifest', 'themes/themes.js', 'themes/legacy.css',
                'icons/icon-192.png', 'icons/maskable-512.png', 'icons/favicon.ico'];
 
@@ -34,7 +34,8 @@ self.addEventListener('push', e => {
     // Every push must show a notification (iPhones cancel notifications for sites that sometimes show none), so when you are
     // already looking at the app it is shown silently and removed after a few seconds.
     await self.registration.showNotification(d.title || 'Gift List', {
-      body: d.body || '', icon: 'icons/icon-192.png', badge: 'icons/icon-192.png',
+      body: d.body || '', icon: 'icons/icon-192.png', badge: 'icons/notification-badge.png',      // badge = the small white gift in the phone's status bar
+     
       tag: d.tag || 'giftlist', renotify: !watching, silent: watching, data: { group: d.group || '' }
     });
     if (watching) { await new Promise(r => setTimeout(r, 3500)); (await self.registration.getNotifications({ tag: d.tag || 'giftlist' })).forEach(n => n.close()); }

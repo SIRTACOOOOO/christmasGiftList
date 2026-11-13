@@ -502,7 +502,7 @@ const darkQuery = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)')
 function applyMode() {      // light, dark, or follow the device; every theme file has its own colors for each
   const dark = modeSetting === 'dark' || (modeSetting === 'device' && darkQuery && darkQuery.matches);
   document.documentElement.dataset.eff = dark ? 'dark' : 'light';
-  renderIcons(); setThemeColor();
+  applyIcons(); renderIcons(); setThemeColor();
 }
 if (darkQuery && darkQuery.addEventListener) darkQuery.addEventListener('change', applyMode);
 let pushOn = false, unreadTotal = 0;
@@ -519,12 +519,13 @@ function setThemeColor() { try { const bg = getComputedStyle(document.documentEl
 function applyTheme() {
   const t = themeOf(theme);
   document.documentElement.dataset.theme = t.id; $('themecss').onload = setThemeColor; $('themecss').href = 'themes/' + t.id + '.css?v=' + ASSET_V;
-  const ic = t.id === 'legacy' ? {192: 'icons/icon-192.png', 180: 'icons/apple-touch-icon.png', 32: 'icons/icon-32.png', any: 'icons/favicon.ico', manifest: 'manifest.webmanifest'}
-    : {192: 'icons/' + t.id + '-192.png', 180: 'icons/' + t.id + '-180.png', 32: 'icons/' + t.id + '-32.png', any: 'icons/' + t.id + '-32.png', manifest: 'manifest-' + t.id + '.webmanifest'};
-  $('ico-any').href = ic.any; $('ico-any').type = t.id === 'legacy' ? 'image/x-icon' : 'image/png'; $('ico-32').href = ic[32]; $('ico-apple').href = ic[180];
-  $('manifestlink').href = ic.manifest; document.querySelectorAll('.applogo').forEach(x => { x.src = ic[192]; });      // app icon follows the theme
   document.documentElement.toggleAttribute('data-scene', !!t.scene);       // themes with a picture + list box lose both on phones
   $('title').textContent = t.title; setTitle(); applyMode();
+}
+function applyIcons() {      // the gift icon follows the theme and light/dark mode: tab icon, Home Screen icon, menu logo, install manifest
+  const id = themeOf(theme).id, mode = id === 'midnight' ? 'dark' : (document.documentElement.dataset.eff === 'dark' ? 'dark' : 'light'), p = 'icons/' + id + '-' + mode + '-';
+  $('ico-any').href = p + '32.png'; $('ico-any').type = 'image/png'; $('ico-32').href = p + '32.png'; $('ico-apple').href = p + '180.png';
+  $('manifestlink').href = 'manifest-' + id + '-' + mode + '.webmanifest'; document.querySelectorAll('.applogo').forEach(x => { x.src = p + '192.png'; });
 }
 function setTitle() { document.title = (unreadTotal ? '(' + unreadTotal + ') ' : '') + themeOf(theme).title + (person ? ' - ' + person : ''); }
 const SVG = d => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
@@ -535,7 +536,7 @@ const ICON = {
   bellOff: SVG('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/><path d="M3 3l18 18"/>')
 };
 function renderIcons() {      // the three icon buttons in the menu: theme (cycles), light/dark (toggles), notifications (on/off)
-  const t = themeOf(theme), dark = document.documentElement.dataset.eff === 'dark', mid = t.id === 'midnight';
+  const t = themeOf(theme), mid = t.id === 'midnight', dark = mid || document.documentElement.dataset.eff === 'dark';
   $('themeBtn').textContent = t.icon || '\u{1F3A8}';
   $('themeBtn').setAttribute('aria-label', 'Theme: ' + t.name + '. Press for the next theme.'); $('themeBtn').title = 'Theme: ' + t.name;
   $('modeBtn').innerHTML = dark ? ICON.moon : ICON.sun;

@@ -18,7 +18,7 @@ Open its file (for example `ocean.css`) and change the colors. Save, upload, and
 
 The first theme in `themes.js` (**Green**, `legacy.css`) is the default for new visitors.
 
-New themes use the Green icons until you add their own: recolour `icons/maskable-512.png` (the original artwork: red box, gold ribbon, dark green background) and save `<id>-512.png`, plus `<id>-192.png`, `<id>-180.png` and `<id>-32.png` at those sizes, all in `icons/` and copy `manifest-ocean.webmanifest` to `manifest-<id>.webmanifest`. Then add `color: '#rrggbb'` (the icon background) to the theme's line in `themes.js`.
+Each theme has a gift app icon in a light and a dark version: `icons/<id>-light-512.png` and `icons/<id>-dark-512.png` (plus `-192`, `-180` and `-32` sizes) and a matching `manifest-<id>-light.webmanifest` / `manifest-<id>-dark.webmanifest`. To add one for a new theme, recolour `icons/maskable-512.png` (the original artwork), save the eight PNGs with those names, and copy an existing manifest file for each mode. Until you do, the page shows a missing icon for that theme.
 
 Optional fields: `icon` is the symbol on the theme button in the menu (the button cycles through the themes in order), and `scene: true` marks a theme that paints a picture behind a box that holds the list. On phones those themes lose the box and the picture so the list gets the whole screen.
 

@@ -215,6 +215,9 @@ try {
   ok(rows(await alice.c.from('push_subscriptions').select('endpoint').eq('endpoint', ep)) === 0, 'other people cannot see it');
   ok((await bob.c.from('push_subscriptions').select('p256dh,auth')).error, 'the push keys cannot be read from a browser');
   ok((await bob.c.rpc('save_push_subscription', { p_endpoint: 'http://insecure.example/x', p_p256dh: 'p'.repeat(60), p_auth: 'a'.repeat(20) })).error, 'only https push addresses are accepted');
+  const pst = await bob.c.rpc('push_status');
+  ok(!pst.error && typeof pst.data?.configured === 'boolean' && !JSON.stringify(pst.data).includes('secret'), 'push_status reports readiness without revealing the secret');
+  ok((await createClient(URL, PUB, { auth: { persistSession: false } }).rpc('push_status')).error, 'push_status needs a signed-in user');
   await bob.c.rpc('remove_push_subscription', { p_endpoint: ep });
   ok(rows(await bob.c.from('push_subscriptions').select('endpoint').eq('endpoint', ep)) === 0, 'a device can unsubscribe');
 

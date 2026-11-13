@@ -18,7 +18,9 @@ Open its file (for example `ocean.css`) and change the colors. Save, upload, and
 
 The first theme in `themes.js` (**Green**, `legacy.css`) is the default for new visitors.
 
-Two optional fields: `icon` is the symbol on the theme button in the menu (the button cycles through the themes in order), and `scene: true` marks a theme that paints a picture behind a box that holds the list. On phones those themes lose the box and the picture so the list gets the whole screen.
+New themes use the Green icons until you add their own: recolour `icons/maskable-512.png` (the original artwork: red box, gold ribbon, dark green background) and save `<id>-512.png`, plus `<id>-192.png`, `<id>-180.png` and `<id>-32.png` at those sizes, all in `icons/` and copy `manifest-ocean.webmanifest` to `manifest-<id>.webmanifest`. Then add `color: '#rrggbb'` (the icon background) to the theme's line in `themes.js`.
+
+Optional fields: `icon` is the symbol on the theme button in the menu (the button cycles through the themes in order), and `scene: true` marks a theme that paints a picture behind a box that holds the list. On phones those themes lose the box and the picture so the list gets the whole screen.
 
 ## What each variable does
 

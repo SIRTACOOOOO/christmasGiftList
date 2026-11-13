@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <script>try{var m=localStorage.getItem('giftMode')||'device',d=m==='dark'||(m==='device'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.eff=d?'dark':'light'}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="manifest" id="manifestlink" href="manifest.webmanifest">
 <meta name="theme-color" id="tcolor" content="#013e24">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,9 +16,9 @@
 <script src="themes/themes.js"></script>
 <link id="themecss" rel="stylesheet">
 <title>Christmas List</title>
-<link rel="icon" href="icons/favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" id="ico-any" href="icons/favicon.ico" sizes="any">
+<link rel="icon" id="ico-32" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="apple-touch-icon" id="ico-apple" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -115,6 +115,9 @@ dialog label{display:block;margin:12px 0 4px;font-weight:500;font-size:.92rem}
 .bar2 select{margin:0}
 .chkl{display:flex;gap:6px;align-items:center;font-size:.92rem;color:var(--mute)}
 .chkl input{width:auto;accent-color:var(--pine)}
+.pv-bought{display:flex;gap:12px;align-items:center;font-size:1.1rem;font-weight:600;margin:6px 0 12px;cursor:pointer}
+.pv-bought input{width:26px;height:26px;margin:0;accent-color:var(--pine);cursor:pointer}
+.pv-bought input:disabled{cursor:default}
 .grphead{display:block;padding:14px 4px 4px;font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);border-bottom:1px solid var(--line)}
 .tag.prio{margin-right:6px}
 .tag.p1{background:var(--berry);color:var(--on-berry);border-color:var(--berry)}
@@ -201,6 +204,7 @@ details.dd>.ddbody>p:first-child{margin-top:0}
 .ddbody .row.col{flex-direction:column;align-items:stretch}
 .ddbody h3:first-child{margin-top:4px}
 #setdlg,#gdlg{width:min(520px,calc(100% - 24px))}
+.report{white-space:pre-wrap;font:.85rem/1.5 var(--body,inherit);background:var(--done);border-radius:8px;padding:10px;margin:10px 0 0;overflow-wrap:anywhere}
 .warn{border:1px solid var(--berry);border-radius:8px;padding:8px 10px;color:var(--ink);font-size:.92rem;margin:0 0 10px}
 @media (prefers-reduced-motion:reduce){details.dd>summary::after{transition:none}}
 /* ---- icon buttons in the menu ---- */
@@ -282,7 +286,7 @@ li.prow .pact{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 </main>
 <div id="scrim" hidden></div>
 <nav id="menu" aria-label="Menu" aria-hidden="true" inert>
-  <img class="menu-logo" src="icons/icon-192.png" alt="" width="44" height="44">
+  <img class="menu-logo applogo" src="icons/icon-192.png" alt="" width="44" height="44">
   <p class="who" id="who"></p>
   <button class="mi" id="groupsBtn">Groups</button>
   <button class="mi" id="santaBtn">Secret Santa</button>
@@ -318,7 +322,7 @@ li.prow .pact{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 
 <dialog id="auth">
   <form id="aform">
-    <img class="auth-logo" src="icons/icon-192.png" alt="" width="48" height="48">
+    <img class="auth-logo applogo" src="icons/icon-192.png" alt="" width="48" height="48">
     <h2 id="atitle">Log in</h2>
     <p class="note" id="a-note" hidden></p>
     <div id="b-name"><label for="a-name" id="l-name">Full name</label><input id="a-name" maxlength="30" autocomplete="username" required></div>
@@ -403,6 +407,11 @@ li.prow .pact{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
   </form>
 
   </div></details>
+  <details class="dd" id="dd-push"><summary>Notifications</summary><div class="ddbody">
+    <p class="note">Turn notifications on or off with the bell icon in the menu. If they are slow or never arrive, this checks every step.</p>
+    <div class="row col"><button type="button" class="btn" id="push-test">Check and send a test notification</button></div>
+    <pre class="report" id="push-report" aria-live="polite" hidden></pre>
+  </div></details>
   <details class="dd" id="dd-after"><summary>After Christmas</summary><div class="ddbody">
     <p class="warn"><b>Only use this after Christmas.</b> Clearing ticks can’t be undone: everyone loses track of what was already bought.</p>
     <p class="note">Clearing ticks never deletes a gift. If something was ticked off but never arrived, it stays on the list.</p>
@@ -442,6 +451,7 @@ li.prow .pact{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 </dialog>
 <dialog id="pdlg">
   <h2 id="pv-name">Gift</h2>
+  <label class="pv-bought" id="pv-boughtrow" hidden><input type="checkbox" id="pv-bought"> <span id="pv-boughttext">Bought</span></label>
   <img class="pv-img" id="pv-img" alt="" hidden>
   <p class="pv-site" id="pv-site"></p>
   <p><b id="pv-ptitle"></b></p>
@@ -509,6 +519,10 @@ function setThemeColor() { try { const bg = getComputedStyle(document.documentEl
 function applyTheme() {
   const t = themeOf(theme);
   document.documentElement.dataset.theme = t.id; $('themecss').onload = setThemeColor; $('themecss').href = 'themes/' + t.id + '.css?v=' + ASSET_V;
+  const ic = t.id === 'legacy' ? {192: 'icons/icon-192.png', 180: 'icons/apple-touch-icon.png', 32: 'icons/icon-32.png', any: 'icons/favicon.ico', manifest: 'manifest.webmanifest'}
+    : {192: 'icons/' + t.id + '-192.png', 180: 'icons/' + t.id + '-180.png', 32: 'icons/' + t.id + '-32.png', any: 'icons/' + t.id + '-32.png', manifest: 'manifest-' + t.id + '.webmanifest'};
+  $('ico-any').href = ic.any; $('ico-any').type = t.id === 'legacy' ? 'image/x-icon' : 'image/png'; $('ico-32').href = ic[32]; $('ico-apple').href = ic[180];
+  $('manifestlink').href = ic.manifest; document.querySelectorAll('.applogo').forEach(x => { x.src = ic[192]; });      // app icon follows the theme
   document.documentElement.toggleAttribute('data-scene', !!t.scene);       // themes with a picture + list box lose both on phones
   $('title').textContent = t.title; setTitle(); applyMode();
 }
@@ -812,8 +826,10 @@ function render() {
     const hd = headOf(i); if (hd && hd !== lastHead) { const h = document.createElement('li'); h.className = 'grphead'; h.textContent = hd; $('list').append(h); lastHead = hd; }
     const li = document.createElement('li'); li.className = (mine ? 'mine ' : '') + (i.bought ? 'done' : '');
     if (!mine) {
-      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'chk'; cb.checked = i.bought; cb.disabled = !!i.by || !!i.pending;
-      cb.setAttribute('aria-label', 'Bought: ' + i.name); cb.onchange = () => toggle(i, cb.checked); li.append(cb);
+      // Tapping the box here never ticks anything by accident: it opens the gift, where the same checkbox does the ticking.
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'chk'; cb.checked = i.bought;
+      cb.setAttribute('aria-label', 'Bought: ' + i.name + '. Opens the gift so you can change it.'); cb.title = 'Open this gift to tick it off';
+      cb.onclick = e => { e.preventDefault(); openPreview(i); }; li.append(cb);
     }
     const mid = document.createElement('div');
     const nm = document.createElement('button'); nm.type = 'button'; nm.className = 'name name-btn'; nm.textContent = i.name; nm.title = 'Preview this gift'; nm.onclick = () => openPreview(i); mid.append(nm);
@@ -914,6 +930,17 @@ async function handleShare() {      // a product page was shared into the app: o
 $('add').onclick = () => openDlg(null);
 $('cancel').onclick = () => $('dlg').close();
 $('q').oninput = render; $('psearch').oninput = render;
+// Scrolling down (mouse wheel or trackpad) over the people row moves it to the right, and scrolling up moves it left.
+// At either end the page scrolls as normal, so the row never traps you.
+$('people').addEventListener('wheel', e => {
+  const box = $('people'); if (e.ctrlKey || box.scrollWidth <= box.clientWidth + 2) return;
+  const dy = e.deltaY * (e.deltaMode === 1 ? 16 : 1), dx = e.deltaX * (e.deltaMode === 1 ? 16 : 1);
+  if (Math.abs(dx) >= Math.abs(dy)) return;                          // already a sideways scroll: let the browser do it
+  const atStart = box.scrollLeft <= 0, atEnd = box.scrollLeft + box.clientWidth >= box.scrollWidth - 1;
+  if ((dy < 0 && atStart) || (dy > 0 && atEnd)) return;
+  e.preventDefault(); box.style.scrollSnapType = 'none'; box.scrollLeft += dy;
+  clearTimeout(box._snap); box._snap = setTimeout(() => { box.style.scrollSnapType = ''; }, 200);
+}, {passive: false});
 $('sort').value = sortKey; $('boughtLast').checked = boughtLast; $('cd').value = cdMode;
 const keep = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 $('sort').onchange = () => { sortKey = $('sort').value; keep('giftSort', sortKey); render(); };
@@ -1432,8 +1459,21 @@ $('logoutAll').onclick = async () => {
 
 /* ---- gift preview ---- */
 const pvCache = {}; let pvSeq = 0;
+let pvItem = null;
+function showBoughtRow() {      // the same Bought box as the list used to have, now only here
+  const i = pvItem, row = $('pv-boughtrow'); if (!i) return;
+  row.hidden = isMine(); if (isMine()) return;
+  $('pv-bought').checked = !!i.bought; $('pv-bought').disabled = !!i.by || !!i.pending;
+  $('pv-boughttext').textContent = i.by ? 'Bought (your surprise gift)' : i.pending ? 'Saving\u2026' : 'Bought';
+}
+$('pv-bought').onchange = async () => {
+  if (!pvItem) return; const box = $('pv-bought'), want = box.checked, cur = items.find(x => x.id === pvItem.id) || pvItem;
+  box.disabled = true; await toggle(cur, want);                      // toggle() asks about a Secret Santa budget and undoes itself if saving fails
+  pvItem = items.find(x => x.id === pvItem.id) || cur; showBoughtRow();
+};
 async function openPreview(i) {
   const tok = ++pvSeq, img = $('pv-img'), url = isUrl(i.link) ? i.link : '';
+  pvItem = i; showBoughtRow();
   $('pv-name').textContent = i.name; img.hidden = true; img.removeAttribute('src');
   ['pv-site', 'pv-ptitle', 'pv-desc'].forEach(id => { $(id).textContent = ''; });
   $('pv-facts').textContent = [i.price ? money(i.price) : ''].filter(Boolean).join(' \u00b7 ');
@@ -1666,6 +1706,10 @@ async function pushEnable() {
   const perm = await Notification.requestPermission();
   if (perm !== 'granted') return toast(perm === 'denied' ? 'Notifications are blocked. Allow them in your browser or phone settings.' : 'Notifications were not turned on.');
   const reg = await swReady(); let sub = await reg.pushManager.getSubscription();
+  if (sub) {      // a subscription made with a different VAPID key can never receive our messages: start again
+    const have = sub.options && sub.options.applicationServerKey ? new Uint8Array(sub.options.applicationServerKey) : null, want = b64ToU8(CFG.VAPID_PUBLIC_KEY);
+    if (have && (have.length !== want.length || have.some((v, k) => v !== want[k]))) { await sub.unsubscribe(); sub = null; }
+  }
   if (!sub) sub = await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: b64ToU8(CFG.VAPID_PUBLIC_KEY)});
   const j = sub.toJSON(), r = await track(sb.rpc('save_push_subscription', {p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth}));
   if (r.error) throw r.error;
@@ -1676,6 +1720,43 @@ async function pushDetach() {      // stops this device's notifications for the 
   try { const sub = await (await swReady()).pushManager.getSubscription(); if (sub) { try { await sb.rpc('remove_push_subscription', {p_endpoint: sub.endpoint}); } catch (e) {} await sub.unsubscribe(); } } catch (e) {}
   pushOn = false; renderIcons();
 }
+async function pushDiagnose() {      // walks through every step a notification takes and says which one is broken
+  const box = $('push-report'), btn = $('push-test'); box.hidden = false; box.textContent = 'Checking\u2026'; btn.disabled = true;
+  const L = [], add = (ok, t) => L.push((ok === true ? '\u2713 ' : ok === false ? '\u2717 ' : '\u2022 ') + t);
+  try {
+    add(!!CFG.VAPID_PUBLIC_KEY, CFG.VAPID_PUBLIC_KEY ? 'config.js has a VAPID public key.' : 'config.js has no VAPID_PUBLIC_KEY (SETUP.md, section 13, step 2).');
+    const can = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+    add(can, can ? 'This browser can receive notifications.' : 'This browser cannot receive notifications. On iPhone, open the app from the Home Screen.');
+    if (can) {
+      add(Notification.permission === 'granted' ? true : Notification.permission === 'denied' ? false : null, 'Permission: ' + Notification.permission + (Notification.permission === 'denied' ? ' (allow notifications for this site in your browser or phone settings).' : '.'));
+      await pushRefresh(); add(pushOn, pushOn ? 'This device is subscribed to your account.' : 'This device is not subscribed. Press the bell icon in the menu.');
+    }
+    const st = await sb.rpc('push_status');
+    if (st.error) add(false, 'The database update is missing (run 20261110000010 and 20261111000011 in the SQL Editor).');
+    else {
+      const d = st.data || {};
+      add(!!d.pg_net, d.pg_net ? 'pg_net is switched on.' : 'pg_net is off. Dashboard > Database > Extensions > pg_net.');
+      add(!!d.configured, d.configured ? 'The database knows where to send notifications.' : 'private.push_settings is empty (SETUP.md, section 13, step 5).');
+      if (d.last) { const code = d.last.status; add(code >= 200 && code < 300 ? true : (code || d.last.error || d.last.timed_out) ? false : null, 'The last request the database sent got: ' + (code || d.last.error || (d.last.timed_out ? 'a time-out' : 'no answer yet')) + (code === 401 ? ' (PUSH_SECRET differs between Supabase secrets and private.push_settings).' : code === 404 ? ' (wrong url in private.push_settings, or the function is not deployed).' : code === 500 ? ' (see Edge Functions > push > Logs).' : '.')); }
+    }
+    let r = null;
+    try { r = await callFn('push', {action: 'test', vapid_public: CFG.VAPID_PUBLIC_KEY}); } catch (e) { add(false, 'The push function did not answer: ' + errMsg(e) + ' Deploy it: npx supabase functions deploy push --no-verify-jwt'); }
+    if (r) {
+      add(!!r.vapid_configured, r.vapid_configured ? 'Supabase has the VAPID keys.' : 'Supabase has no VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY secrets (SETUP.md, step 3).');
+      add(!!r.push_secret_set, r.push_secret_set ? 'PUSH_SECRET is set.' : 'The PUSH_SECRET secret is missing in Supabase.');
+      if (r.vapid_matches_app === false) add(false, 'The public key in config.js is not the one Supabase has. Use the same pair, upload config.js, then turn the bell off and on.');
+      add(r.devices > 0, r.devices > 0 ? 'Supabase has ' + r.devices + (r.devices === 1 ? ' device' : ' devices') + ' saved for you.' : 'Supabase has no device saved for you. Turn the bell off and on.');
+      (r.results || []).forEach(x => {
+        if (x.status >= 200 && x.status < 300) add(true, 'Sent a test to ' + x.host + ' in ' + (x.ms / 1000).toFixed(1) + ' s. It should appear now.');
+        else if (x.status === 404 || x.status === 410) add(false, x.host + ' says this device is gone. Turn the bell off and on.');
+        else if (x.status === 401 || x.status === 403) add(false, x.host + ' rejected the sender (' + x.status + '). The VAPID keys do not match what this device subscribed with, or VAPID_SUBJECT is not a real mailto: address. Fix it, then turn the bell off and on.');
+        else add(false, x.host + ' answered ' + (x.status || 'with an error') + (x.text ? ': ' + x.text : '') + '.');
+      });
+    }
+  } catch (e) { add(false, errMsg(e)); }
+  box.textContent = L.join('\n'); btn.disabled = false;
+}
+$('push-test').onclick = pushDiagnose;
 $('pushBtn').onclick = async () => {
   try { if (pushOn) { await pushDetach(); toast('Notifications are off for this device.'); } else await pushEnable(); }
   catch (e) { toast(errMsg(e)); }

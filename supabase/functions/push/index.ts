@@ -44,7 +44,8 @@ Deno.serve(async (req) => {
       await Promise.all(items.map(async (it) => {
         try {
           const icon = typeof b.icon === 'string' && /^https:\/\//.test(b.icon) && b.icon.length <= 500 ? b.icon : undefined;      // the sender's profile picture
-          const r = await sendPush(it, { title: it.title, body: it.body, group: b.group, tag: b.tag, icon }, VAPID);
+          const initial = typeof b.initial === 'string' ? b.initial.slice(0, 2) : undefined, hue = typeof b.hue === 'number' ? b.hue : undefined;      // for the letter circle
+          const r = await sendPush(it, { title: it.title, body: it.body, group: b.group, tag: b.tag, icon, initial, hue }, VAPID);
           if (r.status < 300) sent++;
           else if (r.status === 404 || r.status === 410) await forget(it.endpoint);
           else { failed++; console.error('push rejected', r.status, new URL(it.endpoint).host, r.text); }

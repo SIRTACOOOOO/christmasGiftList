@@ -2,7 +2,8 @@
 // It only ever touches files from this site. Requests to Supabase, fonts and the sign-in library pass straight through,
 // so no account data is ever stored by the service worker.
 // Bump CACHE when you change this file's list of files.
-const CACHE = 'giftlist-v13';
+const CACHE = 'giftlist-v14';
+const PREFS = 'giftlist-prefs';      // the chosen app icon lives here (written by the page); never deleted by an update
 const SHELL = ['./', 'index.html', 'config.js', 'manifest.webmanifest', 'themes/themes.js', 'themes/legacy.css',
                'icons/icon-192.png', 'icons/maskable-512.png', 'icons/favicon.ico'];
 
@@ -10,16 +11,29 @@ self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== PREFS).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 // Network first, so updates arrive as soon as you are online; the cached copy is the offline fallback.
+const netFirst = r =>
+  fetch(r, { cache: 'no-cache' }).then(res => { if (res.ok && !new URL(r.url).search) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(r, copy)); } return res; })
+    .catch(() => caches.match(r).then(hit => hit || (r.mode === 'navigate' ? caches.match('index.html') : Response.error())));
+// The app's icon comes from its manifest. The address of the manifest never changes, but what is behind it follows the icon
+// chosen in Settings > App icon: Chrome re-reads an installed app's manifest from time to time and updates the Home Screen icon by itself.
+async function chosenManifest() {
+  try {
+    const hit = await (await caches.open(PREFS)).match('__app-icon'), icon = hit ? (await hit.json()).icon : '';
+    if (/^[a-z]+-(light|dark)$/.test(icon)) {
+      const res = await fetch('manifest-' + icon + '.webmanifest', { cache: 'no-cache' });
+      if (res.ok) return new Response(await res.text(), { headers: { 'content-type': 'application/manifest+json' } });
+    }
+  } catch (x) {}
+  return null;
+}
 self.addEventListener('fetch', e => {
-  const r = e.request;
-  if (r.method !== 'GET' || new URL(r.url).origin !== self.location.origin) return;
-  e.respondWith(
-    fetch(r, { cache: 'no-cache' }).then(res => { if (res.ok && !new URL(r.url).search) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(r, copy)); } return res; })
-      .catch(() => caches.match(r).then(hit => hit || (r.mode === 'navigate' ? caches.match('index.html') : Response.error())))
-  );
+  const r = e.request, u = new URL(r.url);
+  if (r.method !== 'GET' || u.origin !== self.location.origin) return;
+  if (/\/manifest\.webmanifest$/.test(u.pathname)) { e.respondWith(chosenManifest().then(m => m || netFirst(r))); return; }
+  e.respondWith(netFirst(r));
 });
 
 // ---- The round picture in a notification: the sender's photo if it can be read, else their coloured letter, else the gift ----

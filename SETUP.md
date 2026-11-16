@@ -24,6 +24,7 @@ In **SQL Editor → New query**, paste each file below **in this order** and cli
 11. `supabase/migrations/20261111000011_push_faster.sql` (run after 10; makes notifications faster and adds the Settings > Notifications check)
 12. `supabase/migrations/20261112000012_push_profile_picture.sql` (run after 11; the sender's profile picture shows in notifications)
 13. `supabase/migrations/20261113000013_push_letter_avatar.sql` (run after 12; people without a picture get their coloured letter circle in notifications)
+14. `supabase/migrations/20261114000014_this_or_that.sql` (run after 13; "this or that" and "this and that" gifts)
 
 (Or with the Supabase CLI: `npx supabase link --project-ref YOUR-REF` then `npx supabase db push`.)
 
@@ -245,3 +246,30 @@ Once the site is installed as an app, **Gift List** appears in the phone's Share
 - **Android (Chrome):** in any shop page, tap Share → **Gift List**. The app opens with Add gift ready: the link is in, and it fills in the name and price when the shop allows it. Tap **Save gift**. If Gift List is not in the Share menu, remove the installed app and install it again once, so the phone picks up the new setting.
 - **iPhone / iPad:** Safari does not support this. Use a Shortcut instead: open **Shortcuts** → **+** → in the settings (ⓘ) turn on **Show in Share Sheet** and accept **URLs** only → add **URL Encode** (input: Shortcut Input) → add **Open URLs** with `https://YOUR-SITE/?url=` followed by the encoded text. Name it "Add to Gift List".
 - Shared gifts always go on **your own** list.
+
+## 15. Amazon and a.co links
+
+The gift preview and the "fill in from the link" button understand Amazon (every country) and its short links (`a.co`, `amzn.to`, `amzn.eu`, `amzn.com`). Redeploy the preview function: `npx supabase functions deploy preview --no-verify-jwt` (it now has a second file, `amazon.ts`; the CLI uploads it automatically).
+
+- Amazon often shows a "robot check" page to servers instead of the product. When that happens the preview is built from the link itself: the product name from the address (Amazon addresses usually contain it) and the picture from the product number. You still get a name and a picture; the price is only available when Amazon lets the page through.
+- Previews made from the link alone are remembered for 1 day instead of 7, so the full page is tried again soon.
+- `npm run test:amazon` checks all of this without the internet (Node 22 or newer).
+
+## 16. Changing the app icon without reinstalling
+
+**Settings → App icon** lets people pick the Home Screen icon. The address of `manifest.webmanifest` never changes; the service worker (`sw.js`) answers it with the manifest of the chosen icon (`manifest-<theme>-<light|dark>.webmanifest`). Chrome re-reads an installed app's manifest from time to time and updates the icon on its own.
+
+- **Android and computers (Chrome, Edge):** the icon changes by itself, usually within a day of opening the app, and the phone may ask for confirmation.
+- **iPhone / iPad:** Apple does not let a web app change its icon. The page offers the steps (remove the app, add it again from Safari); the icon you picked is used when you add it.
+- The choice is remembered on that device only. Nothing is stored in Supabase.
+- Needs the site served over https (GitHub Pages is) so the service worker runs.
+
+## 17. "This or that" and "this and that" gifts
+
+In **Add gift**, the **Gift type** dropdown turns a gift into two parts, each with its own link, name, price and notes (the "fill in from the link" question works for both links):
+
+- **This or that:** either one is fine. The gift preview shows two Bought boxes; ticking one ticks both, and unticking either unticks both. Only the part that was really bought is saved, so Secret Santa budgets count the right price. If one person ticks one choice, nobody else can tick the other.
+- **This and that:** the two gifts go together. Each box is ticked on its own. In the list the checkbox shows half-done while only one of the two is bought, and the price shown is the total.
+- The checkbox in the list only opens the preview, where the boxes live, so nothing is ticked by accident.
+- Run migration 14 first. Until then the Gift type dropdown stays hidden and everything works as before.
+- CSV export and import have five extra columns (Type, Gift 2 name, Gift 2 price, Gift 2 link, Gift 2 notes). Old files without them still import. The JSON backup carries the same fields.

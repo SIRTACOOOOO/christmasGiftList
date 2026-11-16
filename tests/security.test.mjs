@@ -218,6 +218,23 @@ try {
   const pst = await bob.c.rpc('push_status');
   ok(!pst.error && typeof pst.data?.configured === 'boolean' && !JSON.stringify(pst.data).includes('secret'), 'push_status reports readiness without revealing the secret');
   ok((await createClient(URL, PUB, { auth: { persistSession: false } }).rpc('push_status')).error, 'push_status needs a signed-in user');
+
+  // --- "this or that" and "this and that" gifts (migration 0014) --------------------------------------------------------------------
+  const gOr = randomUUID(), gAnd = randomUUID();
+  ok(!(await alice.c.from('gifts').insert({ id: gOr, owner_id: alice.id, name: 'Blue lamp', price: 20, kind: 'or', name2: 'Red lamp', price2: 25 })).error, 'a "this or that" gift can be added');
+  ok(!(await alice.c.from('gifts').insert({ id: gAnd, owner_id: alice.id, name: 'Console', kind: 'and', name2: 'Controller', link2: 'https://example.com/c' })).error, 'a "this and that" gift can be added');
+  ok((await alice.c.from('gifts').insert({ id: randomUUID(), owner_id: alice.id, name: 'Lonely', kind: 'or' })).error, 'an "or" gift needs its second part');
+  ok((await alice.c.from('gifts').insert({ id: randomUUID(), owner_id: alice.id, name: 'Odd', name2: 'Extra' })).error, 'a single gift cannot have a second part');
+  ok(!(await bob.c.from('purchases').insert({ gift_id: gAnd, bought_by: bob.id, part: 1 })).error && !(await bob.c.from('purchases').insert({ gift_id: gAnd, bought_by: bob.id, part: 2 })).error, 'each part of an "and" gift can be ticked on its own');
+  ok(!(await bob.c.from('purchases').insert({ gift_id: gOr, bought_by: bob.id, part: 2 })).error, 'one choice of an "or" gift can be ticked');
+  ok((await bob.c.from('purchases').insert({ gift_id: gOr, bought_by: bob.id, part: 1 })).error, 'the other choice of an "or" gift cannot also be ticked');
+  ok((await bob.c.from('purchases').insert({ gift_id: gAnd, bought_by: bob.id, part: 3 })).error, 'only parts 1 and 2 exist');
+  ok(rows(await alice.c.from('purchases').select('gift_id').in('gift_id', [gOr, gAnd])) === 0, 'the owner still cannot see any ticks');
+  await alice.c.from('gifts').update({ kind: 'single', name2: null, price2: null, link2: null, notes2: null }).eq('id', gAnd);
+  ok(rows(await bob.c.from('purchases').select('part').eq('gift_id', gAnd).eq('part', 2)) === 0, 'turning an "and" gift into a single gift drops the second tick');
+  const gSur = randomUUID();
+  await bob.c.from('gifts').insert({ id: gSur, owner_id: alice.id, name: 'Surprise A', kind: 'and', name2: 'Surprise B' });
+  ok(rows(await bob.c.from('purchases').select('part').eq('gift_id', gSur)) === 2, 'a surprise "and" gift is ticked in both parts');
   await bob.c.rpc('remove_push_subscription', { p_endpoint: ep });
   ok(rows(await bob.c.from('push_subscriptions').select('endpoint').eq('endpoint', ep)) === 0, 'a device can unsubscribe');
 

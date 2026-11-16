@@ -3,6 +3,7 @@
 // Safety: signed-in users only, rate limited, public http(s) addresses only (private and internal addresses are refused,
 // redirects are re-checked), 6 second timeout, 400 KB read limit, and results are cached for 7 days.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
+import { amazonPreview, isAmazonHost } from './amazon.ts';
 
 const SB_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -11,7 +12,8 @@ const ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map((s) => s.
 const admin = createClient(SB_URL, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
 const UA = 'Mozilla/5.0 (compatible; GiftListPreview/1.0)';
-const MAX_BYTES = 400_000, TIMEOUT_MS = 6000, MAX_REDIRECTS = 3, CACHE_DAYS = 7, PER_HOUR = 40;
+const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';      // Amazon turns away unknown names
+const MAX_BYTES = 400_000, TIMEOUT_MS = 6000, MAX_REDIRECTS = 6, CACHE_DAYS = 7, PER_HOUR = 40;
 
 const cors = (req: Request) => {
   const o = req.headers.get('origin') ?? '';
@@ -62,18 +64,22 @@ async function readLimited(r: Response): Promise<string> {
   const all = new Uint8Array(total); let off = 0; for (const c of chunks) { all.set(c, off); off += c.length; }
   return new TextDecoder('utf-8', { fatal: false }).decode(all);
 }
-async function fetchHtml(start: URL): Promise<{ html: string; url: URL }> {
+async function fetchHtml(start: URL, lenient = false): Promise<{ html: string; url: URL; ok: boolean }> {      // lenient: hand back error pages too (Amazon)
   let u = start;
   for (let i = 0; i <= MAX_REDIRECTS; i++) {
     if (!(await allowed(u))) throw new Error('blocked');
     const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
     try {
-      const r = await fetch(u, { redirect: 'manual', signal: ctl.signal, headers: { 'user-agent': UA, accept: 'text/html,application/xhtml+xml', 'accept-language': 'en' } });
+      const amazon = lenient && isAmazonHost(u.hostname);
+      const r = await fetch(u, { redirect: 'manual', signal: ctl.signal, headers: amazon
+        ? { 'user-agent': BROWSER_UA, accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8', 'accept-language': 'en-US,en;q=0.9',
+            'upgrade-insecure-requests': '1', 'sec-fetch-dest': 'document', 'sec-fetch-mode': 'navigate', 'sec-fetch-site': 'none', 'sec-fetch-user': '?1' }
+        : { 'user-agent': UA, accept: 'text/html,application/xhtml+xml', 'accept-language': 'en' } });
       const loc = r.headers.get('location');
       if (r.status >= 300 && r.status < 400 && loc) { u = new URL(loc, u); continue; }
-      if (!r.ok) throw new Error('status ' + r.status);
+      if (!r.ok) { if (lenient) return { html: await readLimited(r), url: u, ok: false }; throw new Error('status ' + r.status); }
       if (!/text\/html|application\/xhtml/i.test(r.headers.get('content-type') ?? '')) throw new Error('not a web page');
-      return { html: await readLimited(r), url: u };
+      return { html: await readLimited(r), url: u, ok: true };
     } finally { clearTimeout(timer); }
   }
   throw new Error('too many redirects');
@@ -136,10 +142,18 @@ Deno.serve(async (req) => {
     if (hits >= PER_HOUR) return reply(req, { ok: false, error: 'Too many previews. Please try again later.' }, 429);
     await admin.rpc('service_rate_record', { p_key: rk });
 
-    let page; try { page = await fetchHtml(u); } catch { return reply(req, { ok: false }); }
-    const p = parse(page.html, page.url);
+    let p, fetchedAt = Date.now();
+    if (isAmazonHost(u.hostname)) {      // Amazon and a.co / amzn.to links (see amazon.ts)
+      let page = null; try { page = await fetchHtml(u, true); } catch { /* the link alone may still tell us enough */ }
+      const a = await amazonPreview(page, u);
+      if (!a) return reply(req, { ok: false });
+      p = a.preview; if (a.partial) fetchedAt -= (CACHE_DAYS - 1) * 86400000;      // built from the link only: look again after a day
+    } else {
+      let page; try { page = await fetchHtml(u); } catch { return reply(req, { ok: false }); }
+      p = parse(page.html, page.url);
+    }
     if (!p.title && !p.description && !p.image && p.price === null) return reply(req, { ok: false });
-    await admin.from('link_previews').upsert({ url: key, ...p, fetched_at: new Date().toISOString() });
+    await admin.from('link_previews').upsert({ url: key, ...p, fetched_at: new Date(fetchedAt).toISOString() });
     return reply(req, { ok: true, ...p });
   } catch (e) {
     console.error('preview error', e instanceof Error ? e.message : e);

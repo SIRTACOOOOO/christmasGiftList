@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node tests/security.test.mjs"
+    "test": "node tests/security.test.mjs",
+    "test:amazon": "node --experimental-strip-types tests/amazon.test.mjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.45.4"

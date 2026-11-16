@@ -15,6 +15,7 @@ Create wishlists, share them with groups, chat about gift ideas, organize Secret
 🎁 Personal Wishlists
 
 - Create and manage your own Christmas wishlist.
+- "This or that" gifts (either one is fine: ticking one ticks both) and "this and that" gifts (two gifts, each ticked on its own), from the Gift type dropdown when adding a gift.
 - Tick "Bought" inside the gift preview. The box in the list only opens the preview, so nothing is ticked by accident.
 - Add gifts with names, prices, website links, and notes. Enter the link first and the site offers to fill in the name and price.
 - Share a product page from your phone's browser straight into the app (installed app, see SETUP.md).
@@ -76,7 +77,7 @@ Create wishlists, share them with groups, chat about gift ideas, organize Secret
 
 - Press the theme icon to cycle through the themes (Green is the default).
 - Press the sun / moon icon to switch between light and dark mode.
-- Each theme has its own gift app icon in a light and a dark version, and it follows the light/dark switch (browser tab, Home Screen and the logo in the menu). An app that is already installed keeps the icon it was installed with; install it again while the theme and mode you want are selected.
+- Each theme has its own gift icon in a light and a dark version for the browser tab and the menu logo. The icon of the installed app is its own setting, like Discord's: **Settings → App icon** (13 icons, or Automatic to follow your theme and light/dark). Android and computers update the installed app's icon by themselves; iPhones need the app added again (the page has a button with the steps).
 - Swipe right for the menu, swipe left for the chat.
 - On phones the themes that draw a box around the list drop it, so the list gets the whole screen.
 - Customize your countdown.

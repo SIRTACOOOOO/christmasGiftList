@@ -211,6 +211,19 @@ details.dd>.ddbody>p:first-child{margin-top:0}
 .ddbody .row.col{flex-direction:column;align-items:stretch}
 .ddbody h3:first-child{margin-top:4px}
 #setdlg,#gdlg{width:min(520px,calc(100% - 24px))}
+.icongrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:10px;margin:10px 0}
+.icontile{border:2px solid var(--line);border-radius:18px;padding:3px;background:var(--card);color:var(--ink);cursor:pointer;display:grid;place-items:center;aspect-ratio:1;font:600 .8rem var(--body,inherit)}
+.icontile img{width:100%;height:100%;border-radius:14px;display:block}
+.icontile[aria-checked=true]{border-color:var(--pine);box-shadow:0 0 0 2px var(--pine)}
+.icontile:focus-visible{outline:3px solid var(--pine);outline-offset:2px}
+#icon-steps{border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:10px}
+#icon-steps ol{margin:6px 0 0;padding-left:20px}
+.joinw{font-weight:400;color:var(--mute);font-style:italic;padding:0 .1em}
+.pv-join{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin:14px 0}
+.pv-join::before,.pv-join::after{content:"";flex:1;height:1px;background:var(--line)}
+.pv-pname{margin:10px 0 2px;font:500 1.05rem var(--display)}
+.fh{font:500 1.05rem var(--display);margin:14px 0 0}
+#f2{border-top:1px solid var(--line);margin-top:14px}
 .report{white-space:pre-wrap;font:.85rem/1.5 var(--body,inherit);background:var(--done);border-radius:8px;padding:10px;margin:10px 0 0;overflow-wrap:anywhere}
 .warn{border:1px solid var(--berry);border-radius:8px;padding:8px 10px;color:var(--ink);font-size:.92rem;margin:0 0 10px}
 @media (prefers-reduced-motion:reduce){details.dd>summary::after{transition:none}}
@@ -347,11 +360,22 @@ li.prow .pact{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
   <form id="form">
     <h2 id="dtitle">Add gift</h2>
     <p class="note" id="dnote" hidden></p>
+    <div id="f-kindrow"><label for="f-kind">Gift type</label>
+      <select id="f-kind"><option value="single">One gift</option><option value="or">This or that (either one is fine)</option><option value="and">This and that (they go together)</option></select></div>
+    <h3 class="fh" id="f-h1" hidden></h3>
     <label for="f-link">Link</label><input id="f-link" inputmode="url" autocapitalize="off" placeholder="Paste a link (optional)">
     <div class="ask" id="fill-ask" hidden><span id="fill-msg">Fill in the name and price from this link?</span><div class="inline"><button type="button" class="btn primary" id="fill-yes">Fill it in</button><button type="button" class="btn" id="fill-no">No thanks</button></div></div>
     <label for="f-name">Gift name</label><input id="f-name" required>
     <label for="f-price">Approx. price</label><input id="f-price" inputmode="decimal" placeholder="20.00">
     <label for="f-notes">Notes: specify size, color, model, or other preferences</label><textarea id="f-notes" rows="2" maxlength="1000" placeholder="For example: size M, navy blue, 2024 model"></textarea>
+    <div id="f2" hidden>
+      <h3 class="fh" id="f-h2"></h3>
+      <label for="f2-link">Link</label><input id="f2-link" inputmode="url" autocapitalize="off" placeholder="Paste a link (optional)">
+      <div class="ask" id="fill-ask2" hidden><span id="fill-msg2">Fill in the name and price from this link?</span><div class="inline"><button type="button" class="btn primary" id="fill-yes2">Fill it in</button><button type="button" class="btn" id="fill-no2">No thanks</button></div></div>
+      <label for="f2-name">Gift name</label><input id="f2-name">
+      <label for="f2-price">Approx. price</label><input id="f2-price" inputmode="decimal" placeholder="20.00">
+      <label for="f2-notes">Notes: specify size, color, model, or other preferences</label><textarea id="f2-notes" rows="2" maxlength="1000"></textarea>
+    </div>
     <div class="row">
       <button type="button" class="btn danger del" id="del">Delete</button>
       <button type="button" class="btn" id="cancel">Cancel</button>
@@ -414,6 +438,16 @@ li.prow .pact{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
   </form>
 
   </div></details>
+  <details class="dd" id="dd-icon"><summary>App icon</summary><div class="ddbody">
+    <p class="note" id="icon-help"></p>
+    <div class="icongrid" id="icongrid" role="radiogroup" aria-label="App icon"></div>
+    <p class="note" id="icon-now"></p>
+    <div class="row col">
+      <button type="button" class="btn" id="icon-install" hidden>Install the app with this icon</button>
+      <button type="button" class="btn" id="icon-how">How to get the new icon on my phone</button>
+    </div>
+    <div class="note" id="icon-steps" hidden></div>
+  </div></details>
   <details class="dd" id="dd-push"><summary>Notifications</summary><div class="ddbody">
     <p class="note">Turn notifications on or off with the bell icon in the menu. If they are slow or never arrive, this checks every step.</p>
     <div class="row col"><button type="button" class="btn" id="push-test">Check and send a test notification</button></div>
@@ -458,15 +492,33 @@ li.prow .pact{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 </dialog>
 <dialog id="pdlg">
   <h2 id="pv-name">Gift</h2>
-  <label class="pv-bought" id="pv-boughtrow" hidden><input type="checkbox" id="pv-bought"> <span id="pv-boughttext">Bought</span></label>
-  <img class="pv-img" id="pv-img" alt="" hidden>
-  <p class="pv-site" id="pv-site"></p>
-  <p><b id="pv-ptitle"></b></p>
-  <p class="note" id="pv-desc" style="color:var(--ink)"></p>
-  <p class="meta" id="pv-facts"></p>
-  <p class="meta" id="pv-notes" hidden></p>
-  <p class="note" id="pv-status"></p>
-  <div class="row"><button type="button" class="btn" id="pv-close">Close</button><a class="btn primary" id="pv-open" href="#" target="_blank" rel="noopener noreferrer" hidden style="text-decoration:none">Open the page</a></div>
+  <p class="note" id="pv-kind" hidden></p>
+  <div class="pvpart" id="pv-p1">
+    <h3 class="pv-pname" id="pv-pname" hidden></h3>
+    <label class="pv-bought" id="pv-boughtrow" hidden><input type="checkbox" id="pv-bought"> <span id="pv-boughttext">Bought</span></label>
+    <img class="pv-img" id="pv-img" alt="" hidden>
+    <p class="pv-site" id="pv-site"></p>
+    <p><b id="pv-ptitle"></b></p>
+    <p class="note" id="pv-desc" style="color:var(--ink)"></p>
+    <p class="meta" id="pv-facts"></p>
+    <p class="meta" id="pv-notes" hidden></p>
+    <p class="note" id="pv-status"></p>
+    <a class="btn primary" id="pv-open" href="#" target="_blank" rel="noopener noreferrer" hidden style="text-decoration:none">Open the page</a>
+  </div>
+  <p class="pv-join" id="pv-join" hidden></p>
+  <div class="pvpart" id="pv-p2" hidden>
+    <h3 class="pv-pname" id="pv-pname2" hidden></h3>
+    <label class="pv-bought" id="pv-boughtrow2" hidden><input type="checkbox" id="pv-bought2"> <span id="pv-boughttext2">Bought</span></label>
+    <img class="pv-img" id="pv-img2" alt="" hidden>
+    <p class="pv-site" id="pv-site2"></p>
+    <p><b id="pv-ptitle2"></b></p>
+    <p class="note" id="pv-desc2" style="color:var(--ink)"></p>
+    <p class="meta" id="pv-facts2"></p>
+    <p class="meta" id="pv-notes2" hidden></p>
+    <p class="note" id="pv-status2"></p>
+    <a class="btn primary" id="pv-open2" href="#" target="_blank" rel="noopener noreferrer" hidden style="text-decoration:none">Open the page</a>
+  </div>
+  <div class="row"><button type="button" class="btn" id="pv-close">Close</button></div>
 </dialog>
 <dialog id="idlg">
   <h2>Import gifts</h2>
@@ -531,8 +583,18 @@ function applyTheme() {
 }
 function applyIcons() {      // the gift icon follows the theme and light/dark mode: tab icon, Home Screen icon, menu logo, install manifest
   const id = themeOf(theme).id, mode = id === 'midnight' ? 'dark' : (document.documentElement.dataset.eff === 'dark' ? 'dark' : 'light'), p = 'icons/' + id + '-' + mode + '-';
-  $('ico-any').href = p + '32.png'; $('ico-any').type = 'image/png'; $('ico-32').href = p + '32.png'; $('ico-apple').href = p + '180.png';
-  $('manifestlink').href = 'manifest-' + id + '-' + mode + '.webmanifest'; document.querySelectorAll('.applogo').forEach(x => { x.src = p + '192.png'; });
+  $('ico-any').href = p + '32.png'; $('ico-any').type = 'image/png'; $('ico-32').href = p + '32.png';
+  document.querySelectorAll('.applogo').forEach(x => { x.src = p + '192.png'; });
+  syncAppIcon(id + '-' + mode);
+}
+/* The icon of the installed app (Home Screen) is its own setting, like Discord's: Settings > App icon. '' = the original Green gift,
+   'auto' = follows the theme and light/dark, anything else = that icon. The tab icon and menu logo always follow the theme. */
+const appIconPref = () => { try { return localStorage.getItem('giftAppIcon') || ''; } catch (e) { return ''; } };
+function syncAppIcon(autoId) {
+  let pref = appIconPref(); if (pref === 'auto') pref = autoId;
+  const id = pref || 'legacy-dark';
+  const a = document.getElementById('ico-apple'); if (a) a.href = 'icons/' + id + '-180.png';      // iPhone reads this when you add the app to the Home Screen
+  try { if (window.caches) caches.open('giftlist-prefs').then(c => c.put('__app-icon', new Response(JSON.stringify({icon: pref || ''})))).catch(() => {}); } catch (e) {}      // the service worker serves the matching manifest
 }
 function setTitle() { document.title = (unreadTotal ? '(' + unreadTotal + ') ' : '') + themeOf(theme).title + (person ? ' - ' + person : ''); }
 const SVG = d => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
@@ -751,14 +813,27 @@ async function loadDirectory() {
     owner: gm.some(m => m.group_id === g.id && m.profile_id === myId && m.role === 'owner')}));
   if (gf && !groups.some(g => g.id === gf)) gf = '';
 }
+/* A gift can have two parts: kind 'or' (either is fine, ticking one ticks both) or 'and' (each part is ticked on its own). */
+let kindsOk = true;      // false until the database has the 0014 update; then gifts are all treated as single gifts
+const isTwo = i => i.kind === 'or' || i.kind === 'and';
+const tick = (i, n) => i.kind === 'or' ? !!(i.b1 || i.b2) : n === 2 ? !!i.b2 : !!i.b1;       // what a checkbox shows
+const allBought = i => i.kind === 'and' ? !!(i.b1 && i.b2) : !!(i.b1 || i.b2);
+const effPrice = i => { if (i.kind === 'and') return (i.price || 0) + (i.price2 || 0); if (i.kind === 'or') { const ps = [i.price, i.price2].filter(x => x > 0); return ps.length ? Math.min(...ps) : 0; } return i.price || 0; };
+const priceText = i => { if (i.kind === 'or' && i.price > 0 && i.price2 > 0 && i.price !== i.price2) return money(i.price) + ' or ' + money(i.price2); const t = effPrice(i); return t ? money(t) : ''; };
+const GIFT_COLS = 'id,owner_id,created_by,name,price,link,notes,position,updated_at';
 async function loadList(name) {
   const id = byName[name.toLowerCase()]; if (!id) return;
-  const r = await sb.from('gifts').select('id,owner_id,created_by,name,price,link,notes,position,updated_at,purchases(gift_id)').eq('owner_id', id).order('created_at').limit(1000);
+  const q = cols => sb.from('gifts').select(cols).eq('owner_id', id).order('created_at').limit(1000);
+  let r = await q(GIFT_COLS + (kindsOk ? ',kind,name2,price2,link2,notes2,purchases(gift_id,part)' : ',purchases(gift_id)'));
+  if (r.error && kindsOk && /kind|name2|price2|part/.test(r.error.message || '')) { kindsOk = false; r = await q(GIFT_COLS + ',purchases(gift_id)'); }      // database not updated with 0014 yet
   if (r.error) throw r.error;
   lists[name] = r.data.map(g => {
-    const surprise = g.created_by !== g.owner_id, isBought = Array.isArray(g.purchases) ? g.purchases.length > 0 : !!g.purchases;
-    return {id: g.id, pos: g.position || 0, name: g.name, price: Number(g.price) || 0, link: g.link || '', notes: g.notes || '', stamp: g.updated_at,
-      bought: g.owner_id !== myId && isBought, by: surprise ? (names[g.created_by] || 'someone') : '', byId: g.created_by};
+    const surprise = g.created_by !== g.owner_id, ps = Array.isArray(g.purchases) ? g.purchases : (g.purchases ? [g.purchases] : []);
+    const kind = kindsOk && g.kind ? g.kind : 'single', has = n => ps.some(x => (x.part || 1) === n), mineList = g.owner_id === myId;
+    const it = {id: g.id, pos: g.position || 0, name: g.name, price: Number(g.price) || 0, link: g.link || '', notes: g.notes || '', stamp: g.updated_at,
+      kind, name2: g.name2 || '', price2: Number(g.price2) || 0, link2: g.link2 || '', notes2: g.notes2 || '',
+      b1: !mineList && has(1), b2: !mineList && has(2), by: surprise ? (names[g.created_by] || 'someone') : '', byId: g.created_by};
+    it.bought = allBought(it); return it;
   });
 }
 async function load() {
@@ -786,7 +861,7 @@ function sortItems(list) {
   const a = list.slice(), nm = (x, y) => x.name.localeCompare(y.name);
   const by = {priority: byPos,           // the order the list's owner chose: first pick at the top
     store: (x, y) => { const p = storeOf(x), q = storeOf(y); return ((p ? 0 : 1) - (q ? 0 : 1)) || p.localeCompare(q) || nm(x, y); },
-    name: nm, low: (x, y) => (x.price || 0) - (y.price || 0), high: (x, y) => (y.price || 0) - (x.price || 0)}[sortKey];
+    name: nm, low: (x, y) => effPrice(x) - effPrice(y), high: (x, y) => effPrice(y) - effPrice(x)}[sortKey];
   if (by) a.sort(by);
   if (boughtLast && !isMine()) a.sort((x, y) => (x.bought ? 1 : 0) - (y.bought ? 1 : 0));   // stable: keeps the chosen order inside each half
   return a;
@@ -826,7 +901,7 @@ function render() {
   $('add').textContent = mine ? 'Add gift' : 'Add surprise gift';
   $('seg').hidden = mine; $('boughtLast').parentElement.hidden = mine;
   const q = $('q').value.toLowerCase();
-  const shown = items.filter(i => (mine || filter === 'all' || (filter === 'done') === i.bought) && (i.name + i.notes).toLowerCase().includes(q));
+  const shown = items.filter(i => (mine || filter === 'all' || (filter === 'done') === i.bought) && (i.name + i.notes + (i.name2 || '') + (i.notes2 || '')).toLowerCase().includes(q));
   $('list').innerHTML = '';
   const arranging = mine && arrangeOn, view = arranging ? items.filter(x => !x.by).sort(byPos) : sortItems(shown); let lastHead = '', rankN = 0;
   $('arrange').hidden = !mine; $('arrange').textContent = arrangeOn ? 'Done arranging' : 'Arrange my list';
@@ -835,21 +910,24 @@ function render() {
     const li = document.createElement('li'); li.className = (mine ? 'mine ' : '') + (i.bought ? 'done' : '');
     if (!mine) {
       // Tapping the box here never ticks anything by accident: it opens the gift, where the same checkbox does the ticking.
-      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'chk'; cb.checked = i.bought;
-      cb.setAttribute('aria-label', 'Bought: ' + i.name + '. Opens the gift so you can change it.'); cb.title = 'Open this gift to tick it off';
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'chk'; cb.checked = i.bought; cb.indeterminate = i.kind === 'and' && !i.bought && (i.b1 || i.b2);      // one of two "and" parts bought
+      cb.setAttribute('aria-label', 'Bought: ' + i.name + (isTwo(i) ? ' ' + i.kind + ' ' + i.name2 : '') + '. Opens the gift so you can change it.'); cb.title = 'Open this gift to tick it off';
       cb.onclick = e => { e.preventDefault(); openPreview(i); }; li.append(cb);
     }
     const mid = document.createElement('div');
-    const nm = document.createElement('button'); nm.type = 'button'; nm.className = 'name name-btn'; nm.textContent = i.name; nm.title = 'Preview this gift'; nm.onclick = () => openPreview(i); mid.append(nm);
+    const nm = document.createElement('button'); nm.type = 'button'; nm.className = 'name name-btn'; nm.append(i.name); if (isTwo(i)) nm.append(' ', Object.assign(document.createElement('span'), {className: 'joinw', textContent: i.kind}), ' ', i.name2); nm.title = 'Preview this gift'; nm.onclick = () => openPreview(i); mid.append(nm);
     const meta = document.createElement('div'); meta.className = 'meta';
-    if (i.link) { if (isUrl(i.link)) { const a = document.createElement('a'); a.href = i.link; a.target = '_blank'; a.rel = 'noopener'; let h = i.link; try { h = new URL(i.link).hostname.replace(/^www\./, ''); } catch (e) {} a.textContent = h; meta.append(a); } else meta.append(i.link); }
-    if (i.notes) meta.append((i.link ? ' \u00b7 ' : '') + i.notes);
+    const metaOf = (link, notes) => {
+      if (link) { if (isUrl(link)) { const a = document.createElement('a'); a.href = link; a.target = '_blank'; a.rel = 'noopener'; let h = link; try { h = new URL(link).hostname.replace(/^www\./, ''); } catch (e) {} a.textContent = h; meta.append(a); } else meta.append(link); }
+      if (notes) meta.append((link ? ' \u00b7 ' : '') + notes);
+    };
+    metaOf(i.link, i.notes); if (isTwo(i) && (i.link2 || i.notes2)) { if (meta.childNodes.length) meta.append(' | '); metaOf(i.link2, i.notes2); }
     if (meta.childNodes.length) mid.append(meta);
     if (i.by) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'Surprise gift from ' + (i.by.toLowerCase() === me.toLowerCase() ? 'you' : i.by); mid.append(t); }
     const right = document.createElement('div'); right.style.textAlign = 'right';
-    const p = document.createElement('div'); p.className = 'price'; p.textContent = i.price ? money(i.price) : ''; right.append(p);
+    const p = document.createElement('div'); p.className = 'price'; p.textContent = priceText(i); if (i.kind === 'and' && effPrice(i)) p.title = 'Both together'; right.append(p);
     if (!i.pending && (mine || (i.by && i.byId === myId))) { const eb = document.createElement('button'); eb.className = 'edit'; eb.textContent = 'Edit'; eb.onclick = () => openDlg(i); right.append(eb); }
-    if (!mine && !i.pending) { const bb = document.createElement('button'); bb.className = 'edit'; bb.textContent = 'Budget'; bb.onclick = () => openBudget({label: i.name + ' for ' + person, amount: i.price || '', gift_id: i.id}); right.append(' ', bb); }
+    if (!mine && !i.pending) { const bb = document.createElement('button'); bb.className = 'edit'; bb.textContent = 'Budget'; bb.onclick = () => openBudget({label: i.name + ' for ' + person, amount: effPrice(i) || '', gift_id: i.id}); right.append(' ', bb); }
     if (!i.by && (arranging || sortKey === 'priority')) { rankN++; const rk = document.createElement('span'); rk.className = 'rank'; rk.textContent = rankN + '.'; mid.prepend(rk); }
     if (arranging) {      // move gifts up and down, or drag them
       const mv = document.createElement('span'); mv.className = 'mv';
@@ -866,67 +944,94 @@ function render() {
   if ($('gdlg').open) renderGroups();
 }
 
-async function santaCheck(i) {      // warns before a tick pushes you over the Secret Santa budget for that person
-  const owner = byName[person.toLowerCase()]; if (!owner || !i.price) return true;
+async function santaCheck(i, price) {      // warns before a tick pushes you over the Secret Santa budget for that person
+  price = price === undefined ? effPrice(i) : price;
+  const owner = byName[person.toLowerCase()]; if (!owner || !price) return true;
   if (!santaLoaded) { try { await loadSanta(); } catch (e) { return true; } }
   for (const s of santas) {
     if (s.status !== 'drawn' || !s.budget_max || !myPairs.some(p => p.santa_id === s.id && p.receiver_id === owner)) continue;
     const lim = Number(s.budget_max), left = lim - (spentOn[owner] || 0);
-    if (i.price > left + 0.005) return confirm('This puts you ' + money(i.price - Math.max(left, 0)) + ' over your Secret Santa budget of ' + money(lim) + ' for ' + person + '. Tick it anyway?');
+    if (price > left + 0.005) return confirm('This puts you ' + money(price - Math.max(left, 0)) + ' over your Secret Santa budget of ' + money(lim) + ' for ' + person + '. Tick it anyway?');
   }
   return true;
 }
-async function toggle(i, v) {
-  if (v && !(await santaCheck(i))) { render(); return; }
-  const old = i.bought; i.bought = v; render();
+async function toggle(i, v, part = 1) {      // part 1 or 2 of a two-part gift; "or" gifts tick both boxes, "and" gifts tick one at a time
+  const price = (part === 2 ? i.price2 : i.price) || 0;
+  if (v && !(await santaCheck(i, price))) { render(); return; }
+  const old = {b1: i.b1, b2: i.b2}, back = i.kind === 'or' ? ((old.b1 ? i.price : i.price2) || 0) : price;      // what an un-tick gives back to the budget
+  if (i.kind === 'or') { i.b1 = v && part === 1; i.b2 = v && part === 2; } else if (part === 2) i.b2 = v; else i.b1 = v;
+  i.bought = allBought(i); render();
   try {
-    const r = v ? await track(sb.from('purchases').insert({gift_id: i.id, bought_by: myId})) : await track(sb.from('purchases').delete().eq('gift_id', i.id));
+    let r;
+    if (v) r = await track(sb.from('purchases').insert(kindsOk ? {gift_id: i.id, bought_by: myId, part} : {gift_id: i.id, bought_by: myId}));
+    else if (i.kind === 'or' || !kindsOk) r = await track(sb.from('purchases').delete().eq('gift_id', i.id));
+    else r = await track(sb.from('purchases').delete().eq('gift_id', i.id).eq('part', part));
     if (r.error && r.error.code !== '23505') throw r.error;     // 23505 = already marked (a retry), which is fine
     const owner = byName[person.toLowerCase()];
-    if (santaLoaded && owner) spentOn[owner] = Math.max(0, (spentOn[owner] || 0) + (v ? 1 : -1) * (i.price || 0));
-  } catch (e) { i.bought = old; render(); toast(errMsg(e)); }
+    if (santaLoaded && owner) spentOn[owner] = Math.max(0, (spentOn[owner] || 0) + (v ? price : -back));
+  } catch (e) { i.b1 = old.b1; i.b2 = old.b2; i.bought = allBought(i); render(); toast(errMsg(e)); }
 }
 
+function applyKind() {      // shows the second gift's fields for "this or that" / "this and that"
+  const k = $('f-kind').value, two = k !== 'single';
+  $('f2').hidden = !two; $('f2-name').required = two; $('f-h1').hidden = !two;
+  $('f-h1').textContent = k === 'or' ? 'First choice' : 'First gift'; $('f-h2').textContent = k === 'or' ? 'Second choice (or)' : 'Second gift (and)';
+}
+$('f-kind').onchange = applyKind;
 function openDlg(i) {
   editing = i || null; const mine = isMine();
   $('dtitle').textContent = i ? 'Edit gift' : mine ? 'Add gift' : 'Add surprise gift for ' + person;
   $('dnote').hidden = mine; $('dnote').textContent = person + ' will not see this. Everyone else sees it as already bought.';
   $('f-name').value = i ? i.name : ''; $('f-price').value = i && i.price ? i.price : '';
   $('f-link').value = i ? i.link : ''; $('f-notes').value = i ? i.notes : '';
+  $('f-kindrow').hidden = !kindsOk; $('f-kind').value = i && kindsOk ? i.kind : 'single';
+  $('f2-name').value = i ? i.name2 : ''; $('f2-price').value = i && i.price2 ? i.price2 : ''; $('f2-link').value = i ? i.link2 : ''; $('f2-notes').value = i ? i.notes2 : '';
+  applyKind();
   $('del').style.display = i ? '' : 'none';
-  fillTok++; fillBusy = false; fillNo = ''; $('fill-ask').hidden = true;
+  [1, 2].forEach(n => { fill[n].tok++; fill[n].busy = false; fill[n].no = ''; $(F(n).ask).hidden = true; });
   $('dlg').showModal(); (i ? $('f-name') : $('f-link')).focus();
 }
-let fillTok = 0, fillBusy = false, fillNo = '';
-const linkNow = () => fixLink($('f-link').value);
+/* ---- "fill in the rest from this link", for either gift of the form ---- */
+const F = n => n === 1 ? {link: 'f-link', name: 'f-name', price: 'f-price', ask: 'fill-ask', msg: 'fill-msg', yes: 'fill-yes', no: 'fill-no'} : {link: 'f2-link', name: 'f2-name', price: 'f2-price', ask: 'fill-ask2', msg: 'fill-msg2', yes: 'fill-yes2', no: 'fill-no2'};
+const fill = {1: {tok: 0, busy: false, no: ''}, 2: {tok: 0, busy: false, no: ''}};
+const linkNow = (n = 1) => fixLink($(F(n).link).value);
 function niceTitle(t, site) {      // drops a trailing "| Shop name" from a page title
   t = String(t || '').trim(); const sn = String(site || '').toLowerCase().replace(/\.[a-z.]+$/, '');
   const parts = t.split(/\s[|\u2013\u2014-]\s/);
   if (parts.length > 1 && sn && parts[parts.length - 1].toLowerCase().includes(sn)) parts.pop();
-  return parts.join(' - ').replace(/^amazon\.[a-z.]+\s*:\s*/i, '').slice(0, 200);
+  t = parts.join(' - ').replace(/^amazon\.[a-z.]+\s*:\s*/i, '');
+  if (t.length > 100) {      // shop titles can run to a paragraph (Amazon's do): keep the part that names the gift
+    const cut = t.slice(0, 100); let at = -1;
+    for (const m of cut.matchAll(/, | - | \| | \(| with | for /g)) if (m.index > 30) { at = m.index; break; }      // the first natural break after the name begins
+    t = (at > 0 ? cut.slice(0, at) : cut.slice(0, Math.max(cut.lastIndexOf(' '), 30))).trim();
+  }
+  return t.slice(0, 200);
 }
-function checkFillAsk() {      // the link was entered before the name: offer to fill in the rest
-  if (fillBusy) return; const u = linkNow();
-  $('fill-msg').textContent = 'Fill in the name and price from this link?'; $('fill-yes').hidden = $('fill-no').hidden = false; $('fill-no').textContent = 'No thanks';
-  $('fill-ask').hidden = !(!editing && isUrl(u) && !$('f-name').value.trim() && fillNo !== u);
+function checkFillAsk(n = 1) {      // the link was entered before the name: offer to fill in the rest
+  const f = F(n), st = fill[n]; if (st.busy) return; const u = linkNow(n);
+  $(f.msg).textContent = 'Fill in the name and price from this link?'; $(f.yes).hidden = $(f.no).hidden = false; $(f.no).textContent = 'No thanks';
+  $(f.ask).hidden = !(!editing && isUrl(u) && !$(f.name).value.trim() && st.no !== u);
 }
-async function fillFromLink() {
-  const url = linkNow(); if (!isUrl(url) || fillBusy) return; fillBusy = true; const tok = ++fillTok;
-  $('fill-ask').hidden = false; $('fill-msg').textContent = 'Reading the page\u2026'; $('fill-yes').hidden = $('fill-no').hidden = true;
+async function fillFromLink(n = 1) {
+  const f = F(n), st = fill[n], url = linkNow(n); if (!isUrl(url) || st.busy) return; st.busy = true; const tok = ++st.tok;
+  $(f.ask).hidden = false; $(f.msg).textContent = 'Reading the page\u2026'; $(f.yes).hidden = $(f.no).hidden = true;
   let d = pvCache[url]; if (!d) { try { d = await callFn('preview', {url}); } catch (e) { d = {ok: false}; } }
-  if (tok !== fillTok) return; fillBusy = false; if (!$('dlg').open) return;
+  if (tok !== st.tok) return; st.busy = false; if (!$('dlg').open) return;
   if (d && d.ok && (d.title || d.price)) {
     pvCache[url] = d;
-    if (!$('f-name').value.trim() && d.title) $('f-name').value = niceTitle(d.title, d.site);
-    if (!$('f-price').value.trim() && d.price) $('f-price').value = Number(d.price).toFixed(2);
-    $('fill-ask').hidden = true; toast('Filled in from the link. Check it, then tap Save.');
-  } else { $('fill-msg').textContent = 'Could not read that page, so type the details in yourself.'; $('fill-no').hidden = false; $('fill-no').textContent = 'OK'; fillNo = url; }
+    if (!$(f.name).value.trim() && d.title) $(f.name).value = niceTitle(d.title, d.site);
+    if (!$(f.price).value.trim() && d.price) $(f.price).value = Number(d.price).toFixed(2);
+    $(f.ask).hidden = true; toast('Filled in from the link. Check it, then tap Save.');
+  } else { $(f.msg).textContent = 'Could not read that page, so type the details in yourself.'; $(f.no).hidden = false; $(f.no).textContent = 'OK'; st.no = url; }
 }
-$('fill-yes').onclick = fillFromLink;
-$('fill-no').onclick = () => { fillNo = linkNow(); $('fill-ask').hidden = true; };
-$('f-link').addEventListener('change', checkFillAsk);
-$('f-link').addEventListener('paste', () => setTimeout(checkFillAsk, 0));
-$('f-name').addEventListener('input', () => { if (!fillBusy && $('f-name').value.trim()) $('fill-ask').hidden = true; });
+[1, 2].forEach(n => {
+  const f = F(n);
+  $(f.yes).onclick = () => fillFromLink(n);
+  $(f.no).onclick = () => { fill[n].no = linkNow(n); $(f.ask).hidden = true; };
+  $(f.link).addEventListener('change', () => checkFillAsk(n));
+  $(f.link).addEventListener('paste', () => setTimeout(() => checkFillAsk(n), 0));
+  $(f.name).addEventListener('input', () => { if (!fill[n].busy && $(f.name).value.trim()) $(f.ask).hidden = true; });
+});
 async function handleShare() {      // a product page was shared into the app: open Add gift with it, one tap from Save
   const sh = pendingShare; pendingShare = null; try { sessionStorage.removeItem('giftShare'); } catch (e) {}
   if (!sh || !sh.url) return;
@@ -972,19 +1077,24 @@ document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
 $('form').onsubmit = e => {
   e.preventDefault();
   const mine = isMine(), name = $('f-name').value.trim(); if (!name) return;
+  const kind = kindsOk ? $('f-kind').value : 'single', two = kind !== 'single', name2 = two ? $('f2-name').value.trim() : '';
+  if (two && !name2) { $('f2-name').focus(); return toast('Add a name for the second gift.'); }
   const price = $('f-price').value.trim(), link = fixLink($('f-link').value), notes = $('f-notes').value.trim();
+  const price2 = two ? $('f2-price').value.trim() : '', link2 = two ? fixLink($('f2-link').value) : '', notes2 = two ? $('f2-notes').value.trim() : '';
   const d = {name, price: price === '' ? null : num(price), link: link || null, notes: notes || null};
-  const shown = {name, price: d.price || 0, link, notes};
+  if (kindsOk) Object.assign(d, {kind, name2: two ? name2 : null, price2: two && price2 !== '' ? num(price2) : null, link2: two ? (link2 || null) : null, notes2: two ? (notes2 || null) : null});
+  const shown = {name, price: d.price || 0, link, notes, kind, name2: two ? name2 : '', price2: two ? (d.price2 || 0) : 0, link2: two ? link2 : '', notes2: two ? notes2 : ''};
   let job;
   if (editing) {
     const stamp = editing.stamp; Object.assign(editing, shown);          // shown straight away, confirmed by the database
+    if (kind === 'single') editing.b2 = false; editing.bought = !isMine() && allBought(editing);
     job = track(sb.from('gifts').update(d).eq('id', editing.id).eq('updated_at', stamp).select('id')).then(r => {
       if (r.error) throw r.error;
       if (!r.data.length) toast('This gift was changed somewhere else. Showing the latest version.'); else toast('Gift saved');
     });
   } else {
     const id = crypto.randomUUID();                                         // the same id on a retry means no duplicate gift
-    items.push({id, ...shown, pending: true, bought: !mine, by: mine ? '' : me, byId: myId, pos: mine ? Math.max(0, ...items.map(x => x.pos || 0)) + 1 : 0});
+    items.push({id, ...shown, pending: true, b1: !mine, b2: !mine && kind === 'and', bought: !mine, by: mine ? '' : me, byId: myId, pos: mine ? Math.max(0, ...items.map(x => x.pos || 0)) + 1 : 0});
     job = track(sb.from('gifts').insert({id, owner_id: byName[person.toLowerCase()], ...d})).then(r => {
       if (r.error && r.error.code !== '23505') throw r.error; toast('Gift saved');
     });
@@ -1119,7 +1229,7 @@ $('dform').onsubmit = async e => {
 };
 
 /* ---- export / import (CSV that opens in Google Sheets and Excel) ---- */
-const CSV_HEAD = ['Gift names', 'Approx. price', 'Links', 'notes'];
+const CSV_HEAD = ['Gift names', 'Approx. price', 'Links', 'notes', 'Type', 'Gift 2 name', 'Gift 2 price', 'Gift 2 link', 'Gift 2 notes'];      // the last five are only filled in for "this or that" / "this and that" gifts
 const safeCell = v => { v = String(v == null ? '' : v); if (/^[=+@\t\r-]/.test(v)) v = "'" + v; return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };   // stops spreadsheet formula injection
 const unsafeCell = v => String(v).replace(/^'([=+@\t\r-])/, '$1').trim();
 function download(text, type, name) {
@@ -1133,7 +1243,7 @@ async function myGifts() {      // your own list, fetched fresh, whichever list 
 }
 $('exp').onclick = async () => {
   const mineGifts = await myGifts(); if (!mineGifts) return;
-  const rows = [CSV_HEAD.join(',')].concat(mineGifts.map(i => [i.name, i.price ? i.price.toFixed(2) : '', i.link, i.notes].map(safeCell).join(',')));
+  const rows = [CSV_HEAD.join(',')].concat(mineGifts.map(i => [i.name, i.price ? i.price.toFixed(2) : '', i.link, i.notes, !isTwo(i) ? '' : i.kind, i.name2, i.price2 ? i.price2.toFixed(2) : '', i.link2, i.notes2].map(safeCell).join(',')));
   download('\ufeff' + rows.join('\r\n') + '\r\n', 'text/csv;charset=utf-8', 'gift-list-' + fileSlug() + '.csv');
   toast('Exported ' + (rows.length - 1) + ' gifts. In Google Sheets use File > Import > Upload.');
 };
@@ -1143,7 +1253,7 @@ $('expj').onclick = async () => {
   const data = {app: 'christmas-gift-list', version: 1, exportedAt: new Date().toISOString(), name: myFull,
     birthday: mineBd ? {month: mineBd.m, day: mineBd.d} : null,
     settings: {countdown: cdMode, sort: sortKey, boughtLast, theme},
-    gifts: mineGifts.slice().sort(byPos).map(i => ({name: i.name, price: i.price || null, link: i.link || null, notes: i.notes || null}))};
+    gifts: mineGifts.slice().sort(byPos).map(i => Object.assign({name: i.name, price: i.price || null, link: i.link || null, notes: i.notes || null}, !isTwo(i) ? {} : {kind: i.kind, name2: i.name2, price2: i.price2 || null, link2: i.link2 || null, notes2: i.notes2 || null}))};
   download(JSON.stringify(data, null, 2), 'application/json', 'gift-list-backup-' + fileSlug() + '-' + new Date().toISOString().slice(0, 10) + '.json');
   toast('Backup saved (' + data.gifts.length + ' gifts).');
 };
@@ -1172,25 +1282,31 @@ function vet(raws) {      // checks every row the same way, whether it came from
     if (!name || name.charAt(0) === '~') return;
     if (name.length > 200 || link.length > 1000 || notes.length > 1000 || (price !== null && !(price >= 0 && price < 1e8))) { skipped.push('Row ' + (ix + 1) + ': ' + name.slice(0, 40)); return; }
     const key = (name + '|' + link).toLowerCase(); if (have.has(key)) { dupes++; return; } have.add(key);
-    good.push({name, price, link: fixLink(link) || null, notes: notes || null});
+    const g = {name, price, link: fixLink(link) || null, notes: notes || null};
+    const kd = /\bor\b/i.test(String(r.kind || '')) ? 'or' : /\band\b/i.test(String(r.kind || '')) ? 'and' : 'single', name2 = String(r.name2 == null ? '' : r.name2).trim();
+    if (kindsOk && kd !== 'single' && name2 && name2.length <= 200) {      // a second gift: "this or that" / "this and that"
+      const p2 = String(r.price2 == null ? '' : r.price2).replace(/[$,\s]/g, ''), l2 = String(r.link2 == null ? '' : r.link2).trim(), n2 = String(r.notes2 == null ? '' : r.notes2).trim();
+      if (l2.length <= 1000 && n2.length <= 1000 && (p2 === '' || (Number(p2) >= 0 && Number(p2) < 1e8))) Object.assign(g, {kind: kd, name2, price2: p2 === '' ? null : Number(p2), link2: fixLink(l2) || null, notes2: n2 || null});
+    }
+    good.push(g);
   });
   return {good, dupes, skipped};
 }
 function readGifts(text) {
-  const rows = parseCSV(text), H = {name: /^(gift names?|gifts?|name|item|title)$/i, price: /^(approx\.? ?price|price|cost)$/i, link: /^(links?|url|urls|website)$/i, notes: /^(notes?|description|comments?)$/i};
+  const rows = parseCSV(text), H = {name: /^(gift names?|gifts?|name|item|title)$/i, price: /^(approx\.? ?price|price|cost)$/i, link: /^(links?|url|urls|website)$/i, notes: /^(notes?|description|comments?)$/i, kind: /^(type|kind)$/i, name2: /^gift 2 names?$/i, price2: /^gift 2 price$/i, link2: /^gift 2 links?$/i, notes2: /^gift 2 notes?$/i};
   let col = {name: 0, price: 1, link: 2, notes: 3}, start = 0;
   for (let k = 0; k < Math.min(rows.length, 5); k++) {
     const m = {}; rows[k].forEach((c, ix) => { for (const key in H) if (m[key] === undefined && H[key].test(String(c).trim())) m[key] = ix; });
     if (m.name !== undefined) { col = m; start = k + 1; break; }
   }
   const cell = (r, k) => k === undefined ? '' : unsafeCell(r[k] === undefined ? '' : r[k]);
-  return vet(rows.slice(start).map(r => ({name: cell(r, col.name), price: cell(r, col.price), link: cell(r, col.link), notes: cell(r, col.notes)})));
+  return vet(rows.slice(start).map(r => ({name: cell(r, col.name), price: cell(r, col.price), link: cell(r, col.link), notes: cell(r, col.notes), kind: cell(r, col.kind), name2: cell(r, col.name2), price2: cell(r, col.price2), link2: cell(r, col.link2), notes2: cell(r, col.notes2)})));
 }
 function readJson(text) {
   let data; try { data = JSON.parse(text); } catch (e) { return {good: [], dupes: 0, skipped: ['That file is not valid JSON']}; }
   const list = Array.isArray(data) ? data : data && data.gifts;
   if (!Array.isArray(list)) return {good: [], dupes: 0, skipped: ['No gifts found in that file']};
-  return vet(list.map(g => ({name: g && g.name, price: g && g.price, link: g && g.link, notes: g && g.notes})));
+  return vet(list.map(g => ({name: g && g.name, price: g && g.price, link: g && g.link, notes: g && g.notes, kind: g && g.kind, name2: g && g.name2, price2: g && g.price2, link2: g && g.link2, notes2: g && g.notes2})));
 }
 $('imp').onclick = () => $('impfile').click();
 let pending = [];
@@ -1203,7 +1319,7 @@ $('impfile').onchange = async () => {
   if (good.length > 500) return toast('Please import 500 gifts or fewer at a time.');
   pending = good;
   $('i-sum').textContent = good.length + ' gift(s) ready to import. ' + dupes + ' duplicate(s) and ' + skipped.length + ' problem row(s) will be skipped.';
-  $('i-prev').innerHTML = ''; good.slice(0, 8).forEach(g => { const li = document.createElement('li'); li.textContent = g.name + (g.price ? ' (' + money(g.price) + ')' : ''); $('i-prev').append(li); });
+  $('i-prev').innerHTML = ''; good.slice(0, 8).forEach(g => { const li = document.createElement('li'); li.textContent = g.name + (g.name2 ? ' ' + g.kind + ' ' + g.name2 : '') + (g.price ? ' (' + money(g.price) + ')' : ''); $('i-prev').append(li); });
   skipped.slice(0, 3).forEach(t => { const li = document.createElement('li'); li.textContent = 'Skipped: ' + t; $('i-prev').append(li); });
   $('i-go').disabled = !good.length; $('i-go').textContent = good.length ? 'Import ' + good.length : 'Nothing to import'; $('idlg').showModal();
 };
@@ -1244,18 +1360,22 @@ async function handleJoin() {
 const santaOpen = {};
 let santas = [], santaParts = [], myPairs = [], myBlacklist = [], santaOut = [], santaWant = [], spentOn = {}, santaLoaded = false;
 async function loadSanta() {
+  try { return await loadSanta0(); }
+  catch (e) { if (kindsOk && /part|price2/.test((e && e.message) || '')) { kindsOk = false; return loadSanta0(); } throw e; }      // database not updated with 0014 yet
+}
+async function loadSanta0() {
   const mine = q => q.eq('bought_by', myId);
   const [a, b, c, d, e, o, w] = await track(Promise.all([
     fetchAll('secret_santas', 'id,group_id,name,budget_max,draws_per_person,status,created_by', ['id']),
     fetchAll('santa_participants', 'santa_id,profile_id', ['santa_id', 'profile_id']),            // filled in when the names are drawn
     fetchAll('santa_assignments', 'santa_id,receiver_id', ['santa_id', 'receiver_id']),          // the database only returns YOUR assignments
     fetchAll('santa_blacklist', 'santa_id,receiver_id', ['santa_id', 'receiver_id']),            // ...and only YOUR "do not give to" list
-    fetchAll('purchases', 'gift_id,gifts(owner_id,price)', ['gift_id'], mine),
+    fetchAll('purchases', kindsOk ? 'gift_id,part,gifts(owner_id,price,price2)' : 'gift_id,gifts(owner_id,price)', kindsOk ? ['gift_id', 'part'] : ['gift_id'], mine),
     fetchAll('santa_optouts', 'santa_id,profile_id', ['santa_id', 'profile_id']),
     fetchAll('santa_wanted', 'santa_id,profile_id,draws', ['santa_id', 'profile_id'])]));
   santas = a; santaParts = b; myPairs = c; myBlacklist = d; santaOut = o; santaWant = w; santaLoaded = true;
   spentOn = {};      // what you have ticked off on each person's list: this is what comes out of your Secret Santa budget for them
-  e.forEach(x => { const g = Array.isArray(x.gifts) ? x.gifts[0] : x.gifts; if (g) spentOn[g.owner_id] = (spentOn[g.owner_id] || 0) + (Number(g.price) || 0); });
+  e.forEach(x => { const g = Array.isArray(x.gifts) ? x.gifts[0] : x.gifts; if (g) spentOn[g.owner_id] = (spentOn[g.owner_id] || 0) + (Number(x.part === 2 ? g.price2 : g.price) || 0); });
 }
 const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
 async function actS(fn, ok) {
@@ -1468,34 +1588,55 @@ $('logoutAll').onclick = async () => {
 /* ---- gift preview ---- */
 const pvCache = {}; let pvSeq = 0;
 let pvItem = null;
-function showBoughtRow() {      // the same Bought box as the list used to have, now only here
-  const i = pvItem, row = $('pv-boughtrow'); if (!i) return;
-  row.hidden = isMine(); if (isMine()) return;
-  $('pv-bought').checked = !!i.bought; $('pv-bought').disabled = !!i.by || !!i.pending;
-  $('pv-boughttext').textContent = i.by ? 'Bought (your surprise gift)' : i.pending ? 'Saving\u2026' : 'Bought';
+const PV = n => n === 1 ? '' : '2';
+const partOf = (i, n) => n === 1 ? {name: i.name, price: i.price, link: i.link, notes: i.notes} : {name: i.name2, price: i.price2, link: i.link2, notes: i.notes2};
+function showBoughtRow() {      // the Bought box (one per part of a two-part gift). It lives here; the box in the list only opens this preview
+  const i = pvItem; if (!i) return; const two = isTwo(i);
+  [1, 2].forEach(n => {
+    const sfx = PV(n), row = $('pv-boughtrow' + sfx), box = $('pv-bought' + sfx);
+    if (n === 2 && !two) { row.hidden = true; return; }
+    row.hidden = isMine(); if (isMine()) return;
+    const nm = partOf(i, n).name;
+    box.checked = tick(i, n); box.disabled = !!i.by || !!i.pending;
+    $('pv-boughttext' + sfx).textContent = i.by ? (two ? 'Bought: ' + nm + ' (your surprise gift)' : 'Bought (your surprise gift)') : i.pending ? 'Saving\u2026' : two ? 'Bought: ' + nm : 'Bought';
+  });
 }
-$('pv-bought').onchange = async () => {
-  if (!pvItem) return; const box = $('pv-bought'), want = box.checked, cur = items.find(x => x.id === pvItem.id) || pvItem;
-  box.disabled = true; await toggle(cur, want);                      // toggle() asks about a Secret Santa budget and undoes itself if saving fails
-  pvItem = items.find(x => x.id === pvItem.id) || cur; showBoughtRow();
-};
-async function openPreview(i) {
-  const tok = ++pvSeq, img = $('pv-img'), url = isUrl(i.link) ? i.link : '';
-  pvItem = i; showBoughtRow();
-  $('pv-name').textContent = i.name; img.hidden = true; img.removeAttribute('src');
-  ['pv-site', 'pv-ptitle', 'pv-desc'].forEach(id => { $(id).textContent = ''; });
-  $('pv-facts').textContent = [i.price ? money(i.price) : ''].filter(Boolean).join(' \u00b7 ');
-  $('pv-notes').textContent = i.notes ? 'Notes: ' + i.notes : ''; $('pv-notes').hidden = !i.notes;
-  $('pv-open').hidden = !url; if (url) $('pv-open').href = url;
-  $('pv-status').textContent = url ? 'Loading a preview\u2026' : 'No link was added to this gift.';
-  if (!$('pdlg').open) $('pdlg').showModal(); if (!url) return;
+[1, 2].forEach(n => {
+  $('pv-bought' + PV(n)).onchange = async () => {
+    if (!pvItem) return; const want = $('pv-bought' + PV(n)).checked, cur = items.find(x => x.id === pvItem.id) || pvItem;
+    $('pv-bought').disabled = $('pv-bought2').disabled = true; await toggle(cur, want, n);      // toggle() asks about a Secret Santa budget and undoes itself if saving fails
+    pvItem = items.find(x => x.id === pvItem.id) || cur; showBoughtRow();
+  };
+});
+async function loadPv(n, i, tok) {
+  const sfx = PV(n), p = partOf(i, n), img = $('pv-img' + sfx), url = isUrl(p.link) ? p.link : '';
+  if (!url) return;
   let d = pvCache[url];
   if (!d) { try { d = await callFn('preview', {url}); } catch (e) { d = {ok: false}; } if (d && d.ok) pvCache[url] = d; }
   if (tok !== pvSeq || !$('pdlg').open) return;
   if (d && d.ok) {
-    $('pv-status').textContent = ''; $('pv-site').textContent = d.site || ''; $('pv-ptitle').textContent = d.title || ''; $('pv-desc').textContent = d.description || '';
+    $('pv-status' + sfx).textContent = ''; $('pv-site' + sfx).textContent = d.site || ''; $('pv-ptitle' + sfx).textContent = d.title || ''; $('pv-desc' + sfx).textContent = d.description || '';
     if (d.image) { img.referrerPolicy = 'no-referrer'; img.onerror = () => { img.hidden = true; }; img.src = d.image; img.hidden = false; }
-  } else $('pv-status').textContent = 'No preview is available for this site (some shops block previews). You can still open the page.';
+  } else $('pv-status' + sfx).textContent = 'No preview is available for this site (some shops block previews). You can still open the page.';
+}
+async function openPreview(i) {
+  const tok = ++pvSeq, two = isTwo(i); pvItem = i;
+  $('pv-name').textContent = two ? i.name + ' ' + i.kind + ' ' + i.name2 : i.name;
+  $('pv-kind').hidden = !two; $('pv-kind').textContent = i.kind === 'or' ? 'Either one is fine. Ticking one of them ticks both.' : 'These go together. Tick each one you bought.';
+  $('pv-p2').hidden = !two; $('pv-join').hidden = !two; $('pv-join').textContent = i.kind;
+  [1, 2].forEach(n => {
+    const sfx = PV(n), p = partOf(i, n), url = isUrl(p.link) ? p.link : '', img = $('pv-img' + sfx);
+    $('pv-pname' + sfx).hidden = !two; $('pv-pname' + sfx).textContent = two ? p.name : '';
+    img.hidden = true; img.removeAttribute('src');
+    ['pv-site', 'pv-ptitle', 'pv-desc'].forEach(id => { $(id + sfx).textContent = ''; });
+    $('pv-facts' + sfx).textContent = [p.price ? money(p.price) : ''].filter(Boolean).join(' \u00b7 ');
+    $('pv-notes' + sfx).textContent = p.notes ? 'Notes: ' + p.notes : ''; $('pv-notes' + sfx).hidden = !p.notes;
+    $('pv-open' + sfx).hidden = !url; if (url) $('pv-open' + sfx).href = url;
+    $('pv-status' + sfx).textContent = url ? 'Loading a preview\u2026' : 'No link was added to this gift.';
+  });
+  showBoughtRow();
+  if (!$('pdlg').open) $('pdlg').showModal();
+  await Promise.all((two ? [1, 2] : [1]).map(n => loadPv(n, i, tok)));
 }
 $('pv-close').onclick = () => $('pdlg').close();
 
@@ -1720,6 +1861,38 @@ if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) window.
 let installEv = null;
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEv = e; $('installBtn').hidden = false; });
 window.addEventListener('appinstalled', () => { installEv = null; $('installBtn').hidden = true; });
+/* ---- Settings > App icon ---- */
+const iconChoices = () => { const out = [{id: 'auto', name: 'Automatic'}]; THEMES.forEach(t => ['dark', 'light'].forEach(m => { if (m === 'light' && t.id === 'midnight') return; out.push({id: t.id + '-' + m, name: t.name + ' (' + m + ')', theme: t.id}); })); return out; };
+const standalone = () => !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
+const onIphone = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function renderAppIcon() {
+  const cur = appIconPref() || 'legacy-dark', grid = $('icongrid'); grid.innerHTML = '';
+  iconChoices().forEach(c => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'icontile'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(c.id === cur)); b.title = c.name; b.setAttribute('aria-label', c.name); b.dataset.icon = c.id;
+    if (c.id === 'auto') b.textContent = 'Auto'; else { const im = document.createElement('img'); im.alt = ''; im.src = 'icons/' + c.id + '-192.png'; b.append(im); }
+    b.onclick = () => chooseAppIcon(c.id); grid.append(b);
+  });
+  const name = (iconChoices().find(c => c.id === cur) || {}).name;
+  $('icon-now').textContent = cur === 'auto' ? 'The app icon follows your theme and light or dark mode.' : 'App icon: ' + name + '.';
+  const inst = standalone();
+  $('icon-help').textContent = inst
+    ? (onIphone() ? 'An iPhone cannot change an app\u2019s icon after it is on the Home Screen. Pick an icon, then use the button below to get it.' : 'The icon of this app updates by itself the next time you open it (it can take up to a day, and your phone may ask you to confirm).')
+    : 'The icon you pick here is used when you install the app. If it is already installed, it updates by itself on Android and computers; iPhones need the app added again.';
+  $('icon-install').hidden = !installEv;
+}
+function chooseAppIcon(id) {
+  try { localStorage.setItem('giftAppIcon', id === 'legacy-dark' ? '' : id); } catch (e) {}
+  applyIcons(); renderAppIcon(); toast('App icon: ' + (iconChoices().find(c => c.id === id) || {}).name);
+}
+$('icon-how').onclick = () => {
+  const box = $('icon-steps'); if (!box.hidden) { box.hidden = true; return; }
+  const steps = onIphone() ? ['Press and hold the app on your Home Screen, then tap Remove App and Delete App.', 'Open this website in Safari.', 'Tap the Share button, then Add to Home Screen. The icon you picked is used.']
+    : /android/i.test(navigator.userAgent) ? ['Normally you do not need this: Android updates the icon by itself after you open the app. If it has not changed after a day:', 'Press and hold the app icon, then Uninstall (or Remove).', 'Open this website in Chrome, tap the three dots, then Install app (or Add to Home screen).']
+    : ['Normally you do not need this: Chrome updates the icon by itself. If it has not changed after a day:', 'Open the app, click the three dots at its top right, then Uninstall.', 'Open this website in Chrome and click the install icon at the right of the address bar.'];
+  box.innerHTML = ''; const ol = document.createElement('ol'); steps.forEach(t => { const li = document.createElement('li'); li.textContent = t; ol.append(li); }); box.append(ol); box.hidden = false;
+};
+$('icon-install').onclick = async () => { if (!installEv) return; installEv.prompt(); try { await installEv.userChoice; } catch (e) {} installEv = null; renderAppIcon(); };
+$('dd-icon').addEventListener('toggle', () => { if ($('dd-icon').open) renderAppIcon(); });
 $('installBtn').onclick = async () => { if (!installEv) return; installEv.prompt(); try { await installEv.userChoice; } catch (e) {} installEv = null; $('installBtn').hidden = true; setMenu(false); };
 if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone) $('iosHint').hidden = false;
 

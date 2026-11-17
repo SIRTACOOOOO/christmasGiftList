@@ -25,6 +25,7 @@ In **SQL Editor → New query**, paste each file below **in this order** and cli
 12. `supabase/migrations/20261112000012_push_profile_picture.sql` (run after 11; the sender's profile picture shows in notifications)
 13. `supabase/migrations/20261113000013_push_letter_avatar.sql` (run after 12; people without a picture get their coloured letter circle in notifications)
 14. `supabase/migrations/20261114000014_this_or_that.sql` (run after 13; "this or that" and "this and that" gifts)
+15. `supabase/migrations/20261115000015_more_parts.sql` (run after 14; up to six gifts in one "and" / "or" gift)
 
 (Or with the Supabase CLI: `npx supabase link --project-ref YOUR-REF` then `npx supabase db push`.)
 
@@ -264,12 +265,14 @@ The gift preview and the "fill in from the link" button understand Amazon (every
 - The choice is remembered on that device only. Nothing is stored in Supabase.
 - Needs the site served over https (GitHub Pages is) so the service worker runs.
 
-## 17. "This or that" and "this and that" gifts
+## 17. Gifts made of several gifts ("this and that", "this or that")
 
-In **Add gift**, the **Gift type** dropdown turns a gift into two parts, each with its own link, name, price and notes (the "fill in from the link" question works for both links):
+In **Add gift**, press **+ Add another gift**. A second gift block opens, and you can keep pressing it (up to six gifts). Once there are two or more, **How do these gifts go together?** appears:
 
-- **This or that:** either one is fine. The gift preview shows two Bought boxes; ticking one ticks both, and unticking either unticks both. Only the part that was really bought is saved, so Secret Santa budgets count the right price. If one person ticks one choice, nobody else can tick the other.
-- **This and that:** the two gifts go together. Each box is ticked on its own. In the list the checkbox shows half-done while only one of the two is bought, and the price shown is the total.
+- **All of them: this and that:** the gifts go together. The preview shows one Bought box per gift, each ticked on its own. In the list the checkbox shows half-done while only some are bought, and the price shown is the total.
+- **Pick one: this or that:** either one is fine. Ticking one box ticks all of them, and unticking any unticks all. Only the gift that was really bought is saved, so Secret Santa budgets count the right price. If one person ticks one choice, nobody else can tick another.
+- **Separate gifts:** each gift is simply saved as its own gift on the list (nothing special about them). Only offered when adding, not when editing.
+- Each gift has its own link, name, price and notes, and its own "fill in the name and price from this link?" question. **Remove** takes one out.
 - The checkbox in the list only opens the preview, where the boxes live, so nothing is ticked by accident.
-- Run migration 14 first. Until then the Gift type dropdown stays hidden and everything works as before.
-- CSV export and import have five extra columns (Type, Gift 2 name, Gift 2 price, Gift 2 link, Gift 2 notes). Old files without them still import. The JSON backup carries the same fields.
+- Run migration 14 first (two gifts in one) and migration 15 (three to six). Until then the app keeps working: without 14 only "separate gifts" is offered, and with only 14 an "and" or "or" gift can have two parts.
+- CSV export and import have a **Type** column and a column group (name, price, link, notes) for each extra gift: Gift 2, Gift 3, and so on. Old files without them still import. The JSON backup carries the same information.

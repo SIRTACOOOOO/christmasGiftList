@@ -15,7 +15,7 @@ Create wishlists, share them with groups, chat about gift ideas, organize Secret
 🎁 Personal Wishlists
 
 - Create and manage your own Christmas wishlist.
-- "This or that" gifts (either one is fine: ticking one ticks both) and "this and that" gifts (two gifts, each ticked on its own), from the Gift type dropdown when adding a gift.
+- Press **+ Add another gift** to make one gift out of several: "this and that and that" (each ticked on its own), "this or that or that" (ticking one ticks all), or just several separate gifts added at once.
 - Tick "Bought" inside the gift preview. The box in the list only opens the preview, so nothing is ticked by accident.
 - Add gifts with names, prices, website links, and notes. Enter the link first and the site offers to fill in the name and price.
 - Share a product page from your phone's browser straight into the app (installed app, see SETUP.md).

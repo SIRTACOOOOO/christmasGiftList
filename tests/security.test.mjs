@@ -232,6 +232,16 @@ try {
   ok(rows(await alice.c.from('purchases').select('gift_id').in('gift_id', [gOr, gAnd])) === 0, 'the owner still cannot see any ticks');
   await alice.c.from('gifts').update({ kind: 'single', name2: null, price2: null, link2: null, notes2: null }).eq('id', gAnd);
   ok(rows(await bob.c.from('purchases').select('part').eq('gift_id', gAnd).eq('part', 2)) === 0, 'turning an "and" gift into a single gift drops the second tick');
+  // --- more than two parts (migration 0015) ---
+  const gThree = randomUUID();
+  ok(!(await alice.c.from('gifts').insert({ id: gThree, owner_id: alice.id, name: 'Hat', kind: 'and', name2: 'Scarf', more: [{ name: 'Gloves', price: 12.5, link: null, notes: 'size M' }] })).error, 'a three-part gift can be added');
+  ok((await alice.c.from('gifts').insert({ id: randomUUID(), owner_id: alice.id, name: 'Bad', kind: 'and', name2: 'B', more: [{ price: 3 }] })).error, 'a part in "more" needs a name');
+  ok((await alice.c.from('gifts').insert({ id: randomUUID(), owner_id: alice.id, name: 'Bad', kind: 'and', name2: 'B', more: [1, 2, 3, 4, 5].map((k) => ({ name: 'P' + k })) })).error, 'at most six parts in total');
+  ok((await alice.c.from('gifts').insert({ id: randomUUID(), owner_id: alice.id, name: 'Bad', kind: 'single', more: [{ name: 'X' }] })).error, 'a single gift cannot have extra parts');
+  ok(!(await bob.c.from('purchases').insert({ gift_id: gThree, bought_by: bob.id, part: 3 })).error, 'the third part can be ticked');
+  ok((await bob.c.from('purchases').insert({ gift_id: gThree, bought_by: bob.id, part: 4 })).error, 'a fourth part does not exist on a three-part gift');
+  await alice.c.from('gifts').update({ more: [] }).eq('id', gThree);
+  ok(rows(await bob.c.from('purchases').select('part').eq('gift_id', gThree).eq('part', 3)) === 0, 'removing a part drops its tick');
   const gSur = randomUUID();
   await bob.c.from('gifts').insert({ id: gSur, owner_id: alice.id, name: 'Surprise A', kind: 'and', name2: 'Surprise B' });
   ok(rows(await bob.c.from('purchases').select('part').eq('gift_id', gSur)) === 2, 'a surprise "and" gift is ticked in both parts');
